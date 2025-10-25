@@ -3,9 +3,9 @@
 java = "VERSION_1_8"
 
 # Build constants
-koinAndroid = "4.1.1"
+koinAndroid = "3.5.0"
 minSdk = "26"
-compileSdk = "34"
+compileSdk = "36"
 targetSdk = "33"
 
 # Detekt
