@@ -11,7 +11,7 @@ class RootActivity : AppCompatActivity() {
         setContentView(R.layout.fragment_search)
 
         // Пример использования access token для HeadHunter API
-        networkRequestExample(accessToken = BuildConfig.API_ACCESS_TOKEN)
+        networkRequestExample(accessToken = "")
     }
 
     private fun networkRequestExample(accessToken: String) {
