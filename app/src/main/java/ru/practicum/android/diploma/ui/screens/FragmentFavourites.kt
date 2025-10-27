@@ -5,7 +5,7 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import ru.practicum.android.diploma.R
 
-class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
+class FragmentFavourites : Fragment(R.layout.fragment_favorites) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
