@@ -5,26 +5,26 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import ru.practicum.android.diploma.R
-import ru.practicum.android.diploma.databinding.FragmentTeamBinding
+import ru.practicum.android.diploma.databinding.FragmentFavoritesBinding
 
-class TeamFragment : Fragment(R.layout.fragment_team) {
+class FavouritesFragment : Fragment(R.layout.fragment_favorites) {
 
-    private var _binding: FragmentTeamBinding? = null
+    private var _binding: FragmentFavoritesBinding? = null
     private val binding get() = _binding!!
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        _binding = FragmentTeamBinding.bind(view)
+        _binding = FragmentFavoritesBinding.bind(view)
 
-        // Переход на FavouritesFragment
-        binding.buttonToFavourites.setOnClickListener {
-            findNavController().navigate(R.id.action_teamFragment_to_favouritesFragment)
+        // Переход на TeamFragment
+        binding.buttonToTeam.setOnClickListener {
+            findNavController().navigate(R.id.action_favouritesFragment_to_teamFragment)
         }
 
         // Переход на SearchFragment
         binding.buttonToSearch.setOnClickListener {
-            findNavController().navigate(R.id.action_teamFragment_to_searchFragment)
+            findNavController().navigate(R.id.action_favouritesFragment_to_searchFragment)
         }
     }
 

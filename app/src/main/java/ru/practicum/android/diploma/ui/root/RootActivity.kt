@@ -2,13 +2,12 @@ package ru.practicum.android.diploma.ui.root
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import ru.practicum.android.diploma.BuildConfig
 import ru.practicum.android.diploma.R
 
 class RootActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.fragment_search)
+        setContentView(R.layout.root)
 
         // Пример использования access token для HeadHunter API
         networkRequestExample(accessToken = "")

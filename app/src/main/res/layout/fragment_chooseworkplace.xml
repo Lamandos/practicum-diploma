@@ -16,4 +16,31 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/buttonToFilterSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go to Filter Settings"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonToChooseCountry" />
+
+    <Button
+        android:id="@+id/buttonToChooseCountry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go to Choose Country"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonToChooseRegion" />
+
+    <Button
+        android:id="@+id/buttonToChooseRegion"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go to Choose Region"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/chooseWorkplaceTV" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
