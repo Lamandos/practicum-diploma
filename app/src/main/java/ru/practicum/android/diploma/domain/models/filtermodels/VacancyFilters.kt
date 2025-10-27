@@ -1,4 +1,4 @@
-package ru.practicum.android.diploma.domain.models.filterModels
+package ru.practicum.android.diploma.domain.models.filtermodels
 
 data class VacancyFilters(
     val region: Region? = null,

@@ -1,4 +1,4 @@
-package ru.practicum.android.diploma.data.dto.vacancyDto
+package ru.practicum.android.diploma.data.dto.vacancydto
 
 data class SalaryDto(
     val from: Int?,

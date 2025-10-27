@@ -1,4 +1,4 @@
-package ru.practicum.android.diploma.domain.models.filterModels
+package ru.practicum.android.diploma.domain.models.filtermodels
 
 import ru.practicum.android.diploma.domain.models.vacancy.Country
 

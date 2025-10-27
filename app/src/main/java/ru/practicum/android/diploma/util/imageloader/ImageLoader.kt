@@ -1,4 +1,4 @@
-package ru.practicum.android.diploma.util.imageLoader
+package ru.practicum.android.diploma.util.imageloader
 
 import android.widget.ImageView
 

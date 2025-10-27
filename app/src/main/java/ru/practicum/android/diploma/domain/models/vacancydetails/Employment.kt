@@ -1,4 +1,4 @@
-package ru.practicum.android.diploma.domain.models.vacancyDetails
+package ru.practicum.android.diploma.domain.models.vacancydetails
 
 data class Employment(
     val id: String,

@@ -1,4 +1,4 @@
-package ru.practicum.android.diploma.domain.models.vacancyDetails
+package ru.practicum.android.diploma.domain.models.vacancydetails
 
 import android.provider.ContactsContract
 import ru.practicum.android.diploma.domain.models.vacancy.Area

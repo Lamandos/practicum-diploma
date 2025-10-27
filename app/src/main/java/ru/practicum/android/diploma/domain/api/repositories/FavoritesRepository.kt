@@ -1,7 +1,7 @@
 package ru.practicum.android.diploma.domain.api.repositories
 
 import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
-import ru.practicum.android.diploma.domain.models.vacancyDetails.VacancyDetails
+import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 interface FavoritesRepository {
 
