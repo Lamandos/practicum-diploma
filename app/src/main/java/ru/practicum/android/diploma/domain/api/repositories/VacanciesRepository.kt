@@ -1,6 +1,5 @@
 package ru.practicum.android.diploma.domain.api.repositories
 
-import androidx.annotation.Size
 import ru.practicum.android.diploma.domain.models.FilterModels.Industry
 import ru.practicum.android.diploma.domain.models.FilterModels.Region
 import ru.practicum.android.diploma.domain.models.FilterModels.VacancyFilters
