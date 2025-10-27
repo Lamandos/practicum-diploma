@@ -1,10 +1,10 @@
 package ru.practicum.android.diploma.domain.api.repositories
 
-import ru.practicum.android.diploma.domain.models.FilterModels.Industry
-import ru.practicum.android.diploma.domain.models.FilterModels.Region
-import ru.practicum.android.diploma.domain.models.FilterModels.VacancyFilters
-import ru.practicum.android.diploma.domain.models.Vacancy.Vacancy
-import ru.practicum.android.diploma.domain.models.VacancyDetails.VacancyDetails
+import ru.practicum.android.diploma.domain.models.filterModels.Industry
+import ru.practicum.android.diploma.domain.models.filterModels.Region
+import ru.practicum.android.diploma.domain.models.filterModels.VacancyFilters
+import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
+import ru.practicum.android.diploma.domain.models.vacancyDetails.VacancyDetails
 
 interface VacanciesRepository {
     // поиск вакансий
