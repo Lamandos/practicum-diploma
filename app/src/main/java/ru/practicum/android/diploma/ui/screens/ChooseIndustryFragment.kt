@@ -1,4 +1,5 @@
 package ru.practicum.android.diploma.ui.screens
+
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment

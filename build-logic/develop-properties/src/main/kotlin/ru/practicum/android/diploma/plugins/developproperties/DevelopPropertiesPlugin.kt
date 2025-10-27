@@ -6,7 +6,6 @@ import org.gradle.kotlin.dsl.create
 import java.io.StringReader
 import java.util.*
 
-
 /**
  * Хранилище значений, прочитанных из файла develop.properties
  *
