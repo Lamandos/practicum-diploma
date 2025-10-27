@@ -7,5 +7,5 @@ data class VacancyDto(
     val employer: EmployerDto,
     val area: AreaDto,
     val published_at: String,
-    val snippet: SnippetDto?
+    val snippet: SnippetDto?,
 )

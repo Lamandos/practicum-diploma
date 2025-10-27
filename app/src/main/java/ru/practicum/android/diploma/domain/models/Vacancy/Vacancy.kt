@@ -7,5 +7,5 @@ data class Vacancy(
     val employer: Employer,
     val area: Area,
     val publishedAt: String,
-    val snippet: Snippet?
+    val snippet: Snippet?,
 )

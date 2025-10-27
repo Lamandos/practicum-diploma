@@ -8,24 +8,24 @@ import ru.practicum.android.diploma.domain.models.Vacancy.Vacancy
 import ru.practicum.android.diploma.domain.models.VacancyDetails.VacancyDetails
 
 interface VacanciesRepository {
-    //поиск вакансий
+    // поиск вакансий
 
     suspend fun searchVacancies(
-        query: String, //поисковый запрос
+        query: String, // поисковый запрос
         page: Int = 1, // номер страницы для постраничной загрузки
         pageSize: Int,
-        filters: VacancyFilters?
+        filters: VacancyFilters?,
     ): Result<List<Vacancy>>
 
-    //получение деталей вакансии
+    // получение деталей вакансии
     suspend fun getVacancyDetails(vacancyId: String): Result<VacancyDetails>
 
-    //получение списка отраслей
+    // получение списка отраслей
     suspend fun getIndustries(): Result<List<Industry>>
 
-    //получение списка регионов
+    // получение списка регионов
     suspend fun getRegions(countryCode: String? = null): Result<List<Region>>
 
-    //проверка доступности сети
+    // проверка доступности сети
     suspend fun isNetworkAvailable(): Boolean
 }

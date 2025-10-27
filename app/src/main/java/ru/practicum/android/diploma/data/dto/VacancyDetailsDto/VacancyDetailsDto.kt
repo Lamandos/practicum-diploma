@@ -12,5 +12,5 @@ data class VacancyDetailsDto(
     val description: String,
     val key_skills: List<KeySkillDto>,
     val experience: ExperienceDto?,
-    val employment: EmploymentDto?
+    val employment: EmploymentDto?,
 )

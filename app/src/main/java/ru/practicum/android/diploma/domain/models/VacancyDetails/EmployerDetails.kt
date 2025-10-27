@@ -1,9 +1,9 @@
 package ru.practicum.android.diploma.domain.models.VacancyDetails
 
-data class EmployerDetails (
+data class EmployerDetails(
     val id: String,
     val name: String,
     val logoUrls: String,
     val description: String?,
-    val siteUrl: String?
+    val siteUrl: String?,
 )

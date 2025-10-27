@@ -5,5 +5,5 @@ data class VacancyFilters(
     val industry: Industry? = null,
     val salary: Int? = null,
     val hideWithoutSalary: Boolean = false,
-    val currency: String = "RUR"
+    val currency: String = "RUR",
 )

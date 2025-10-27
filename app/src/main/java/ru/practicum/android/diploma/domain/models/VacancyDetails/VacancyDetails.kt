@@ -14,5 +14,5 @@ data class VacancyDetails(
     val keySkills: List<KeySkill>,
     val experience: Expirience?,
     val employment: Employment?,
-    val contacts: ContactsContract.Contacts?
+    val contacts: ContactsContract.Contacts?,
 )
