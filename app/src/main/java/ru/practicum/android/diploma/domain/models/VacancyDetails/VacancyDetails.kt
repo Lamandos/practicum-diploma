@@ -12,7 +12,7 @@ data class VacancyDetails(
     val area: Area,
     val description: String, // HTML content
     val keySkills: List<KeySkill>,
-    val experience: Experience?,
+    val experience: Expirience?,
     val employment: Employment?,
     val contacts: ContactsContract.Contacts?
 )
