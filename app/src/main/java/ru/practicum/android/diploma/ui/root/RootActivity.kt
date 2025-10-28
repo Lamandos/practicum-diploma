@@ -17,6 +17,8 @@ import androidx.navigation.ui.NavigationUI
 import com.google.android.material.bottomnavigation.BottomNavigationItemView
 import com.google.android.material.bottomnavigation.BottomNavigationMenuView
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import java.lang.ClassCastException
+import java.lang.NullPointerException
 import ru.practicum.android.diploma.R
 
 class RootActivity : AppCompatActivity() {
@@ -29,6 +31,14 @@ class RootActivity : AppCompatActivity() {
 
     private val bottomNavigationView: BottomNavigationView by lazy {
         findViewById(R.id.bottom_nav)
+    }
+
+    companion object {
+        private const val TAG = "BottomNav"
+        private const val FONT_FAMILY = "ys_display_medium"
+        private const val DELAY_SHORT = 50L
+        private const val DELAY_MEDIUM = 100L
+        private const val DELAY_LONG = 150L
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,17 +54,17 @@ class RootActivity : AppCompatActivity() {
 
         NavigationUI.setupWithNavController(bottomNavigationView, navController)
 
-        // Убираем установку фона, так как он задается через стиль
-        // bottomNavigationView.itemBackground = ContextCompat.getDrawable(this, android.R.color.transparent)
-
-        // Настраиваем удаление жирного шрифта
         setupBoldTextRemover()
 
         // Первоначальное удаление жирности
         bottomNavigationView.postDelayed({
             removeBoldTextForcefully()
-        }, 100)
+        }, DELAY_MEDIUM)
 
+        setupNavigationListener()
+    }
+
+    private fun setupNavigationListener() {
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
                 R.id.filterSettingsFragment, R.id.chooseRegionFragment, R.id.chooseCountryFragment,
@@ -77,7 +87,7 @@ class RootActivity : AppCompatActivity() {
             // Принудительно убираем жирность после задержки
             bottomNavigationView.postDelayed({
                 removeBoldTextForcefully()
-            }, 50)
+            }, DELAY_SHORT)
 
             true
         }
@@ -96,20 +106,22 @@ class RootActivity : AppCompatActivity() {
                 for (i in 0 until menu.childCount) {
                     val itemView = menu.getChildAt(i) as? BottomNavigationItemView
                     itemView?.let { item ->
-                        // Метод 1: Через стандартные ID
                         removeBoldFromItemView(item)
-
-                        // Метод 2: Через поиск всех TextView
                         findAndRemoveBoldFromView(item)
                     }
                 }
             }
-        } catch (e: Exception) {
-            Log.e("BottomNav", "Error removing bold text", e)
+        } catch (e: ClassCastException) {
+            Log.e(TAG, "Class cast exception in removeBoldTextForcefully", e)
+        } catch (e: NullPointerException) {
+            Log.e(TAG, "Null pointer exception in removeBoldTextForcefully", e)
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "Illegal state exception in removeBoldTextForcefully", e)
         }
     }
 
-    private fun removeBoldFromItemView(@SuppressLint("RestrictedApi") itemView: BottomNavigationItemView) {
+    @SuppressLint("RestrictedApi")
+    private fun removeBoldFromItemView(itemView: BottomNavigationItemView) {
         try {
             // Большой текст (активный)
             val largeLabel = itemView.findViewById<TextView>(
@@ -120,14 +132,16 @@ class RootActivity : AppCompatActivity() {
                 com.google.android.material.R.id.navigation_bar_item_small_label_view
             )
 
-            largeLabel?.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL), Typeface.NORMAL)
-            smallLabel?.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL), Typeface.NORMAL)
+            largeLabel?.setTypeface(Typeface.create(FONT_FAMILY, Typeface.NORMAL), Typeface.NORMAL)
+            smallLabel?.setTypeface(Typeface.create(FONT_FAMILY, Typeface.NORMAL), Typeface.NORMAL)
 
             // Дополнительно убираем fake bold
             largeLabel?.paint?.isFakeBoldText = false
             smallLabel?.paint?.isFakeBoldText = false
-        } catch (e: Exception) {
-            Log.e("BottomNav", "Error in removeBoldFromItemView", e)
+        } catch (e: NullPointerException) {
+            Log.e(TAG, "Null pointer exception in removeBoldFromItemView", e)
+        } catch (e: IllegalArgumentException) {
+            Log.e(TAG, "Illegal argument exception in removeBoldFromItemView", e)
         }
     }
 
@@ -140,11 +154,13 @@ class RootActivity : AppCompatActivity() {
                 }
             } else if (view is TextView) {
                 // Нашли TextView - убираем жирность
-                view.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL), Typeface.NORMAL)
+                view.setTypeface(Typeface.create(FONT_FAMILY, Typeface.NORMAL), Typeface.NORMAL)
                 view.paint.isFakeBoldText = false
             }
-        } catch (e: Exception) {
-            Log.e("BottomNav", "Error in findAndRemoveBoldFromView", e)
+        } catch (e: NullPointerException) {
+            Log.e(TAG, "Null pointer exception in findAndRemoveBoldFromView", e)
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "Illegal state exception in findAndRemoveBoldFromView", e)
         }
     }
 
@@ -157,7 +173,7 @@ class RootActivity : AppCompatActivity() {
         // Убираем жирность при каждом показе
         bottomNavigationView.postDelayed({
             removeBoldTextForcefully()
-        }, 100)
+        }, DELAY_MEDIUM)
     }
 
     override fun onResume() {
@@ -165,6 +181,6 @@ class RootActivity : AppCompatActivity() {
         // Убираем жирность при возвращении в активность
         bottomNavigationView.postDelayed({
             removeBoldTextForcefully()
-        }, 150)
+        }, DELAY_LONG)
     }
 }
