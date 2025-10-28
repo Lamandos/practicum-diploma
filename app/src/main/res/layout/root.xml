@@ -25,5 +25,6 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:labelVisibilityMode="labeled"
         style="@style/BotNav"
-        app:menu="@menu/bottom_nav_tab"/>
+        app:menu="@menu/bottom_nav_tab"
+        app:materialThemeOverlay="@style/ThemeOverlay.BottomNav.NoBold"/>
 </LinearLayout>

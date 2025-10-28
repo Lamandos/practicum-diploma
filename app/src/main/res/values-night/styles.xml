@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="ScreenBackgroundColorAndText"  >
+    <style name="ScreenBackgroundColorAndText">
         <item name="android:background">@color/background_color</item>
         <item name="android:textColor">@color/namescreen_color</item>
     </style>
@@ -11,7 +11,9 @@
         <item name="itemIconTint">@color/bottom_nav_icon_tint</item>
         <item name="itemTextColor">@color/bottom_nav_text_color</item>
         <item name="android:textSize">12sp</item>
+    </style>
+    <style name="ThemeOverlay.BottomNav.NoBold" parent="">
+        <item name="android:textStyle">normal</item>
         <item name="android:fontFamily">@font/ys_display_regular</item>
     </style>
-
 </resources>
