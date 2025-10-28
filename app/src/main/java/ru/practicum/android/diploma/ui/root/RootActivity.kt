@@ -41,7 +41,8 @@ class RootActivity : AppCompatActivity() {
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
-                R.id.filterSettingsFragment, R.id.chooseRegionFragment, R.id.chooseCountryFragment, R.id.chooseIndustryFragment, R.id.chooseWorkPlaceFragment, R.id.vacancyFragment2 -> {
+                R.id.filterSettingsFragment, R.id.chooseRegionFragment, R.id.chooseCountryFragment,
+                R.id.chooseIndustryFragment, R.id.chooseWorkPlaceFragment, R.id.vacancyFragment2 -> {
                     hideBottomNavigationView()
                 }
                 else -> {
