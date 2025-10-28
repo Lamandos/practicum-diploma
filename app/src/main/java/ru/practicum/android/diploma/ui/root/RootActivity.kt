@@ -14,8 +14,16 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import ru.practicum.android.diploma.R
 
 class RootActivity : AppCompatActivity() {
-    private lateinit var navController: NavController
-    private lateinit var bottomNavigationView: BottomNavigationView
+
+    private val navController: NavController by lazy {
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        navHostFragment.navController
+    }
+
+    private val bottomNavigationView: BottomNavigationView by lazy {
+        findViewById(R.id.bottom_nav)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,17 +35,10 @@ class RootActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
             insets
         }
-        bottomNavigationView = findViewById(R.id.bottom_nav)
 
-        val navHostFragment = supportFragmentManager
-            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
-        navController = navHostFragment.navController
-
-        findViewById<BottomNavigationView>(R.id.bottom_nav)?.let {
-            NavigationUI.setupWithNavController(it, navController)
-            it.itemBackground = ContextCompat.getDrawable(this, android.R.color.transparent)
-        }
         NavigationUI.setupWithNavController(bottomNavigationView, navController)
+        bottomNavigationView.itemBackground =
+            ContextCompat.getDrawable(this, android.R.color.transparent)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
@@ -51,6 +52,7 @@ class RootActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun hideBottomNavigationView() {
         bottomNavigationView.visibility = View.GONE
     }
