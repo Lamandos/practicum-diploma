@@ -22,6 +22,7 @@ import java.lang.ClassCastException
 import java.lang.IllegalArgumentException
 import java.lang.IllegalStateException
 import java.lang.NullPointerException
+import java.lang.IndexOutOfBoundsException
 
 class RootActivity : AppCompatActivity() {
 
@@ -111,6 +112,8 @@ class RootActivity : AppCompatActivity() {
             Log.e(TAG, "Null pointer exception in removeBoldTextForcefully", e)
         } catch (e: IllegalStateException) {
             Log.e(TAG, "Illegal state exception in removeBoldTextForcefully", e)
+        } catch (e: IndexOutOfBoundsException) {
+            Log.e(TAG, "Index out of bounds exception in removeBoldTextForcefully", e)
         }
     }
 
@@ -170,12 +173,20 @@ class RootActivity : AppCompatActivity() {
             Log.e(TAG, "Null pointer exception in findAndRemoveBoldFromView", e)
         } catch (e: IllegalStateException) {
             Log.e(TAG, "Illegal state exception in findAndRemoveBoldFromView", e)
+        } catch (e: IndexOutOfBoundsException) {
+            Log.e(TAG, "Index out of bounds exception in findAndRemoveBoldFromView", e)
         }
     }
 
     private fun processViewGroup(viewGroup: ViewGroup) {
-        for (i in 0 until viewGroup.childCount) {
-            findAndRemoveBoldFromView(viewGroup.getChildAt(i))
+        try {
+            for (i in 0 until viewGroup.childCount) {
+                findAndRemoveBoldFromView(viewGroup.getChildAt(i))
+            }
+        } catch (e: IndexOutOfBoundsException) {
+            Log.e(TAG, "Index out of bounds exception in processViewGroup", e)
+        } catch (e: NullPointerException) {
+            Log.e(TAG, "Null pointer exception in processViewGroup", e)
         }
     }
 
