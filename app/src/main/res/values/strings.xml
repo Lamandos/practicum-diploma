@@ -9,4 +9,7 @@
     <string name="vacancy_layout">Вакансия</string>
     <string name="favorites">Избранное</string>
     <string name="team">Команда</string>
+    <string name="Main">Главная</string>
+    <string name="Favorites">Избранное</string>
+    <string name="Team">Команда</string>
 </resources>
