@@ -1,15 +1,21 @@
 package ru.practicum.android.diploma.ui.root
 
+import android.annotation.SuppressLint
+import android.graphics.Typeface
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
+import com.google.android.material.bottomnavigation.BottomNavigationItemView
+import com.google.android.material.bottomnavigation.BottomNavigationMenuView
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import ru.practicum.android.diploma.R
 
@@ -37,8 +43,17 @@ class RootActivity : AppCompatActivity() {
         }
 
         NavigationUI.setupWithNavController(bottomNavigationView, navController)
-        bottomNavigationView.itemBackground =
-            ContextCompat.getDrawable(this, android.R.color.transparent)
+
+        // Убираем установку фона, так как он задается через стиль
+        // bottomNavigationView.itemBackground = ContextCompat.getDrawable(this, android.R.color.transparent)
+
+        // Настраиваем удаление жирного шрифта
+        setupBoldTextRemover()
+
+        // Первоначальное удаление жирности
+        bottomNavigationView.postDelayed({
+            removeBoldTextForcefully()
+        }, 100)
 
         navController.addOnDestinationChangedListener { _, destination, _ ->
             when (destination.id) {
@@ -53,11 +68,103 @@ class RootActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupBoldTextRemover() {
+        // Слушатель изменений выбора
+        bottomNavigationView.setOnItemSelectedListener { item ->
+            // Даем навигации обработать клик
+            NavigationUI.onNavDestinationSelected(item, navController)
+
+            // Принудительно убираем жирность после задержки
+            bottomNavigationView.postDelayed({
+                removeBoldTextForcefully()
+            }, 50)
+
+            true
+        }
+
+        // Слушатель повторного выбора
+        bottomNavigationView.setOnItemReselectedListener { item ->
+            removeBoldTextForcefully()
+        }
+    }
+
+    @SuppressLint("RestrictedApi")
+    private fun removeBoldTextForcefully() {
+        try {
+            val menuView = bottomNavigationView.getChildAt(0) as? BottomNavigationMenuView
+            menuView?.let { menu ->
+                for (i in 0 until menu.childCount) {
+                    val itemView = menu.getChildAt(i) as? BottomNavigationItemView
+                    itemView?.let { item ->
+                        // Метод 1: Через стандартные ID
+                        removeBoldFromItemView(item)
+
+                        // Метод 2: Через поиск всех TextView
+                        findAndRemoveBoldFromView(item)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("BottomNav", "Error removing bold text", e)
+        }
+    }
+
+    private fun removeBoldFromItemView(@SuppressLint("RestrictedApi") itemView: BottomNavigationItemView) {
+        try {
+            // Большой текст (активный)
+            val largeLabel = itemView.findViewById<TextView>(
+                com.google.android.material.R.id.navigation_bar_item_large_label_view
+            )
+            // Малый текст (неактивный)
+            val smallLabel = itemView.findViewById<TextView>(
+                com.google.android.material.R.id.navigation_bar_item_small_label_view
+            )
+
+            largeLabel?.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL), Typeface.NORMAL)
+            smallLabel?.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL), Typeface.NORMAL)
+
+            // Дополнительно убираем fake bold
+            largeLabel?.paint?.isFakeBoldText = false
+            smallLabel?.paint?.isFakeBoldText = false
+        } catch (e: Exception) {
+            Log.e("BottomNav", "Error in removeBoldFromItemView", e)
+        }
+    }
+
+    private fun findAndRemoveBoldFromView(view: View) {
+        try {
+            if (view is ViewGroup) {
+                // Рекурсивно ищем во всех child views
+                for (i in 0 until view.childCount) {
+                    findAndRemoveBoldFromView(view.getChildAt(i))
+                }
+            } else if (view is TextView) {
+                // Нашли TextView - убираем жирность
+                view.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL), Typeface.NORMAL)
+                view.paint.isFakeBoldText = false
+            }
+        } catch (e: Exception) {
+            Log.e("BottomNav", "Error in findAndRemoveBoldFromView", e)
+        }
+    }
+
     private fun hideBottomNavigationView() {
         bottomNavigationView.visibility = View.GONE
     }
 
     private fun showBottomNavigationView() {
         bottomNavigationView.visibility = View.VISIBLE
+        // Убираем жирность при каждом показе
+        bottomNavigationView.postDelayed({
+            removeBoldTextForcefully()
+        }, 100)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Убираем жирность при возвращении в активность
+        bottomNavigationView.postDelayed({
+            removeBoldTextForcefully()
+        }, 150)
     }
 }
