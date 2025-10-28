@@ -14,4 +14,8 @@
         <item name="android:fontFamily">@font/ys_display_regular</item>
     </style>
 
+    <style name="TextAppearance.BottomNav.Normal" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textStyle">normal</item>
+    </style>
+
 </resources>

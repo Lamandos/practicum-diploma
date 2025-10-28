@@ -25,5 +25,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:labelVisibilityMode="labeled"
         style="@style/BotNav"
-        app:menu="@menu/bottom_nav_tab"/>
+        app:menu="@menu/bottom_nav_tab"
+        app:itemTextAppearanceActive="@style/TextAppearance.BottomNav.Normal"
+        app:itemTextAppearanceInactive="@style/TextAppearance.BottomNav.Normal"/>
 </LinearLayout>
