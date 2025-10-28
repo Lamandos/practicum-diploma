@@ -26,6 +26,5 @@
         app:labelVisibilityMode="labeled"
         style="@style/BotNav"
         app:menu="@menu/bottom_nav_tab"
-        app:itemTextAppearanceActive="@style/TextAppearance.BottomNav.Normal"
-        app:itemTextAppearanceInactive="@style/TextAppearance.BottomNav.Normal"/>
+        app:materialThemeOverlay="@style/ThemeOverlay.BottomNav.NoBold"/>
 </LinearLayout>
