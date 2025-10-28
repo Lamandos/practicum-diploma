@@ -17,9 +17,11 @@ import androidx.navigation.ui.NavigationUI
 import com.google.android.material.bottomnavigation.BottomNavigationItemView
 import com.google.android.material.bottomnavigation.BottomNavigationMenuView
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import java.lang.ClassCastException
-import java.lang.NullPointerException
 import ru.practicum.android.diploma.R
+import java.lang.ClassCastException
+import java.lang.IllegalArgumentException
+import java.lang.IllegalStateException
+import java.lang.NullPointerException
 
 class RootActivity : AppCompatActivity() {
 
@@ -102,21 +104,31 @@ class RootActivity : AppCompatActivity() {
     private fun removeBoldTextForcefully() {
         try {
             val menuView = bottomNavigationView.getChildAt(0) as? BottomNavigationMenuView
-            menuView?.let { menu ->
-                for (i in 0 until menu.childCount) {
-                    val itemView = menu.getChildAt(i) as? BottomNavigationItemView
-                    itemView?.let { item ->
-                        removeBoldFromItemView(item)
-                        findAndRemoveBoldFromView(item)
-                    }
-                }
-            }
+            processMenuView(menuView)
         } catch (e: ClassCastException) {
             Log.e(TAG, "Class cast exception in removeBoldTextForcefully", e)
         } catch (e: NullPointerException) {
             Log.e(TAG, "Null pointer exception in removeBoldTextForcefully", e)
         } catch (e: IllegalStateException) {
             Log.e(TAG, "Illegal state exception in removeBoldTextForcefully", e)
+        }
+    }
+
+    @SuppressLint("RestrictedApi")
+    private fun processMenuView(menuView: BottomNavigationMenuView?) {
+        menuView?.let { menu ->
+            for (i in 0 until menu.childCount) {
+                val itemView = menu.getChildAt(i) as? BottomNavigationItemView
+                processItemView(itemView)
+            }
+        }
+    }
+
+    @SuppressLint("RestrictedApi")
+    private fun processItemView(itemView: BottomNavigationItemView?) {
+        itemView?.let { item ->
+            removeBoldFromItemView(item)
+            findAndRemoveBoldFromView(item)
         }
     }
 
@@ -132,12 +144,8 @@ class RootActivity : AppCompatActivity() {
                 com.google.android.material.R.id.navigation_bar_item_small_label_view
             )
 
-            largeLabel?.setTypeface(Typeface.create(FONT_FAMILY, Typeface.NORMAL), Typeface.NORMAL)
-            smallLabel?.setTypeface(Typeface.create(FONT_FAMILY, Typeface.NORMAL), Typeface.NORMAL)
-
-            // Дополнительно убираем fake bold
-            largeLabel?.paint?.isFakeBoldText = false
-            smallLabel?.paint?.isFakeBoldText = false
+            applyNormalTypeface(largeLabel)
+            applyNormalTypeface(smallLabel)
         } catch (e: NullPointerException) {
             Log.e(TAG, "Null pointer exception in removeBoldFromItemView", e)
         } catch (e: IllegalArgumentException) {
@@ -145,22 +153,29 @@ class RootActivity : AppCompatActivity() {
         }
     }
 
+    private fun applyNormalTypeface(textView: TextView?) {
+        textView?.let {
+            it.setTypeface(Typeface.create(FONT_FAMILY, Typeface.NORMAL), Typeface.NORMAL)
+            it.paint.isFakeBoldText = false
+        }
+    }
+
     private fun findAndRemoveBoldFromView(view: View) {
         try {
-            if (view is ViewGroup) {
-                // Рекурсивно ищем во всех child views
-                for (i in 0 until view.childCount) {
-                    findAndRemoveBoldFromView(view.getChildAt(i))
-                }
-            } else if (view is TextView) {
-                // Нашли TextView - убираем жирность
-                view.setTypeface(Typeface.create(FONT_FAMILY, Typeface.NORMAL), Typeface.NORMAL)
-                view.paint.isFakeBoldText = false
+            when (view) {
+                is ViewGroup -> processViewGroup(view)
+                is TextView -> applyNormalTypeface(view)
             }
         } catch (e: NullPointerException) {
             Log.e(TAG, "Null pointer exception in findAndRemoveBoldFromView", e)
         } catch (e: IllegalStateException) {
             Log.e(TAG, "Illegal state exception in findAndRemoveBoldFromView", e)
+        }
+    }
+
+    private fun processViewGroup(viewGroup: ViewGroup) {
+        for (i in 0 until viewGroup.childCount) {
+            findAndRemoveBoldFromView(viewGroup.getChildAt(i))
         }
     }
 
