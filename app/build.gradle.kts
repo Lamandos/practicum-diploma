@@ -45,7 +45,7 @@ android {
     }
 }
 object AppConfig {
-    const val MIN_SDK_VERSION = 27
+    const val MIN_SDK_VERSION = 26
 }
 dependencies {
     implementation(libs.androidX.core)
