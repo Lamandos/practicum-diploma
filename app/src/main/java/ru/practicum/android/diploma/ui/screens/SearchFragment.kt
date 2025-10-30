@@ -21,7 +21,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
         _binding = FragmentSearchBinding.bind(view)
 
-        //setupNavigationWithDebounce()
+        // setupNavigationWithDebounce()
     }
 
 //    private fun setupNavigationWithDebounce() {
