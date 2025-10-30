@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.root.RootActivity">
+
+    <TextView
+        android:id="@+id/searchVacanciesTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/search_vacancies"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/buttonToVacancy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go to Vacancy"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonToFavourites" />
+
+    <Button
+        android:id="@+id/buttonToFavourites"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go to Favourites"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/searchVacanciesTV" />
+
+    <Button
+        android:id="@+id/buttonToTeam"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go to Team"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonToFilterSettings" />
+
+    <Button
+        android:id="@+id/buttonToFilterSettings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Go to Filter Settings"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonToVacancy" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
