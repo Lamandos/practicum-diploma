@@ -1,14 +1,15 @@
 package ru.practicum.android.diploma.domain.api.repositories
 
-import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
-import ru.practicum.android.diploma.domain.models.vacancy.Country
+import android.graphics.Region
+import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
+
 
 interface FilterRepository {
     // сохранение фильтров
-    suspend fun saveFilters(filters: VacancyFilters)
+    suspend fun saveFilters(filters: FilterIndustry)
 
     // получение сохраненных фильтров
-    suspend fun getFilters(): VacancyFilters?
+    suspend fun getFilters(): FilterIndustry
 
     // сброс фильтров
     suspend fun clearFilters()
@@ -17,8 +18,8 @@ interface FilterRepository {
     suspend fun hasActiveFilters(): Boolean
 
     // сохранение выбранной страны
-    suspend fun saveSelectedCountry(country: Country?)
+    suspend fun saveSelectedCountry(country: Region)
 
     // солучение выбранной страны
-    suspend fun getSelectedCountry(): Country?
+    suspend fun getSelectedCountry(): Region
 }

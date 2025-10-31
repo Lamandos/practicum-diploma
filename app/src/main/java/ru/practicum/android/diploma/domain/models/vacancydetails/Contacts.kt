@@ -1,9 +1,12 @@
 package ru.practicum.android.diploma.domain.models.vacancydetails
 
-import android.provider.ContactsContract
-
-data class Contacts(
+data class Contacts (
+    val id: String,
     val name: String?,
     val email: String?,
-    val phones: List<ContactsContract.CommonDataKinds.Phone>?,
-)
+    val phones: List<Phone>?
+){
+    data class Phone(
+        val number: String
+    )
+}

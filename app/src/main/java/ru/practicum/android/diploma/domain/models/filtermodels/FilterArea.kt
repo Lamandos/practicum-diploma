@@ -1,7 +1,8 @@
 package ru.practicum.android.diploma.domain.models.filtermodels
 
-data class Industry(
+data class FilterArea(
     val id: String,
     val name: String,
-    val parentId: String?,
+    val parentId: Int,
+    val areas: Array<FilterArea>
 )

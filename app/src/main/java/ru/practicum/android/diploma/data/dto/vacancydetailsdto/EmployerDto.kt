@@ -1,5 +1,7 @@
 package ru.practicum.android.diploma.data.dto.vacancydetailsdto
 
-data class KeySkillDto(
+data class EmployerDto(
+    val id: String,
     val name: String,
+    val logo: String
 )
