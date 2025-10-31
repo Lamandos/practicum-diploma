@@ -4,16 +4,346 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    >
+    tools:context=".ui.root.RootActivity">
 
-    <TextView
-        android:id="@+id/vacancyTV"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:id="@+id/vac_header"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/pad_4"
+            style="@style/vac_btns"
+            android:src="@drawable/back_icon" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginStart="@dimen/pad_4"
+            style="@style/HeaderStyle"
+            android:text="@string/vacancy_layout"
+            android:layout_gravity="center_vertical" />
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1">
+        </FrameLayout>
+
+        <ImageView
+            android:id="@+id/share_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/margin_half_8"
+            style="@style/vac_btns"
+            android:src="@drawable/share_icon"
+            android:layout_gravity="center_vertical"/>
+
+        <ImageView
+            android:id="@+id/favorites_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/margin_half_8"
+            style="@style/vac_btns"
+            android:src="@drawable/favorite_icon"
+            android:layout_gravity="center_vertical"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/full_vac_info"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/vacancy_layout"
+        android:orientation="vertical"
+        android:layout_marginTop="@dimen/margin_def_16"
+        android:layout_marginStart="@dimen/margin_def_16"
+        android:layout_marginEnd="@dimen/margin_def_16"
+        app:layout_constraintTop_toBottomOf="@+id/vac_header">
+
+        <LinearLayout
+            android:id="@+id/vac_name_sal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintTop_toBottomOf="@+id/vac_header">
+
+            <TextView
+                android:id="@+id/vac_name"
+                style="@style/vac_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginTop="@dimen/margin_half_8"
+                android:fontFamily="@font/ys_display_bold"
+                android:text="Ardroid-разработчик"
+                android:textSize="32sp" />
+
+            <TextView
+                android:id="@+id/vac_salary"
+                style="@style/vac_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginBottom="@dimen/margin_half_8"
+                android:fontFamily="@font/ys_display_medium"
+                android:text="от 100 000 ₽"
+                android:textSize="22sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/vac_employer_region"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_def_16"
+            android:background="@drawable/vac_info_bg"
+            android:orientation="horizontal"
+            app:layout_constraintTop_toBottomOf="@+id/vac_name_sal">
+
+            <ImageView
+                android:id="@+id/vac_img"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:layout_marginStart="@dimen/margin_def_16"
+                android:layout_marginTop="@dimen/margin_def_16"
+                android:layout_marginEnd="@dimen/margin_half_8"
+                android:layout_marginBottom="@dimen/margin_def_16"
+                android:background="@drawable/vac_icon_border"
+                android:scaleType="centerInside"
+                android:src="@drawable/placeholder" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/vac_employer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginTop="@dimen/margin_def_16"
+                    android:layout_marginEnd="@dimen/margin_def_16"
+                    android:fontFamily="@font/ys_display_medium"
+                    android:textColor="@color/yp_black"
+                    android:text="Еда"
+                    android:textSize="22sp" />
+
+                <TextView
+                    android:id="@+id/vac_region"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="@dimen/margin_def_16"
+                    android:layout_marginBottom="19dp"
+                    android:textColor="@color/yp_black"
+                    android:fontFamily="@font/ys_display_regular"
+                    android:text="Москва"
+                    android:textSize="16sp" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/experience_title"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:fontFamily="@font/ys_display_medium"
+            android:text="@string/experience"
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@+id/vac_employer_region" />
+
+        <TextView
+            android:id="@+id/experience_info"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/pad_4"
+            android:fontFamily="@font/ys_display_regular"
+            android:text="От 1 года до 3 лет"
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@+id/experience_title" />
+
+        <TextView
+            android:id="@+id/schedule_info"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_half_8"
+            android:fontFamily="@font/ys_display_regular"
+            android:text="Полная занятость, Удаленная работа"
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@+id/experience_info" />
+
+        <TextView
+            android:id="@+id/description_title"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:fontFamily="@font/ys_display_medium"
+            android:text="@string/vac_description"
+            android:textSize="22sp"
+            app:layout_constraintTop_toBottomOf="@+id/schedule_info" />
+
+        <TextView
+            android:id="@+id/responsibilities_title"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_def_16"
+            android:fontFamily="@font/ys_display_medium"
+            android:text="@string/responsibilities"
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@+id/description_title" />
+
+        <TextView
+            android:id="@+id/responsibilities_info"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ys_display_regular"
+            android:text="Список обязанностей. Точки разделения надо делать в коде."
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@+id/responsibilities_title" />
+
+        <TextView
+            android:id="@+id/requirements_title"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_def_16"
+            android:fontFamily="@font/ys_display_medium"
+            android:text="@string/requirements"
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@+id/responsibilities_info" />
+
+        <TextView
+            android:id="@+id/requirements_info"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ys_display_regular"
+            android:text="Список требований. Точки разделения надо делать в коде."
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@+id/requirements_title" />
+
+        <TextView
+            android:id="@+id/terms_title"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_def_16"
+            android:fontFamily="@font/ys_display_medium"
+            android:text="@string/Terms"
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@+id/requirements_info" />
+
+        <TextView
+            android:id="@+id/terms_info"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/ys_display_regular"
+            android:text="Список условий. Точки разделения надо делать в коде."
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@+id/terms_title" />
+
+        <TextView
+            android:id="@+id/skills_title"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:fontFamily="@font/ys_display_medium"
+            android:text="@string/skills"
+            android:textSize="22sp"
+            app:layout_constraintTop_toBottomOf="@+id/terms_info" />
+
+        <TextView
+            android:id="@+id/skills_info"
+            style="@style/vac_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_def_16"
+            android:fontFamily="@font/ys_display_regular"
+            android:text="Список условий. Точки разделения надо делать в коде."
+            android:textSize="16sp"
+            app:layout_constraintTop_toBottomOf="@+id/skills_title" />
+    </LinearLayout>
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="@dimen/prog_size"
+        android:layout_height="@dimen/prog_size"
+        android:layout_gravity="center"
+        android:indeterminateTint="@color/yp_blue"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/vac_header" />
+
+    <LinearLayout
+        android:id="@+id/vac_del_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/vac_header">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/vac_deleted" />
+
+        <TextView
+            style="@style/error_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_def_16"
+            android:text="@string/vac_deleted"
+            android:gravity="center"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/server_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/vac_header">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/server_error_vac" />
+
+        <TextView
+            style="@style/error_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_def_16"
+            android:gravity="center_horizontal"
+            android:text="@string/Server_error" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
