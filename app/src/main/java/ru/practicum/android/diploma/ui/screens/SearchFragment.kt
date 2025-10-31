@@ -21,40 +21,40 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
         _binding = FragmentSearchBinding.bind(view)
 
-        setupNavigationWithDebounce()
+        // setupNavigationWithDebounce()
     }
 
-    private fun setupNavigationWithDebounce() {
-        // Все переходы защищены от множественных кликов
-
-        // Переход на VacancyFragment
-        binding.buttonToVacancy.setOnClickListener {
-            clickDebounce.submit {
-                findNavController().navigate(R.id.action_searchFragment_to_vacancyFragment2)
-            }
-        }
-
-        // Переход на FavouritesFragment
-        binding.buttonToFavourites.setOnClickListener {
-            clickDebounce.submit {
-                findNavController().navigate(R.id.action_searchFragment_to_favouritesFragment)
-            }
-        }
-
-        // Переход на TeamFragment
-        binding.buttonToTeam.setOnClickListener {
-            clickDebounce.submit {
-                findNavController().navigate(R.id.action_searchFragment_to_teamFragment)
-            }
-        }
-
-        // Переход на FilterSettingsFragment
-        binding.buttonToFilterSettings.setOnClickListener {
-            clickDebounce.submit {
-                findNavController().navigate(R.id.action_searchFragment_to_filterSettingsFragment)
-            }
-        }
-    }
+//    private fun setupNavigationWithDebounce() {
+//        // Все переходы защищены от множественных кликов
+//
+//        // Переход на VacancyFragment
+//        binding.buttonToVacancy.setOnClickListener {
+//            clickDebounce.submit {
+//                findNavController().navigate(R.id.action_searchFragment_to_vacancyFragment2)
+//            }
+//        }
+//
+//        // Переход на FavouritesFragment
+//        binding.buttonToFavourites.setOnClickListener {
+//            clickDebounce.submit {
+//                findNavController().navigate(R.id.action_searchFragment_to_favouritesFragment)
+//            }
+//        }
+//
+//        // Переход на TeamFragment
+//        binding.buttonToTeam.setOnClickListener {
+//            clickDebounce.submit {
+//                findNavController().navigate(R.id.action_searchFragment_to_teamFragment)
+//            }
+//        }
+//
+//        // Переход на FilterSettingsFragment
+//        binding.buttonToFilterSettings.setOnClickListener {
+//            clickDebounce.submit {
+//                findNavController().navigate(R.id.action_searchFragment_to_filterSettingsFragment)
+//            }
+//        }
+//    }
 
     override fun onPause() {
         super.onPause()
