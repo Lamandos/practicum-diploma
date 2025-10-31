@@ -1,6 +1,5 @@
 package ru.practicum.android.diploma.domain.api.repositories
 
-
 import android.graphics.Region
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
@@ -11,7 +10,7 @@ interface VacanciesRepository {
         query: String, // поисковый запрос
         page: Int = 1, // номер страницы для постраничной загрузки
         pageSize: Int,
-        filters: FilterIndustry,
+        filters: FilterIndustry
     ): Result<List<VacancyDetails>>
 
     // получение деталей вакансии
