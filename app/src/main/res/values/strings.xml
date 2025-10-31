@@ -16,4 +16,5 @@
     <string name="No_internet">Нет интернета</string>
     <string name="no_vac">Не удалось получить\nсписок вакансий</string>
     <string name="no_vac_msg">Таких вакансий нет</string>
+    <string name="empty_list">Список пуст</string>
 </resources>
