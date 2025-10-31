@@ -1,7 +1,12 @@
 package ru.practicum.android.diploma.ui.screens
 
+import android.content.Context.INPUT_METHOD_SERVICE
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import ru.practicum.android.diploma.R
@@ -16,12 +21,62 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     // Используем DebounceFactory для создания экземпляров
     private val clickDebounce = DebounceFactory.createClickDebounce()
 
+    private var searchText = ""
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         _binding = FragmentSearchBinding.bind(view)
 
+        binding.searchField.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+
+            override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                binding.clearIcon.visibility = clearIconVisibility(s)
+                binding.searchIcon.visibility = searchIconVisibility(s)
+                searchText = s.toString()
+            }
+
+            override fun afterTextChanged(s: Editable?) {
+            }
+
+        })
+
+        binding.clearIcon.setOnClickListener {
+            binding.searchField.setText("")
+            closeKeyboard(binding.searchField)
+        }
+
+        binding.searchField.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                true
+            }
+            false
+        }
+
         // setupNavigationWithDebounce()
+    }
+
+    private fun clearIconVisibility(s: CharSequence?): Int {
+        return if (s.isNullOrEmpty()) {
+            View.GONE
+        } else {
+            View.VISIBLE
+        }
+    }
+
+    private fun searchIconVisibility(s: CharSequence?): Int {
+        return if (s.isNullOrEmpty()) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
+    }
+
+    private fun closeKeyboard(view: View) {
+        val imm = requireContext().getSystemService(INPUT_METHOD_SERVICE) as? InputMethodManager
+        imm?.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
 //    private fun setupNavigationWithDebounce() {
