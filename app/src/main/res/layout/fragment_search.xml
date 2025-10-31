@@ -112,7 +112,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/margin_half_8"
-        app:layout_constraintTop_toBottomOf="@+id/msg_text" />
+        app:layout_constraintTop_toBottomOf="@+id/msg_text"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+android:visibility="visible"
+        tools:listitem="@layout/fragment_vacancy_for_rv"
+        />
 
     <ImageView
         android:id="@+id/search_start_pic"
