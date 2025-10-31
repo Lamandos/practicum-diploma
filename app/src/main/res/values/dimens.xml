@@ -5,4 +5,9 @@
     <dimen name="pad_12">12dp</dimen>
     <dimen name="pad_4">4dp</dimen>
     <dimen name="prog_size">48dp</dimen>
+
+        <dimen name="size_48dp">48dp</dimen>
+
+        <dimen name="size_16sp">16sp</dimen>
+        <dimen name="size_22sp">22sp</dimen>
 </resources>
