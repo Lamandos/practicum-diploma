@@ -9,47 +9,47 @@ import androidx.room.TypeConverters
 @TypeConverters(ListConverter::class)
 data class FavoritesEntity(
     @PrimaryKey
-    var id: String,
+    val id: String,
     @ColumnInfo(name = "name")
-    var name: String,
+    val name: String,
     @ColumnInfo(name = "description")
-    var description: String,
+    val description: String,
     @ColumnInfo(name = "salary_from")
-    var salaryFrom: Int?,
+    val salaryFrom: Int?,
     @ColumnInfo(name = "salary_to")
-    var salaryTo: Int?,
+    val salaryTo: Int?,
     @ColumnInfo(name = "salary_currency")
-    var salaryCurrency: String?,
+    val salaryCurrency: String?,
     @ColumnInfo(name = "address")
-    var address: String?,
+    val address: String?,
     @ColumnInfo(name = "experience_id")
-    var experienceId: String,
+    val experienceId: String,
     @ColumnInfo(name = "experience_name")
-    var experienceName: String,
+    val experienceName: String,
     @ColumnInfo(name = "schedule_id")
-    var scheduleId: String,
+    val scheduleId: String,
     @ColumnInfo(name = "schedule_name")
-    var scheduleName: String,
+    val scheduleName: String,
     @ColumnInfo(name = "employment_id")
-    var employmentId: String,
+    val employmentId: String,
     @ColumnInfo(name = "employment_name")
-    var employmentName: String,
+    val employmentName: String,
     @ColumnInfo(name = "employer_id")
-    var employerId: String,
+    val employerId: String,
     @ColumnInfo(name = "employer_name")
-    var employerName: String,
+    val employerName: String,
     @ColumnInfo(name = "employer_logo")
-    var employerLogo: String?,
+    val employerLogo: String?,
     @ColumnInfo(name = "area_id")
-    var areaId: String,
+    val areaId: String,
     @ColumnInfo(name = "area_name")
-    var areaName: String,
+    val areaName: String,
     @ColumnInfo(name = "skills")
-    var skills: List<String>,
+    val skills: List<String>,
     @ColumnInfo(name = "url")
-    var url: String,
+    val url: String,
     @ColumnInfo(name = "industry_id")
-    var industryId: String,
+    val industryId: String,
     @ColumnInfo(name = "industry_name")
-    var industryName: String
+    val industryName: String,
 )

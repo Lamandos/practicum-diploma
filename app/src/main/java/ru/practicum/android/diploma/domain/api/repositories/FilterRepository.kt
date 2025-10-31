@@ -3,7 +3,6 @@ package ru.practicum.android.diploma.domain.api.repositories
 import android.graphics.Region
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
 
-
 interface FilterRepository {
     // сохранение фильтров
     suspend fun saveFilters(filters: FilterIndustry)
@@ -20,6 +19,6 @@ interface FilterRepository {
     // сохранение выбранной страны
     suspend fun saveSelectedCountry(country: Region)
 
-    // солучение выбранной страны
+    // получение выбранной страны
     suspend fun getSelectedCountry(): Region
 }

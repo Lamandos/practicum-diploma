@@ -7,7 +7,6 @@ import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 interface VacanciesRepository {
     // поиск вакансий
-
     suspend fun searchVacancies(
         query: String, // поисковый запрос
         page: Int = 1, // номер страницы для постраничной загрузки
