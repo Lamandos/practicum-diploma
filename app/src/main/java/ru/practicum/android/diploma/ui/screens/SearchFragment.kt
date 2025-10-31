@@ -30,6 +30,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
         binding.searchField.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                // пока пусто
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
@@ -39,6 +40,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
             }
 
             override fun afterTextChanged(s: Editable?) {
+                // пока пусто
             }
 
         })
