@@ -28,6 +28,10 @@
         <item name="android:tint">@color/yp_black</item>
     </style>
 
+    <style name="vac_btns">
+        <item name="android:tint">@color/yp_black</item>
+    </style>
+
     <style name="search_bar">
         <item name="android:textColor">@color/yp_black</item>
         <item name="android:backgroundTint">@color/yp_light_gray</item>
@@ -40,6 +44,10 @@
         <item name="android:textColor">@color/yp_black</item>
         <item name="android:fontFamily">@font/ys_display_medium</item>
         <item name="android:textSize">22sp</item>
+    </style>
+
+    <style name="vac_info">
+        <item name="android:textColor">@color/yp_black</item>
     </style>
 
     <style name="team_style">

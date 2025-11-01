@@ -16,4 +16,13 @@
     <string name="No_internet">Нет интернета</string>
     <string name="no_vac">Не удалось получить\nсписок вакансий</string>
     <string name="no_vac_msg">Таких вакансий нет</string>
+    <string name="empty_list">Список пуст</string>
+    <string name="Server_error">Ошибка сервера</string>
+    <string name="vac_deleted">Вакансия не найдена или\nудалена</string>
+    <string name="experience">Требуемый опыт</string>
+    <string name="vac_description">Описание вакансии</string>
+    <string name="responsibilities">Обязанности</string>
+    <string name="requirements">Требования</string>
+    <string name="Terms">Условия</string>
+    <string name="skills">Ключевые навыки</string>
 </resources>
