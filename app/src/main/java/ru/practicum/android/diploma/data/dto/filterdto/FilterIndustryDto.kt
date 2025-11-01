@@ -1,6 +1,6 @@
 package ru.practicum.android.diploma.data.dto.filterdto
 
-data class RegionDto(
+data class FilterIndustryDto(
     val id: String,
-    val name: String,
+    val name: String
 )

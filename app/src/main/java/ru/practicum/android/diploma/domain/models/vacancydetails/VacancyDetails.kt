@@ -1,18 +1,22 @@
 package ru.practicum.android.diploma.domain.models.vacancydetails
 
-import android.provider.ContactsContract
-import ru.practicum.android.diploma.domain.models.vacancy.Area
-import ru.practicum.android.diploma.domain.models.vacancy.Salary
+import ru.practicum.android.diploma.domain.models.filtermodels.FilterArea
+import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
 
 data class VacancyDetails(
     val id: String,
     val name: String,
+    val description: String,
     val salary: Salary?,
-    val employer: EmployerDetails,
-    val area: Area,
-    val description: String, // HTML content
-    val keySkills: List<KeySkill>,
-    val experience: Expirience?,
-    val employment: Employment?,
-    val contacts: ContactsContract.Contacts?,
+    val address: Address?,
+    val experience: Experience,
+    val schedule: Schedule,
+    val employment: Employment,
+    val employer: Employer,
+    val contacts: Contacts?,
+    val area: FilterArea,
+    val skills: List<String>,
+    val url: String,
+    val industry: FilterIndustry?,
+    val publishedAt: String? = null
 )
