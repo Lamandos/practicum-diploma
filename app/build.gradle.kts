@@ -20,10 +20,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-//        buildConfigField(type = "String", name = "API_ACCESS_TOKEN", value = "\"${developProperties.apiAccessToken}\"")
-        val apiToken: String = project.property("API_ACCESS_TOKEN") as String
+        val apiToken = developProperties.apiAccessToken
         buildConfigField("String", "API_ACCESS_TOKEN", "\"$apiToken\"")
-
     }
 
     buildTypes {
