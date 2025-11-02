@@ -30,7 +30,6 @@ fun SnippetDto.toDomain(): Snippet {
     )
 }
 
-
 fun AreaDto.toDomain(): Area {
     return Area(
         id = id,

@@ -3,6 +3,7 @@ package ru.practicum.android.diploma.data.network
 import ru.practicum.android.diploma.data.dto.Response
 import ru.practicum.android.diploma.data.dto.ResponseError
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
+import java.io.IOException
 
 class RetrofitNetworkClient(
     private val apiService: VacancySearchApiService
@@ -17,8 +18,10 @@ class RetrofitNetworkClient(
                 }
                 else -> ResponseError("Неизвестный тип запроса")
             }
-        } catch (e: Exception) {
-            ResponseError(e.message ?: "Неизвестная ошибка сети")
+        } catch (e: IOException) {
+            ResponseError("Ошибка сети: ${e.message}")
+        } catch (e: retrofit2.HttpException) {
+            ResponseError("Сервер вернул ошибку: ${e.message()}")
         }
     }
 }

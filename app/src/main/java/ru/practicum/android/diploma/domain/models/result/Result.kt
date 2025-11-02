@@ -1,4 +1,4 @@
-package ru.practicum.android.diploma.domain.models.Result
+package ru.practicum.android.diploma.domain.models.result
 
 sealed class Result<out T> {
     data class Success<out T>(val data: T) : Result<T>()

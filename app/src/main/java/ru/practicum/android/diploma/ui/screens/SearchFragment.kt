@@ -28,10 +28,13 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     private var searchText = ""
     private var searchJob: Job? = null
 
+    companion object {
+        private const val SEARCH_DEBOUNCE_MS = 2000L
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentSearchBinding.bind(view)
-
 
         viewModel.vacancies.observe(viewLifecycleOwner, Observer { vacancies ->
             Log.d("SearchFragment", "Получили вакансии: ${vacancies.map { it.name }}")
@@ -52,7 +55,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 searchJob?.cancel()
 
                 searchJob = viewLifecycleOwner.lifecycleScope.launch {
-                    delay(2000L)
+                    delay(SEARCH_DEBOUNCE_MS)
                     if (searchText.isNotBlank()) {
                         viewModel.resetSearch()
                         viewModel.searchVacancies(searchText)
@@ -82,7 +85,9 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 closeKeyboard(binding.searchField)
                 binding.searchField.isCursorVisible = true
                 true
-            } else false
+            } else {
+                false
+            }
         }
     }
 
