@@ -19,4 +19,6 @@
     <color name="bottom_nav_background_color">#FDFDFD</color>
     <color name="system_bar_background_color">#FDFDFD</color>
     <color name="system_bar_icon_color">#1A1B22</color>
+    <color name="vacancy_rv_text_color">#1A1B22</color>
+    <color name="border_placeholder_vacancy_color">#E6E8EB</color>
 </resources>
