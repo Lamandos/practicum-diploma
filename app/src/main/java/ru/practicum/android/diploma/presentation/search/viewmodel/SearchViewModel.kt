@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import ru.practicum.android.diploma.BuildConfig
 import ru.practicum.android.diploma.data.dto.Response
 import ru.practicum.android.diploma.data.dto.ResponseError
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
@@ -39,6 +40,7 @@ class SearchViewModel(
 
         searchText = text
         isLoading = true
+        Log.d(TAG_SEARCH_VM, "API Token before request: ${BuildConfig.API_ACCESS_TOKEN}")
 
         viewModelScope.launch {
             val request = VacancySearchRequest(text = searchText, page = currentPage)

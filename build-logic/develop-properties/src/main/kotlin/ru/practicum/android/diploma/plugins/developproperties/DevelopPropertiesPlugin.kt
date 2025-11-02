@@ -13,7 +13,7 @@ import java.util.*
  */
 @Suppress("detekt.UnnecessaryAbstractClass")
 abstract class DevelopPropertiesPluginExtension {
-    var apiAccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJwcmFjdGljdW0ucnUiLCJhdWQiOiJwcmFjdGljdW0ucnUiLCJ1c2VybmFtZSI6Im11cmlvbmExMUB5YW5kZXgucnUifQ.-Xul4J2wMtzLY2SYoD7y4ev1nh_qiivI_J8TS_GnIBc"
+    var apiAccessToken = ""
 }
 
 class DevelopPropertiesPlugin : Plugin<Project> {
