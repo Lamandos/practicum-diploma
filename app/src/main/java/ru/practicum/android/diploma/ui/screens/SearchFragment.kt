@@ -38,7 +38,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
         viewModel.vacancies.observe(viewLifecycleOwner, Observer { vacancies ->
             Log.d("SearchFragment", "Получили вакансии: ${vacancies.map { it.name }}")
-         })
+        })
 
         binding.searchField.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -48,11 +48,9 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
                 binding.clearIcon.visibility = clearIconVisibility(s)
                 binding.searchIcon.visibility = searchIconVisibility(s)
-
                 binding.searchField.isCursorVisible = false
 
                 searchJob?.cancel()
-
                 searchJob = viewLifecycleOwner.lifecycleScope.launch {
                     delay(SEARCH_DEBOUNCE_MS)
                     if (searchText.isNotBlank()) {

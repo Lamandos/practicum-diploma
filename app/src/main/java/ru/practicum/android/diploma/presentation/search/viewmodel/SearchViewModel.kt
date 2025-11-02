@@ -68,13 +68,13 @@ class SearchViewModel(
         return skip
     }
 
-
     private fun handleResponse(response: Response) {
         when (response) {
             is ResponseSuccess<*> -> handleSuccess(response.data as VacancySearchResponse)
             is ResponseError -> Log.e(TAG_SEARCH_VM, "Ошибка: ${response.message}")
         }
     }
+
     private fun handleSuccess(data: VacancySearchResponse) {
         val currentList = _vacancies.value.orEmpty().toMutableList()
         val newItems = data.items.map { item ->
@@ -107,10 +107,7 @@ class SearchViewModel(
 
         currentList.addAll(newItems)
         _vacancies.value = currentList
-
         currentPage = data.page + 1
         maxPages = data.pages
     }
-
-
 }

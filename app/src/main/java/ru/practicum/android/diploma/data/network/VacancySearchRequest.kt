@@ -5,7 +5,6 @@ data class VacancySearchRequest(
     val page: Int = 0,
     val perPage: Int = 20
 )
-
 fun VacancySearchRequest.toQueryMap(): Map<String, String> {
     return mapOf(
         "text" to text,
@@ -13,5 +12,3 @@ fun VacancySearchRequest.toQueryMap(): Map<String, String> {
         "per_page" to perPage.toString()
     )
 }
-
-
