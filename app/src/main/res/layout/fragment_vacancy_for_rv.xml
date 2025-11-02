@@ -14,8 +14,8 @@
         android:id="@+id/vacancyPlaceholder"
         android:layout_width="@dimen/size_48dp"
         android:layout_height="@dimen/size_48dp"
-        android:src="@drawable/placeholder_vacancy"
-        android:background="@drawable/border"
+        android:src="@drawable/placeholder"
+        android:background="@drawable/vac_icon_border"
         />
 
     <LinearLayout
