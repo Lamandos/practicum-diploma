@@ -1,6 +1,6 @@
 package ru.practicum.android.diploma.data.dto
 
-open class Response {
+sealed class Response
 
-    var resultCode = 0
-}
+data class ResponseSuccess<T>(val data: T) : Response()
+data class ResponseError(val message: String) : Response()
