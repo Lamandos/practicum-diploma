@@ -65,11 +65,9 @@ class SearchViewModel(
 
     private fun shouldSkipSearch(): Boolean {
         val skip = isLoading || currentPage >= maxPages
-        if (skip) {
-
-        }
         return skip
     }
+
 
     private fun handleResponse(response: Response) {
         when (response) {
@@ -77,9 +75,7 @@ class SearchViewModel(
             is ResponseError -> Log.e(TAG_SEARCH_VM, "Ошибка: ${response.message}")
         }
     }
-
     private fun handleSuccess(data: VacancySearchResponse) {
-
         val currentList = _vacancies.value.orEmpty().toMutableList()
         val newItems = data.items.map { item ->
             Vacancy(
@@ -100,7 +96,7 @@ class SearchViewModel(
             )
         }
 
-         val vacanciesLog = newItems.joinToString(separator = " | ") { vacancy ->
+        val vacanciesLog = newItems.joinToString(separator = " | ") { vacancy ->
             val salaryStr = vacancy.salary?.let { "${it.from}-${it.to} ${it.currency}" } ?: "Не указано"
             val city = vacancy.area.name
             val employer = vacancy.employer.name
@@ -114,6 +110,7 @@ class SearchViewModel(
 
         currentPage = data.page + 1
         maxPages = data.pages
-     }
+    }
+
 
 }
