@@ -29,7 +29,7 @@ class SearchVacancyAdapter(
             salary.text = formatSalary(vacancy.salary)
 
             Glide.with(itemView)
-                .load(vacancy.employer.logoUrls)
+                .load(vacancy.employer.logo)
                 .placeholder(R.drawable.placeholder)
                 .error(R.drawable.placeholder)
                 .into(placeholder)

@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
-import ru.practicum.android.diploma.BuildConfig
 import ru.practicum.android.diploma.data.dto.Response
 import ru.practicum.android.diploma.data.dto.ResponseError
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
@@ -18,41 +17,42 @@ import ru.practicum.android.diploma.domain.models.vacancy.Salary
 import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
 import java.io.IOException
 
+sealed class SearchState {
+    object Idle : SearchState()
+    object Loading : SearchState()
+    data class Success(val vacancies: List<Vacancy>) : SearchState()
+    object Empty : SearchState()
+}
+
 class SearchViewModel(
     private val client: NetworkClient
 ) : ViewModel() {
 
-    companion object {
-        private const val TAG_SEARCH_VM = "SearchVM"
-        private const val TAG_RESULTS = "Results"
-    }
+    private val _searchState = MutableLiveData<SearchState>(SearchState.Idle)
+    val searchState: LiveData<SearchState> get() = _searchState
 
     private var isLoading = false
     private var currentPage = 0
     private var maxPages = Int.MAX_VALUE
 
-    private val _vacancies = MutableLiveData<List<Vacancy>>()
-    val vacancies: LiveData<List<Vacancy>> get() = _vacancies
+    fun setLoading() {
+        _searchState.value = SearchState.Loading
+    }
 
-    private val _searchQuery = MutableLiveData<String>()
-    val searchQuery: LiveData<String> get() = _searchQuery
-
-    fun searchVacancies(text: String) {
+    fun searchVacancies(query: String) {
         if (shouldSkipSearch()) return
 
-        _searchQuery.value = text
         isLoading = true
-        Log.d(TAG_SEARCH_VM, "API Token before request: ${BuildConfig.API_ACCESS_TOKEN}")
-
         viewModelScope.launch {
-            val request = VacancySearchRequest(text = text, page = currentPage)
             try {
-                val response = client.doRequest(request)
+                val response = client.doRequest(VacancySearchRequest(text = query, page = currentPage))
                 handleResponse(response)
             } catch (e: IOException) {
-                Log.e(TAG_SEARCH_VM, "Network error", e)
+                Log.e("SearchVM", "Network error", e)
+                _searchState.value = SearchState.Empty
             } catch (e: HttpException) {
-                Log.e(TAG_SEARCH_VM, "Server error", e)
+                Log.e("SearchVM", "Server error", e)
+                _searchState.value = SearchState.Empty
             } finally {
                 isLoading = false
             }
@@ -62,34 +62,25 @@ class SearchViewModel(
     fun resetSearch() {
         currentPage = 0
         maxPages = Int.MAX_VALUE
-        _vacancies.value = emptyList()
+        _searchState.value = SearchState.Idle
     }
 
-    private fun shouldSkipSearch(): Boolean {
-        return isLoading || currentPage >= maxPages
-    }
+    private fun shouldSkipSearch(): Boolean = isLoading || currentPage >= maxPages
 
     private fun handleResponse(response: Response) {
         when (response) {
             is ResponseSuccess<*> -> handleSuccess(response.data as VacancySearchResponse)
-            is ResponseError -> Log.e(TAG_SEARCH_VM, "Ошибка: ${response.message}")
+            is ResponseError -> _searchState.postValue(SearchState.Empty)
         }
     }
 
     private fun handleSuccess(data: VacancySearchResponse) {
-        val currentList = _vacancies.value.orEmpty().toMutableList()
-
         val newItems = data.items.map { item ->
             Vacancy(
                 id = item.id,
                 name = item.name,
                 salary = item.salary?.let { s ->
-                    Salary(
-                        from = s.from,
-                        to = s.to,
-                        currency = s.currency,
-                        gross = s.gross
-                    )
+                    Salary(from = s.from, to = s.to, currency = s.currency, gross = s.gross)
                 },
                 employer = item.employer,
                 area = item.area,
@@ -98,13 +89,10 @@ class SearchViewModel(
             )
         }
 
-        currentList.addAll(newItems)
-        _vacancies.value = currentList
-
         currentPage = data.page + 1
         maxPages = data.pages
 
-        val vacanciesLog = newItems.joinToString(" | ") { "${it.name} (${it.employer.name})" }
-        Log.d(TAG_RESULTS, "Вакансии страницы ${data.page}: $vacanciesLog")
+        _searchState.value = if (newItems.isEmpty()) SearchState.Empty else SearchState.Success(newItems)
     }
 }
+

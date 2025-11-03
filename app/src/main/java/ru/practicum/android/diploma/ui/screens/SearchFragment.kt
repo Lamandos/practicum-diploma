@@ -18,6 +18,7 @@ import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentSearchBinding
 import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
 import ru.practicum.android.diploma.presentation.search.adapter.SearchVacancyAdapter
+import ru.practicum.android.diploma.presentation.search.viewmodel.SearchState
 import ru.practicum.android.diploma.presentation.search.viewmodel.SearchViewModel
 
 class SearchFragment : Fragment(R.layout.fragment_search) {
@@ -45,24 +46,23 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
 
-        viewModel.vacancies.value?.let { vacancies ->
-            updateUI(
-                vacancies,
-                isSearchActive = viewModel.searchQuery.value?.isNotEmpty() == true
-            )
-        }
+        observeViewModel()
+        setupSearchField()
+        setupClearIcon()
+    }
 
-        viewModel.vacancies.observe(viewLifecycleOwner) { vacancies ->
-            val isSearchActive = viewModel.searchQuery.value?.isNotEmpty() == true
-            updateUI(vacancies, isSearchActive)
-        }
-
-        viewModel.searchQuery.observe(viewLifecycleOwner) { query ->
-            if (binding.searchField.text.toString() != query) {
-                binding.searchField.setText(query)
+    private fun observeViewModel() {
+        viewModel.searchState.observe(viewLifecycleOwner) { state ->
+            when (state) {
+                is SearchState.Idle -> updateUI(emptyList(), isSearchActive = false)
+                is SearchState.Loading -> updateUI(emptyList(), isSearchActive = true, isLoading = true)
+                is SearchState.Success -> updateUI(state.vacancies, isSearchActive = true)
+                is SearchState.Empty -> updateUI(emptyList(), isSearchActive = true)
             }
         }
+    }
 
+    private fun setupSearchField() {
         binding.searchField.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun afterTextChanged(s: Editable?) {
@@ -75,46 +75,56 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 binding.searchIcon.visibility = if (searchText.isEmpty()) View.VISIBLE else View.GONE
 
                 searchJob?.cancel()
+
                 if (searchText.isBlank()) {
-                    updateUI(emptyList(), isSearchActive = false)
+                    viewModel.resetSearch()
                     return
                 }
+
                 searchJob = viewLifecycleOwner.lifecycleScope.launch {
+                    viewModel.setLoading()
                     delay(SEARCH_DEBOUNCE_MS)
-                    if (viewModel.searchQuery.value != searchText) {
-                        viewModel.resetSearch()
-                        viewModel.searchVacancies(searchText)
-                    }
+                    viewModel.searchVacancies(searchText)
                 }
             }
         })
-
-        binding.clearIcon.setOnClickListener {
-            binding.searchField.text?.clear()
-            binding.searchField.isCursorVisible = true
-            binding.clearIcon.visibility = View.GONE
-            binding.searchIcon.visibility = View.VISIBLE
-
-            viewModel.resetSearch()
-            updateUI(emptyList(), isSearchActive = false)
-        }
 
         binding.searchField.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
                 val query = binding.searchField.text.toString()
                 if (query.isNotBlank()) {
-                    viewModel.resetSearch()
+                    viewModel.setLoading()
                     viewModel.searchVacancies(query)
                 }
                 closeKeyboard(binding.searchField)
                 true
-            } else {
-                false
-            }
+            } else false
         }
     }
-    private fun updateUI(vacancies: List<Vacancy>, isSearchActive: Boolean) {
+
+    private fun setupClearIcon() {
+        binding.clearIcon.setOnClickListener {
+            binding.searchField.text?.clear()
+            binding.searchField.isCursorVisible = true
+            binding.clearIcon.visibility = View.GONE
+            binding.searchIcon.visibility = View.VISIBLE
+            viewModel.resetSearch()
+        }
+    }
+
+    private fun updateUI(
+        vacancies: List<Vacancy>,
+        isSearchActive: Boolean,
+        isLoading: Boolean = false
+    ) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+
         when {
+            isLoading -> {
+                binding.searchStartPic.visibility = View.GONE
+                binding.recyclerView.visibility = View.GONE
+                binding.msgText.visibility = View.GONE
+            }
             vacancies.isEmpty() && isSearchActive -> {
                 binding.searchStartPic.visibility = View.VISIBLE
                 binding.recyclerView.visibility = View.GONE
