@@ -27,7 +27,6 @@ class SearchViewModel(
         private const val TAG_RESULTS = "Results"
     }
 
-    private var searchText = ""
     private var isLoading = false
     private var currentPage = 0
     private var maxPages = Int.MAX_VALUE
@@ -35,15 +34,18 @@ class SearchViewModel(
     private val _vacancies = MutableLiveData<List<Vacancy>>()
     val vacancies: LiveData<List<Vacancy>> get() = _vacancies
 
+    private val _searchQuery = MutableLiveData<String>()
+    val searchQuery: LiveData<String> get() = _searchQuery
+
     fun searchVacancies(text: String) {
         if (shouldSkipSearch()) return
 
-        searchText = text
+        _searchQuery.value = text
         isLoading = true
         Log.d(TAG_SEARCH_VM, "API Token before request: ${BuildConfig.API_ACCESS_TOKEN}")
 
         viewModelScope.launch {
-            val request = VacancySearchRequest(text = searchText, page = currentPage)
+            val request = VacancySearchRequest(text = text, page = currentPage)
             try {
                 val response = client.doRequest(request)
                 handleResponse(response)
@@ -53,21 +55,18 @@ class SearchViewModel(
                 Log.e(TAG_SEARCH_VM, "Server error", e)
             } finally {
                 isLoading = false
-                Log.d(TAG_SEARCH_VM, "isLoading set to false")
             }
         }
     }
 
     fun resetSearch() {
-        searchText = ""
         currentPage = 0
         maxPages = Int.MAX_VALUE
         _vacancies.value = emptyList()
     }
 
     private fun shouldSkipSearch(): Boolean {
-        val skip = isLoading || currentPage >= maxPages
-        return skip
+        return isLoading || currentPage >= maxPages
     }
 
     private fun handleResponse(response: Response) {
@@ -79,6 +78,7 @@ class SearchViewModel(
 
     private fun handleSuccess(data: VacancySearchResponse) {
         val currentList = _vacancies.value.orEmpty().toMutableList()
+
         val newItems = data.items.map { item ->
             Vacancy(
                 id = item.id,
@@ -98,18 +98,16 @@ class SearchViewModel(
             )
         }
 
-        val vacanciesLog = newItems.joinToString(separator = " | ") { vacancy ->
-            val salaryStr = vacancy.salary?.let { "${it.from}-${it.to} ${it.currency}" } ?: "Не указано"
-            val city = vacancy.area.name
-            val employer = vacancy.employer.name
-            "${vacancy.name} ($city, $salaryStr, $employer)"
-        }
-
-        Log.d(TAG_RESULTS, "Вакансии страницы ${data.page}: $vacanciesLog")
-
         currentList.addAll(newItems)
         _vacancies.value = currentList
+
         currentPage = data.page + 1
         maxPages = data.pages
+
+        val vacanciesLog = newItems.joinToString(" | ") { "${it.name} (${it.employer.name})" }
+        Log.d(TAG_RESULTS, "Вакансии страницы ${data.page}: $vacanciesLog")
     }
 }
+
+
+

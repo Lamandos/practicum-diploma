@@ -3,19 +3,21 @@ package ru.practicum.android.diploma.ui.screens
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentSearchBinding
+import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
+import ru.practicum.android.diploma.presentation.search.adapter.SearchVacancyAdapter
 import ru.practicum.android.diploma.presentation.search.viewmodel.SearchViewModel
 
 class SearchFragment : Fragment(R.layout.fragment_search) {
@@ -24,9 +26,8 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     private val binding get() = _binding!!
 
     private val viewModel: SearchViewModel by viewModel()
-
-    private var searchText = ""
     private var searchJob: Job? = null
+    private lateinit var adapter: SearchVacancyAdapter
 
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 2000L
@@ -36,63 +37,101 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentSearchBinding.bind(view)
 
-        viewModel.vacancies.observe(viewLifecycleOwner, Observer { vacancies ->
-            Log.d("SearchFragment", "Получили вакансии: ${vacancies.map { it.name }}")
-        })
+        adapter = SearchVacancyAdapter { vacancy ->
+            val action = SearchFragmentDirections.actionSearchFragmentToVacancyFragment2()
+            findNavController().navigate(action)
+        }
+        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerView.adapter = adapter
+
+        viewModel.vacancies.value?.let { updateUI(it, isSearchActive = viewModel.searchQuery.value?.isNotEmpty() == true) }
+
+        viewModel.vacancies.observe(viewLifecycleOwner) { vacancies ->
+            val isSearchActive = viewModel.searchQuery.value?.isNotEmpty() == true
+            updateUI(vacancies, isSearchActive)
+        }
+
+        viewModel.searchQuery.observe(viewLifecycleOwner) { query ->
+            if (binding.searchField.text.toString() != query) {
+                binding.searchField.setText(query)
+            }
+        }
 
         binding.searchField.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun afterTextChanged(s: Editable?) {
+                binding.searchField.isCursorVisible = !s.isNullOrEmpty()
+            }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                searchText = s.toString()
-
-                binding.clearIcon.visibility = clearIconVisibility(s)
-                binding.searchIcon.visibility = searchIconVisibility(s)
-                binding.searchField.isCursorVisible = false
+                val searchText = s.toString()
+                binding.clearIcon.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
+                binding.searchIcon.visibility = if (searchText.isEmpty()) View.VISIBLE else View.GONE
 
                 searchJob?.cancel()
+
+                if (searchText.isBlank()) {
+                    updateUI(emptyList(), isSearchActive = false)
+                    return
+                }
+
+
                 searchJob = viewLifecycleOwner.lifecycleScope.launch {
                     delay(SEARCH_DEBOUNCE_MS)
-                    if (searchText.isNotBlank()) {
+                    if (viewModel.searchQuery.value != searchText) {
                         viewModel.resetSearch()
                         viewModel.searchVacancies(searchText)
                     }
                 }
             }
-
-            override fun afterTextChanged(s: Editable?) {
-                if (s.isNullOrEmpty()) {
-                    binding.searchField.isCursorVisible = true
-                }
-            }
         })
+
 
         binding.clearIcon.setOnClickListener {
             binding.searchField.text?.clear()
             binding.searchField.isCursorVisible = true
             binding.clearIcon.visibility = View.GONE
             binding.searchIcon.visibility = View.VISIBLE
+
             viewModel.resetSearch()
+            updateUI(emptyList(), isSearchActive = false)
         }
 
         binding.searchField.setOnEditorActionListener { _, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                viewModel.resetSearch()
-                viewModel.searchVacancies(searchText)
+                val query = binding.searchField.text.toString()
+                if (query.isNotBlank()) {
+                    viewModel.resetSearch()
+                    viewModel.searchVacancies(query)
+                }
                 closeKeyboard(binding.searchField)
-                binding.searchField.isCursorVisible = true
                 true
-            } else {
-                false
-            }
+            } else false
         }
     }
 
-    private fun clearIconVisibility(s: CharSequence?): Int =
-        if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
-
-    private fun searchIconVisibility(s: CharSequence?): Int =
-        if (s.isNullOrEmpty()) View.VISIBLE else View.GONE
+    private fun updateUI(vacancies: List<Vacancy>, isSearchActive: Boolean) {
+        when {
+            vacancies.isEmpty() && isSearchActive -> {
+                binding.searchStartPic.visibility = View.VISIBLE
+                binding.recyclerView.visibility = View.GONE
+                binding.msgText.visibility = View.VISIBLE
+                binding.msgText.text = getString(R.string.no_vac_msg)
+            }
+            vacancies.isNotEmpty() -> {
+                binding.searchStartPic.visibility = View.GONE
+                binding.recyclerView.visibility = View.VISIBLE
+                adapter.setItems(vacancies)
+                binding.msgText.visibility = View.VISIBLE
+                binding.msgText.text = getString(R.string.found_vac_msg, vacancies.size)
+            }
+            else -> {
+                binding.searchStartPic.visibility = View.VISIBLE
+                binding.recyclerView.visibility = View.GONE
+                binding.msgText.visibility = View.GONE
+            }
+        }
+    }
 
     private fun closeKeyboard(view: View) {
         val imm = requireContext().getSystemService(InputMethodManager::class.java)
