@@ -79,8 +79,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                     updateUI(emptyList(), isSearchActive = false)
                     return
                 }
-
-
                 searchJob = viewLifecycleOwner.lifecycleScope.launch {
                     delay(SEARCH_DEBOUNCE_MS)
                     if (viewModel.searchQuery.value != searchText) {
