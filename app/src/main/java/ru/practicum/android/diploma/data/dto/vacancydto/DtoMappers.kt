@@ -10,7 +10,7 @@ fun EmployerDto.toDomain(): Employer {
     return Employer(
         id = id,
         name = name,
-        logoUrls = logoUrls
+        logo = logo
     )
 }
 
