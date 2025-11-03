@@ -104,7 +104,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
     }
 
-        private fun setupClearIcon() {
+    private fun setupClearIcon() {
         binding.clearIcon.setOnClickListener {
             binding.searchField.text?.clear()
             binding.searchField.isCursorVisible = true
