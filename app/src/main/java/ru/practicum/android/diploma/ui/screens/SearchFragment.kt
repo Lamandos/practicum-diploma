@@ -27,7 +27,12 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private val viewModel: SearchViewModel by viewModel()
     private var searchJob: Job? = null
-    private lateinit var adapter: SearchVacancyAdapter
+    private val adapter: SearchVacancyAdapter by lazy {
+        SearchVacancyAdapter { vacancy ->
+            val action = SearchFragmentDirections.actionSearchFragmentToVacancyFragment2()
+            findNavController().navigate(action)
+        }
+    }
 
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 2000L
@@ -37,14 +42,15 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentSearchBinding.bind(view)
 
-        adapter = SearchVacancyAdapter { vacancy ->
-            val action = SearchFragmentDirections.actionSearchFragmentToVacancyFragment2()
-            findNavController().navigate(action)
-        }
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
 
-        viewModel.vacancies.value?.let { updateUI(it, isSearchActive = viewModel.searchQuery.value?.isNotEmpty() == true) }
+        viewModel.vacancies.value?.let { vacancies ->
+            updateUI(
+                vacancies,
+                isSearchActive = viewModel.searchQuery.value?.isNotEmpty() == true
+            )
+        }
 
         viewModel.vacancies.observe(viewLifecycleOwner) { vacancies ->
             val isSearchActive = viewModel.searchQuery.value?.isNotEmpty() == true
@@ -69,7 +75,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 binding.searchIcon.visibility = if (searchText.isEmpty()) View.VISIBLE else View.GONE
 
                 searchJob?.cancel()
-
                 if (searchText.isBlank()) {
                     updateUI(emptyList(), isSearchActive = false)
                     return
@@ -85,7 +90,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 }
             }
         })
-
 
         binding.clearIcon.setOnClickListener {
             binding.searchField.text?.clear()
@@ -106,10 +110,11 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 }
                 closeKeyboard(binding.searchField)
                 true
-            } else false
+            } else {
+                false
+            }
         }
     }
-
     private fun updateUI(vacancies: List<Vacancy>, isSearchActive: Boolean) {
         when {
             vacancies.isEmpty() && isSearchActive -> {

@@ -19,8 +19,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         binding.backBtn.setOnClickListener {
             findNavController().navigateUp()
         }
-
-
     }
 
     override fun onDestroyView() {

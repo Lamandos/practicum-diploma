@@ -108,6 +108,3 @@ class SearchViewModel(
         Log.d(TAG_RESULTS, "Вакансии страницы ${data.page}: $vacanciesLog")
     }
 }
-
-
-
