@@ -98,11 +98,13 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 }
                 closeKeyboard(binding.searchField)
                 true
-            } else false
+            } else {
+                false
+            }
         }
     }
 
-    private fun setupClearIcon() {
+        private fun setupClearIcon() {
         binding.clearIcon.setOnClickListener {
             binding.searchField.text?.clear()
             binding.searchField.isCursorVisible = true
