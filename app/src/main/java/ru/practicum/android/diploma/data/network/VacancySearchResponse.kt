@@ -31,4 +31,3 @@ fun VacancyItem.toDomain(): Vacancy {
         snippet = null
     )
 }
-

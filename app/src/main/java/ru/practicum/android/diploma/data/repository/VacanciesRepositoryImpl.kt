@@ -21,7 +21,6 @@ class VacanciesRepositoryImpl(
         pageSize: Int,
         filters: FilterIndustry,
     ): Result<List<VacancyDetails>> {
-
         val response = networkClient.doRequest(
             VacancySearchRequest(text = query, page = page, perPage = pageSize)
         )
