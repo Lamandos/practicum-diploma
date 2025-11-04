@@ -1,12 +1,10 @@
 package ru.practicum.android.diploma.presentation.search.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
 import ru.practicum.android.diploma.data.dto.Response
 import ru.practicum.android.diploma.data.dto.ResponseError
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
@@ -15,13 +13,14 @@ import ru.practicum.android.diploma.data.network.VacancySearchRequest
 import ru.practicum.android.diploma.data.network.VacancySearchResponse
 import ru.practicum.android.diploma.domain.models.vacancy.Salary
 import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
-import java.io.IOException
 
 sealed class SearchState {
     object Idle : SearchState()
     object Loading : SearchState()
     data class Success(val vacancies: List<Vacancy>) : SearchState()
     object Empty : SearchState()
+    object NoInternet : SearchState()
+    object ServerError : SearchState()
 }
 
 class SearchViewModel(
@@ -46,18 +45,24 @@ class SearchViewModel(
         viewModelScope.launch {
             try {
                 val response = client.doRequest(VacancySearchRequest(text = query, page = currentPage))
-                handleResponse(response)
-            } catch (e: IOException) {
-                Log.e("SearchVM", "Network error", e)
-                _searchState.value = SearchState.Empty
-            } catch (e: HttpException) {
-                Log.e("SearchVM", "Server error", e)
-                _searchState.value = SearchState.Empty
+                when (response) {
+                    is ResponseSuccess<*> -> handleSuccess(response.data as VacancySearchResponse)
+                    is ResponseError -> handleError(response)
+                }
             } finally {
                 isLoading = false
             }
         }
     }
+
+    private fun handleError(response: ResponseError) {
+        _searchState.value = when {
+            response.message.contains("сети", ignoreCase = true) -> SearchState.NoInternet
+            response.message.contains("Сервер", ignoreCase = true) -> SearchState.ServerError
+            else -> SearchState.ServerError
+        }
+    }
+
 
     fun resetSearch() {
         currentPage = 0
@@ -70,7 +75,7 @@ class SearchViewModel(
     private fun handleResponse(response: Response) {
         when (response) {
             is ResponseSuccess<*> -> handleSuccess(response.data as VacancySearchResponse)
-            is ResponseError -> _searchState.postValue(SearchState.Empty)
+            is ResponseError -> _searchState.postValue(SearchState.ServerError)
         }
     }
 

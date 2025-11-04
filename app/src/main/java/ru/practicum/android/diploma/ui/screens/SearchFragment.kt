@@ -28,6 +28,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private val viewModel: SearchViewModel by viewModel()
     private var searchJob: Job? = null
+
     private val adapter: SearchVacancyAdapter by lazy {
         SearchVacancyAdapter { vacancy ->
             val action = SearchFragmentDirections.actionSearchFragmentToVacancyFragment2()
@@ -58,6 +59,8 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 is SearchState.Loading -> updateUI(emptyList(), isSearchActive = true, isLoading = true)
                 is SearchState.Success -> updateUI(state.vacancies, isSearchActive = true)
                 is SearchState.Empty -> updateUI(emptyList(), isSearchActive = true)
+                is SearchState.NoInternet -> updateUI(emptyList(), isSearchActive = true, errorState = state)
+                is SearchState.ServerError -> updateUI(emptyList(), isSearchActive = true, errorState = state)
             }
         }
     }
@@ -117,36 +120,38 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     private fun updateUI(
         vacancies: List<Vacancy>,
         isSearchActive: Boolean,
-        isLoading: Boolean = false
+        isLoading: Boolean = false,
+        errorState: SearchState? = null
     ) {
+        binding.recyclerView.visibility = View.GONE
+        binding.searchStartPic.visibility = View.GONE
+        binding.msgText.visibility = View.GONE
+        binding.noNetError.visibility = View.GONE
+        binding.noVacError.visibility = View.GONE
+        binding.serverError.visibility = View.GONE
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
 
+        if (isLoading) return
+
         when {
-            isLoading -> {
-                binding.searchStartPic.visibility = View.GONE
-                binding.recyclerView.visibility = View.GONE
-                binding.msgText.visibility = View.GONE
-            }
+            errorState is SearchState.NoInternet -> binding.noNetError.visibility = View.VISIBLE
+            errorState is SearchState.ServerError -> binding.serverError.visibility = View.VISIBLE
             vacancies.isEmpty() && isSearchActive -> {
-                binding.searchStartPic.visibility = View.VISIBLE
-                binding.recyclerView.visibility = View.GONE
+                binding.noVacError.visibility = View.VISIBLE
                 binding.msgText.visibility = View.VISIBLE
                 binding.msgText.text = getString(R.string.no_vac_msg)
             }
             vacancies.isNotEmpty() -> {
-                binding.searchStartPic.visibility = View.GONE
                 binding.recyclerView.visibility = View.VISIBLE
                 adapter.setItems(vacancies)
+
                 binding.msgText.visibility = View.VISIBLE
                 binding.msgText.text = getString(R.string.found_vac_msg, vacancies.size)
             }
-            else -> {
-                binding.searchStartPic.visibility = View.VISIBLE
-                binding.recyclerView.visibility = View.GONE
-                binding.msgText.visibility = View.GONE
-            }
+            else -> binding.searchStartPic.visibility = View.VISIBLE
         }
     }
+
 
     private fun closeKeyboard(view: View) {
         val imm = requireContext().getSystemService(InputMethodManager::class.java)
