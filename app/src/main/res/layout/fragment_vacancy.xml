@@ -111,6 +111,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/margin_def_16"
                 android:background="@drawable/vac_info_bg"
+                android:padding="1dp"
                 android:orientation="horizontal">
 
                 <ImageView
@@ -124,6 +125,7 @@
                     android:layout_marginBottom="@dimen/margin_def_16"
                     android:background="@drawable/vac_icon_border"
                     android:scaleType="centerInside"
+                    android:clipToOutline="true"
                     android:src="@drawable/placeholder" />
 
                 <LinearLayout

@@ -76,24 +76,41 @@
         app:layout_constraintEnd_toEndOf="@+id/search_field"
         app:layout_constraintTop_toTopOf="@+id/search_field" />
 
-    <TextView
-        android:id="@+id/msg_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/no_vac_msg"
-        android:background="@drawable/search_result_msg"
-        android:textColor="@color/white"
-        android:fontFamily="@font/ys_display_regular"
-        android:textSize="16sp"
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:layout_marginTop="11dp"
-        android:paddingEnd="@dimen/pad_12"
-        android:paddingStart="@dimen/pad_12"
-        android:paddingTop="@dimen/pad_4"
-        android:paddingBottom="@dimen/pad_4"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/search_field"
-        android:visibility="gone"/>
+        app:layout_constraintTop_toBottomOf="@+id/search_field">
+
+        <TextView
+            android:id="@+id/msg_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|top"
+            android:background="@drawable/search_result_msg"
+            android:fontFamily="@font/ys_display_regular"
+            android:paddingStart="@dimen/pad_12"
+            android:paddingTop="@dimen/pad_4"
+            android:paddingEnd="@dimen/pad_12"
+            android:paddingBottom="@dimen/pad_4"
+            android:text="@string/no_vac_msg"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:elevation="@dimen/margin_half_8"/>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingTop="38dp"
+            android:clipToPadding="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/fragment_vacancy_for_rv" />
+
+    </FrameLayout>
 
     <ProgressBar
         android:id="@+id/progressBar"
@@ -106,16 +123,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/margin_half_8"
-        app:layout_constraintTop_toBottomOf="@+id/msg_text"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        tools:listitem="@layout/fragment_vacancy_for_rv"
-        />
 
     <ImageView
         android:id="@+id/search_start_pic"
