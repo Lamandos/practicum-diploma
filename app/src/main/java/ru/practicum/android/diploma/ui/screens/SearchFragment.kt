@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -43,22 +44,60 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentSearchBinding.bind(view)
 
-        binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
-        binding.recyclerView.adapter = adapter
-
+        setupRecyclerView()
         observeViewModel()
         setupSearchField()
         setupClearIcon()
     }
 
+    private fun setupRecyclerView() {
+        val layoutManager = LinearLayoutManager(requireContext())
+        binding.recyclerView.layoutManager = layoutManager
+        binding.recyclerView.adapter = adapter
+
+        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                if (dy > 0) {
+                    val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+                    val totalItemCount = layoutManager.itemCount
+
+                    if (lastVisibleItem >= totalItemCount - 1) {
+                        viewModel.loadNextPage()
+                    }
+                }
+            }
+        })
+    }
+
     private fun observeViewModel() {
         viewModel.searchState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is SearchState.Idle -> updateUI(emptyList(), isSearchActive = false)
-                is SearchState.Loading -> updateUI(emptyList(), isSearchActive = true, isLoading = true)
-                is SearchState.Success -> updateUI(state.vacancies, isSearchActive = true)
-                is SearchState.Empty -> updateUI(emptyList(), isSearchActive = true)
+                is SearchState.Idle -> {
+                    updateUI(emptyList(), isSearchActive = false)
+                    adapter.showLoading(false)
+                }
+                is SearchState.Loading -> {
+                    updateUI(emptyList(), isSearchActive = true, isLoading = true)
+                    adapter.showLoading(false)
+                }
+                is SearchState.Success -> {
+                    updateUI(state.vacancies, isSearchActive = true)
+                }
+                is SearchState.Empty -> {
+                    updateUI(emptyList(), isSearchActive = true)
+                    adapter.showLoading(false)
+                }
+                is SearchState.Error -> {
+                    updateUI(emptyList(), isSearchActive = true)
+                    adapter.showLoading(false)
+                }
             }
+        }
+
+        viewModel.showLoadingState.observe(viewLifecycleOwner) { showLoading ->
+            adapter.showLoading(showLoading)
         }
     }
 
@@ -136,9 +175,14 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
             vacancies.isNotEmpty() -> {
                 binding.searchStartPic.visibility = View.GONE
                 binding.recyclerView.visibility = View.VISIBLE
-                adapter.setItems(vacancies)
                 binding.msgText.visibility = View.VISIBLE
-                binding.msgText.text = getString(R.string.found_vac_msg, vacancies.size)
+                binding.msgText.text = resources.getQuantityString(
+                    R.plurals.found_vac_msg,
+                    viewModel.totalFoundCount,
+                    viewModel.totalFoundCount
+                )
+
+                adapter.setItems(vacancies)
             }
             else -> {
                 binding.searchStartPic.visibility = View.VISIBLE

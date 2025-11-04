@@ -9,7 +9,8 @@ data class VacancySearchResponse(
     val items: List<VacancyItem>,
     val page: Int,
     val pages: Int,
-    val perPage: Int
+    val perPage: Int,
+    val found: Int
 )
 
 data class VacancyItem(
@@ -31,4 +32,3 @@ fun VacancyItem.toDomain(): Vacancy {
         snippet = null
     )
 }
-
