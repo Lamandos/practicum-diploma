@@ -63,13 +63,12 @@ class SearchViewModel(
         }
     }
 
-
     fun resetSearch() {
         currentPage = 0
         maxPages = Int.MAX_VALUE
         _searchState.value = SearchState.Idle
     }
-
+    
     private fun shouldSkipSearch(): Boolean = isLoading || currentPage >= maxPages
 
     private fun handleResponse(response: Response) {

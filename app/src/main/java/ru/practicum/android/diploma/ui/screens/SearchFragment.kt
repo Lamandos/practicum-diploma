@@ -152,7 +152,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
     }
 
-
     private fun closeKeyboard(view: View) {
         val imm = requireContext().getSystemService(InputMethodManager::class.java)
         imm?.hideSoftInputFromWindow(view.windowToken, 0)
