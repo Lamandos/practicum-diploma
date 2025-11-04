@@ -71,7 +71,6 @@ class SearchViewModel(
 
     private fun shouldSkipSearch(): Boolean = isLoading || currentPage >= maxPages
 
-
     private fun handleResponse(response: Response) {
         when (response) {
             is ResponseSuccess<*> -> handleSuccess(response.data as VacancySearchResponse)
