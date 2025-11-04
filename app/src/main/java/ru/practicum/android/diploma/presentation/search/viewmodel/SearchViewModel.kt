@@ -1,31 +1,29 @@
 package ru.practicum.android.diploma.presentation.search.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import ru.practicum.android.diploma.data.dto.Response
-import ru.practicum.android.diploma.data.dto.ResponseError
-import ru.practicum.android.diploma.data.dto.ResponseSuccess
-import ru.practicum.android.diploma.data.network.NetworkClient
-import ru.practicum.android.diploma.data.network.VacancySearchRequest
-import ru.practicum.android.diploma.data.network.VacancySearchResponse
+import ru.practicum.android.diploma.domain.api.usecases.VacanciesInteractor
+import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
+import ru.practicum.android.diploma.domain.models.vacancy.Area
 import ru.practicum.android.diploma.domain.models.vacancy.Salary
 import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
-import java.io.IOException
+import ru.practicum.android.diploma.domain.models.vacancydetails.EmployerDetails
+import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 sealed class SearchState {
     object Idle : SearchState()
     object Loading : SearchState()
     data class Success(val vacancies: List<Vacancy>) : SearchState()
     object Empty : SearchState()
+    object NoInternet : SearchState()
+    object ServerError : SearchState()
 }
 
 class SearchViewModel(
-    private val client: NetworkClient
+    private val vacanciesInteractor: VacanciesInteractor
 ) : ViewModel() {
 
     private val _searchState = MutableLiveData<SearchState>(SearchState.Idle)
@@ -41,21 +39,33 @@ class SearchViewModel(
 
     fun searchVacancies(query: String) {
         if (shouldSkipSearch()) return
-
         isLoading = true
+
         viewModelScope.launch {
             try {
-                val response = client.doRequest(VacancySearchRequest(text = query, page = currentPage))
-                handleResponse(response)
-            } catch (e: IOException) {
-                Log.e("SearchVM", "Network error", e)
-                _searchState.value = SearchState.Empty
-            } catch (e: HttpException) {
-                Log.e("SearchVM", "Server error", e)
-                _searchState.value = SearchState.Empty
+                val result = vacanciesInteractor.searchVacancies(
+                    query = query,
+                    page = currentPage,
+                    pageSize = 20,
+                    filters = FilterIndustry("", "")
+                )
+
+                if (result.isSuccess) {
+                    handleSuccess(result.getOrThrow())
+                } else {
+                    handleError(result.exceptionOrNull()?.message ?: "Ошибка сервера")
+                }
             } finally {
                 isLoading = false
             }
+        }
+    }
+
+    private fun handleError(message: String) {
+        _searchState.value = when {
+            message.contains("сети", ignoreCase = true) -> SearchState.NoInternet
+            message.contains("Сервер", ignoreCase = true) -> SearchState.ServerError
+            else -> SearchState.ServerError
         }
     }
 
@@ -67,30 +77,33 @@ class SearchViewModel(
 
     private fun shouldSkipSearch(): Boolean = isLoading || currentPage >= maxPages
 
-    private fun handleResponse(response: Response) {
-        when (response) {
-            is ResponseSuccess<*> -> handleSuccess(response.data as VacancySearchResponse)
-            is ResponseError -> _searchState.postValue(SearchState.Empty)
-        }
-    }
-
-    private fun handleSuccess(data: VacancySearchResponse) {
-        val newItems = data.items.map { item ->
+    private fun handleSuccess(data: List<VacancyDetails>) {
+        val newItems = data.map { item ->
             Vacancy(
                 id = item.id,
                 name = item.name,
                 salary = item.salary?.let { s ->
-                    Salary(from = s.from, to = s.to, currency = s.currency, gross = s.gross)
+                    Salary(from = s.from, to = s.to, currency = s.currency, gross = null)
                 },
-                employer = item.employer,
-                area = item.area,
-                publishedAt = "",
+                employer = EmployerDetails(
+                    id = "",
+                    name = item.employer,
+                    logo = "",
+                    description = null,
+                    siteUrl = null
+                ),
+                area = Area(
+                    id = "",
+                    name = item.area,
+                    country = null
+                ),
+                publishedAt = item.publishedAt ?: "",
                 snippet = null
             )
         }
 
-        currentPage = data.page + 1
-        maxPages = data.pages
+        currentPage += 1
+        maxPages = Int.MAX_VALUE
 
         _searchState.value = if (newItems.isEmpty()) SearchState.Empty else SearchState.Success(newItems)
     }
