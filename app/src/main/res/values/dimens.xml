@@ -7,9 +7,8 @@
     <dimen name="prog_size">48dp</dimen>
     <dimen name="vac_info_text">16sp</dimen>
     <dimen name="vac_info_head">22sp</dimen>
-
-        <dimen name="size_48dp">48dp</dimen>
-
-        <dimen name="size_16sp">16sp</dimen>
-        <dimen name="size_22sp">22sp</dimen>
+    <dimen name="size_48dp">48dp</dimen>
+    <dimen name="size_16sp">16sp</dimen>
+    <dimen name="size_22sp">22sp</dimen>
+    <dimen name="margin_9">9dp</dimen>
 </resources>
