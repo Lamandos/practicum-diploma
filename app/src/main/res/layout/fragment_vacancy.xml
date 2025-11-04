@@ -15,45 +15,44 @@
 
         <ImageView
             android:id="@+id/back_btn"
+            style="@style/vac_btns"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginStart="@dimen/pad_4"
-            style="@style/vac_btns"
             android:src="@drawable/back_icon" />
 
         <TextView
+            style="@style/HeaderStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
+            android:layout_gravity="center_vertical"
             android:layout_marginStart="@dimen/pad_4"
-            style="@style/HeaderStyle"
-            android:text="@string/vacancy_layout"
-            android:layout_gravity="center_vertical" />
+            android:gravity="center"
+            android:text="@string/vacancy_layout" />
 
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1">
-        </FrameLayout>
+            android:layout_weight="1"></FrameLayout>
 
         <ImageView
             android:id="@+id/share_btn"
+            style="@style/vac_btns"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:layout_marginEnd="@dimen/margin_half_8"
-            style="@style/vac_btns"
-            android:src="@drawable/share_icon"
-            android:layout_gravity="center_vertical"/>
+            android:src="@drawable/share_icon" />
 
         <ImageView
             android:id="@+id/favorites_btn"
+            style="@style/vac_btns"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
             android:layout_marginEnd="@dimen/margin_half_8"
-            style="@style/vac_btns"
-            android:src="@drawable/favorite_icon"
-            android:layout_gravity="center_vertical"/>
+            android:src="@drawable/favorite_icon" />
 
     </LinearLayout>
 
@@ -292,7 +291,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/margin_def_16"
+                android:autoLink="email|phone"
                 android:fontFamily="@font/ys_display_regular"
+                android:linksClickable="true"
                 android:text="Номер телефона и/или почта. Точки разделения надо делать в коде."
                 android:textSize="@dimen/vac_info_text" />
 
@@ -334,8 +335,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_def_16"
-            android:text="@string/vac_deleted"
-            android:gravity="center"/>
+            android:gravity="center"
+            android:text="@string/vac_deleted" />
     </LinearLayout>
 
     <LinearLayout
