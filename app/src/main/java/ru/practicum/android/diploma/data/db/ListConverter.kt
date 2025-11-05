@@ -3,7 +3,6 @@ package ru.practicum.android.diploma.data.db
 import androidx.room.TypeConverter
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
 
 class ListConverter {
     private val gson = Gson()

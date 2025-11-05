@@ -20,4 +20,3 @@ val repositoryModule: Module = module {
         )
     }
 }
-

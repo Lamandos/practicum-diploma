@@ -95,4 +95,3 @@ class SearchViewModel(
         _searchState.value = if (newItems.isEmpty()) SearchState.Empty else SearchState.Success(newItems)
     }
 }
-

@@ -7,4 +7,3 @@ data class AreaDto(
     val name: String,
     val country: String? = null
 )
-

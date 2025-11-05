@@ -1,11 +1,11 @@
 package ru.practicum.android.diploma.data.dto.vacancydetailsdto
 
 import ru.practicum.android.diploma.domain.models.vacancydetails.Address
-import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
-import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
-import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 import ru.practicum.android.diploma.domain.models.vacancydetails.Contacts
+import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
 import ru.practicum.android.diploma.domain.models.vacancydetails.Phone
+import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
+import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 fun ExperienceDto.toDomain(): Experience {
     return Experience(

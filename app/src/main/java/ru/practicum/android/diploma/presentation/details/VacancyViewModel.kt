@@ -70,7 +70,6 @@ class VacancyViewModel(
             return
         }
 
-
         viewModelScope.launch {
             try {
                 val isCurrentlyFavorite = _isFavorite.value ?: false

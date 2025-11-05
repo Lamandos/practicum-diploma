@@ -2,8 +2,8 @@
 package ru.practicum.android.diploma.domain.interactors.impl
 
 import kotlinx.coroutines.flow.Flow
-import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.domain.api.repositories.FavoritesRepository
+import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 class FavoritesInteractorImpl(
