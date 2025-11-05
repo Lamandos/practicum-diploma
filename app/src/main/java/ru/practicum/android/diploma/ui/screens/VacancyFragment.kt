@@ -8,7 +8,6 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
-import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -52,12 +51,20 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         setupObservers()
         updateFavoritesButton(false)
 
-        vacancyId?.let { viewModel.init(it) } ?: findNavController().popBackStack()
+        vacancyId?.let { id ->
+            viewModel.init(id, fromFavorites)
+        } ?: run {
+            findNavController().popBackStack()
+        }
     }
 
     private fun setupClickListeners() {
-        binding.backBtn.setOnClickListener { findNavController().popBackStack() }
-        binding.favoritesBtn.setOnClickListener { viewModel.onFavoritesClicked() }
+        binding.backBtn.setOnClickListener {
+            findNavController().popBackStack()
+        }
+        binding.favoritesBtn.setOnClickListener {
+            viewModel.onFavoritesClicked()
+        }
         binding.shareBtn.setOnClickListener {
             viewModel.vacancyDetails.value?.let { shareVacancy(it.url) }
         }
@@ -71,28 +78,9 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         startActivity(Intent.createChooser(intent, getString(R.string.share_vacancy_title)))
     }
 
-    private fun setupObservers() {
-        viewModel.vacancyDetails.observe(viewLifecycleOwner) { vacancy ->
-            vacancy?.let {
-                Log.d("VacancyFragment", "Contacts: ${it.contacts}")
-                bindVacancyDetails(it)
-            }
-        }
-
-        viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
-            updateFavoritesButton(isFavorite)
-            if (fromFavorites && !isFavorite) findNavController().popBackStack()
-        }
-    }
-
-    private fun updateFavoritesButton(isFavorite: Boolean) {
-        binding.favoritesBtn.setImageResource(
-            if (isFavorite) R.drawable.favorite_fill_icon else R.drawable.favorite_icon
-        )
-    }
-
     private fun bindVacancyDetails(details: VacancyDetails) {
         val sectionColor = getSectionColor()
+
         bindBasics(details)
         bindSkills(details.skills, sectionColor)
         bindContacts(details.contacts)
@@ -102,33 +90,18 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private fun getSectionColor(): Int {
         val titleColor = ContextCompat.getColor(requireContext(), R.color.yp_black)
-        val nightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
-            Configuration.UI_MODE_NIGHT_YES
+        val nightMode =
+            resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
         return if (nightMode) ContextCompat.getColor(requireContext(), R.color.white) else titleColor
     }
 
     private fun bindBasics(details: VacancyDetails) {
-        val city = details.address?.city ?: details.area?.name ?: getString(NOT_SPECIFIED_TEXT_RES)
-        binding.vacName.text = "${details.name.orEmpty()} , $city"
+        binding.vacName.text = details.name.orEmpty()
         binding.vacSalary.text = formatSalary(details.salary)
-        binding.vacEmployer.text =
-            details.employer?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
-
-        val address = details.address
-        val companyAddress = when {
-            !address?.street.isNullOrBlank() && !address?.building.isNullOrBlank() ->
-                "${address?.street}, ${address?.building}"
-            !address?.city.isNullOrBlank() -> address?.city!!
-            !details.area?.name.isNullOrBlank() -> details.area?.name!!
-            else -> getString(NOT_SPECIFIED_TEXT_RES)
-        }
-        binding.vacRegion.text = companyAddress
-
-        binding.experienceInfo.text =
-            details.experience?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
-        binding.scheduleInfo.text =
-            details.schedule?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
-
+        binding.vacEmployer.text = details.employer?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.vacRegion.text = details.area?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.experienceInfo.text = details.experience?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.scheduleInfo.text = details.schedule?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
         setupSectionTitles(getSectionColor())
     }
 
@@ -142,7 +115,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
                 visibility = View.VISIBLE
             }
         }
-
         setupTitle(binding.responsibilitiesTitle, R.string.responsibilities)
         setupTitle(binding.requirementsTitle, R.string.requirements)
         setupTitle(binding.termsTitle, R.string.Terms)
@@ -170,6 +142,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             binding.skillsTitle.visibility = View.GONE
             return
         }
+
         binding.skillsInfo.visibility = View.VISIBLE
         binding.skillsInfo.setTextColor(sectionColor)
         binding.skillsInfo.text = skills.joinToString("\n") { "$BULLET_SYMBOL$it" }
@@ -178,15 +151,15 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     private fun bindContacts(contacts: Contacts?) {
         val contactText = contacts?.let { c ->
             val lines = mutableListOf<String>()
-
-            c.email?.takeIf { it.isNotBlank() }?.let { lines.add(it) }
-
-            c.phones?.mapNotNull { phone ->
-                phone.number.takeIf { it.isNotBlank() }?.let { number ->
-                    if (!phone.comment.isNullOrBlank()) "$number (${phone.comment})" else number
+            c.email?.takeIf { it.isNotBlank() }?.let(lines::add)
+            c.phones?.forEach { phone ->
+                val number = phone.number.orEmpty()
+                if (number.isNotBlank()) {
+                    lines.add(
+                        if (!phone.comment.isNullOrBlank()) "$number (${phone.comment})" else number
+                    )
                 }
-            }?.let { lines.addAll(it) }
-
+            }
             lines.joinToString("\n").takeIf { it.isNotBlank() }
         }
 
@@ -228,6 +201,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             infoView.visibility = View.GONE
             return
         }
+
         titleView.visibility = View.VISIBLE
         infoView.visibility = View.VISIBLE
         infoView.text = addBullets(text, sectionColor)
@@ -249,16 +223,53 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     private fun extractSection(desc: String, startRes: Int, endRes: Int?): String {
         val startText = getString(startRes)
         val endText = endRes?.let { getString(it) }
-
-        val startIndex = desc.indexOf("$startText:").takeIf { it != -1 } ?: return ""
+        val startIndex = desc.indexOf("$startText:")
+        if (startIndex == -1) return ""
         val from = startIndex + startText.length + 1
-
         val to = endText?.let {
             val endIndex = desc.indexOf("$it:", from)
             if (endIndex == -1) desc.length else endIndex
         } ?: desc.length
-
         return desc.substring(from, to).trim()
+    }
+
+    private fun setupObservers() {
+        viewModel.vacancyDetails.observe(viewLifecycleOwner) { vacancy ->
+            handleVacancyDetails(vacancy)
+        }
+        viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
+            handleFavoriteState(isFavorite)
+        }
+    }
+
+    private fun handleVacancyDetails(vacancy: VacancyDetails?) {
+        if (vacancy != null) {
+            showVacancy(vacancy)
+            bindVacancyDetails(vacancy)
+        } else if (fromFavorites) {
+            findNavController().popBackStack()
+        }
+    }
+
+    private fun handleFavoriteState(isFavorite: Boolean) {
+        updateFavoritesButton(isFavorite)
+        if (fromFavorites && !isFavorite) {
+            findNavController().popBackStack()
+        }
+    }
+
+    private fun showVacancy(vacancy: VacancyDetails) {
+        binding.vacName.text = vacancy.name
+        binding.vacEmployer.text = vacancy.employer?.name ?: ""
+        binding.vacSalary.text = formatSalary(vacancy.salary)
+    }
+
+    private fun updateFavoritesButton(isFavorite: Boolean) {
+        if (isFavorite) {
+            binding.favoritesBtn.setImageResource(R.drawable.favorite_fill_icon)
+        } else {
+            binding.favoritesBtn.setImageResource(R.drawable.favorite_icon)
+        }
     }
 
     override fun onDestroyView() {
