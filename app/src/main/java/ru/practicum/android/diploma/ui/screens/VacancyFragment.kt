@@ -251,5 +251,3 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         _binding = null
     }
 }
-
-
