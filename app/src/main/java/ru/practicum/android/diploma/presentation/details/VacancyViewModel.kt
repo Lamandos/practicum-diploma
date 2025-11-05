@@ -111,13 +111,13 @@ class VacancyViewModel(
             _isFavorite.value = false
         }
 
-        result.onFailure { exception ->
-            when (exception) {
+        result.onFailure { throwable ->
+            when (throwable) {
                 is IOException, is SecurityException, is IllegalStateException -> {
                     handleErrorWithLog(
                         message = ERROR_REMOVE_FAVORITE,
-                        operation = "removeFromFavorites - ${exception::class.simpleName}",
-                        exception = exception
+                        operation = "removeFromFavorites - ${throwable::class.simpleName}",
+                        exception = throwable
                     )
                 }
             }
@@ -139,13 +139,13 @@ class VacancyViewModel(
             }
         }
 
-        result.onFailure { exception ->
-            when (exception) {
+        result.onFailure { throwable ->
+            when (throwable) {
                 is IOException, is SecurityException, is IllegalStateException -> {
                     handleErrorWithLog(
                         message = ERROR_ADD_FAVORITE,
-                        operation = "addToFavorites - ${exception::class.simpleName}",
-                        exception = exception
+                        operation = "addToFavorites - ${throwable::class.simpleName}",
+                        exception = throwable
                     )
                 }
             }
@@ -168,7 +168,7 @@ class VacancyViewModel(
         _error.value = message
     }
 
-    private fun handleErrorWithLog(message: String, operation: String, exception: Exception) {
+    private fun handleErrorWithLog(message: String, operation: String, exception: Throwable) {
         Log.e(TAG, "Error in $operation: ${exception.message}", exception)
         handleError(message)
     }
