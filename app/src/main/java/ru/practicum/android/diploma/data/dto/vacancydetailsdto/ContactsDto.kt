@@ -6,6 +6,7 @@ data class ContactsDto(
     val phones: List<PhoneDto>?
 ) {
     data class PhoneDto(
-        val number: String
+        val number: String,
+        val comment: String? = null
     )
 }
