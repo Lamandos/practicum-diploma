@@ -28,14 +28,14 @@ class RetrofitNetworkClient(
                     val result = apiService.getVacancyDetails(dto.vacancyId)
                     ResponseSuccess(result)
                 }
-                else -> ResponseError("Неизвестный тип запроса")
+                else -> ResponseError(Throwable("Неизвестный тип запроса"))
             }
         } catch (e: IOException) {
             Log.e(TAG, "Ошибка сети", e)
-            ResponseError("Ошибка сети: ${e.message}")
+            ResponseError(Throwable("Ошибка сети: ${e.message}", e))
         } catch (e: retrofit2.HttpException) {
             Log.e(TAG, "Ошибка HTTP", e)
-            ResponseError("Сервер вернул ошибку: ${e.message()}")
+            ResponseError(Throwable("Сервер вернул ошибку: ${e.message()}", e))
         }
     }
 

@@ -1,11 +1,15 @@
 package ru.practicum.android.diploma.ui.screens
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -15,6 +19,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
+import retrofit2.HttpException
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentSearchBinding
 import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
@@ -39,6 +44,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 2000L
+        private const val SERVER_ERROR_CODE = 500
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -91,12 +97,28 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                     adapter.showLoading(false)
                 }
                 is SearchState.Error -> {
-                    updateUI(emptyList(), isSearchActive = true)
+                    val hasNetwork = isNetworkAvailable(requireContext())
+                    val isServerError =
+                        (state.throwable as? HttpException)?.code() == SERVER_ERROR_CODE
+                    updateUI(
+                        vacancies = emptyList(),
+                        isSearchActive = true,
+                        isLoading = false,
+                        isNetworkAvailable = hasNetwork,
+                        isServerError = isServerError
+                    )
                     adapter.showLoading(false)
                 }
             }
         }
 
+        viewModel.isErrorToastShown.observe(viewLifecycleOwner) { isErrorToastShown ->
+            if (isErrorToastShown) {
+                viewModel.errorMessage.value?.let {
+                    Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
         viewModel.showLoadingState.observe(viewLifecycleOwner) { showLoading ->
             adapter.showLoading(showLoading)
         }
@@ -157,23 +179,50 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     private fun updateUI(
         vacancies: List<Vacancy>,
         isSearchActive: Boolean,
-        isLoading: Boolean = false
+        isLoading: Boolean = false,
+        isNetworkAvailable: Boolean = true,
+        isServerError: Boolean = false
     ) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
 
         when {
             isLoading -> {
+                binding.noNetError.visibility = View.GONE
+                binding.serverError.visibility = View.GONE
+                binding.noVacError.visibility = View.GONE
+                binding.searchStartPic.visibility = View.GONE
+                binding.recyclerView.visibility = View.GONE
+                binding.msgText.visibility = View.GONE
+            }
+            !isNetworkAvailable -> {
+                binding.noNetError.visibility = View.VISIBLE
+                binding.serverError.visibility = View.GONE
+                binding.noVacError.visibility = View.GONE
+                binding.searchStartPic.visibility = View.GONE
+                binding.recyclerView.visibility = View.GONE
+                binding.msgText.visibility = View.GONE
+            }
+            isServerError -> {
+                binding.noNetError.visibility = View.GONE
+                binding.serverError.visibility = View.VISIBLE
+                binding.noVacError.visibility = View.GONE
                 binding.searchStartPic.visibility = View.GONE
                 binding.recyclerView.visibility = View.GONE
                 binding.msgText.visibility = View.GONE
             }
             vacancies.isEmpty() && isSearchActive -> {
-                binding.searchStartPic.visibility = View.VISIBLE
+                binding.noNetError.visibility = View.GONE
+                binding.serverError.visibility = View.GONE
+                binding.noVacError.visibility = View.VISIBLE
+                binding.searchStartPic.visibility = View.GONE
                 binding.recyclerView.visibility = View.GONE
                 binding.msgText.visibility = View.VISIBLE
                 binding.msgText.text = getString(R.string.no_vac_msg)
             }
             vacancies.isNotEmpty() -> {
+                binding.noNetError.visibility = View.GONE
+                binding.serverError.visibility = View.GONE
+                binding.noVacError.visibility = View.GONE
                 binding.searchStartPic.visibility = View.GONE
                 binding.recyclerView.visibility = View.VISIBLE
                 binding.msgText.visibility = View.VISIBLE
@@ -182,17 +231,25 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                     viewModel.totalFoundCount,
                     viewModel.totalFoundCount
                 )
-
                 adapter.setItems(vacancies)
             }
             else -> {
+                binding.noNetError.visibility = View.GONE
+                binding.serverError.visibility = View.GONE
+                binding.noVacError.visibility = View.GONE
                 binding.searchStartPic.visibility = View.VISIBLE
                 binding.recyclerView.visibility = View.GONE
                 binding.msgText.visibility = View.GONE
             }
         }
     }
+    fun isNetworkAvailable(context: Context): Boolean {
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
 
+        return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
+    }
     private fun closeKeyboard(view: View) {
         val imm = requireContext().getSystemService(InputMethodManager::class.java)
         imm?.hideSoftInputFromWindow(view.windowToken, 0)
