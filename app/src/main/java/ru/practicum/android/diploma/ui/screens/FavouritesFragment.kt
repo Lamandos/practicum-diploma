@@ -1,4 +1,3 @@
-// FavouritesFragment.kt
 package ru.practicum.android.diploma.ui.screens
 
 import android.os.Bundle
@@ -20,7 +19,12 @@ class FavouritesFragment : Fragment(R.layout.fragment_favorites) {
     private val binding get() = _binding!!
 
     private val viewModel: FavoritesViewModel by viewModel()
-    private lateinit var adapter: VacancyAdapter
+
+    private val adapter: VacancyAdapter by lazy {
+        VacancyAdapter { vacancy ->
+            navigateToVacancyDetails(vacancy.id)
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -28,14 +32,9 @@ class FavouritesFragment : Fragment(R.layout.fragment_favorites) {
 
         setupRecyclerView()
         setupObservers()
-        setupClickListeners()
     }
 
     private fun setupRecyclerView() {
-        adapter = VacancyAdapter { vacancy ->
-            navigateToVacancyDetails(vacancy.id)
-        }
-
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(requireContext())
             adapter = this@FavouritesFragment.adapter
@@ -46,9 +45,6 @@ class FavouritesFragment : Fragment(R.layout.fragment_favorites) {
         viewModel.favoritesState.observe(viewLifecycleOwner) { state ->
             handleState(state)
         }
-    }
-
-    private fun setupClickListeners() {
     }
 
     private fun handleState(state: FavoritesState) {

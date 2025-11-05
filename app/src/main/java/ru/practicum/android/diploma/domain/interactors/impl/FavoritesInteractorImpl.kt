@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import ru.practicum.android.diploma.domain.api.repositories.FavoritesRepository
 import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import java.sql.SQLException
 
 class FavoritesInteractorImpl(
     private val favoritesRepository: FavoritesRepository
@@ -18,26 +19,21 @@ class FavoritesInteractorImpl(
     }
 
     override suspend fun addToFavorites(vacancy: VacancyDetails) {
-        try {
-            favoritesRepository.addToFavorites(vacancy)
-        } catch (e: Exception) {
-            throw e
-        }
+        favoritesRepository.addToFavorites(vacancy)
     }
 
     override suspend fun removeFromFavorites(vacancyId: String) {
-        try {
-            favoritesRepository.removeFromFavorites(vacancyId)
-        } catch (e: Exception) {
-            throw e
-        }
+        favoritesRepository.removeFromFavorites(vacancyId)
     }
 
     override suspend fun isFavorite(vacancyId: String): Boolean {
         return try {
-            val result = favoritesRepository.isFavorite(vacancyId)
-            result
-        } catch (e: Exception) {
+            favoritesRepository.isFavorite(vacancyId)
+        } catch (e: SQLException) {
+            // Ошибки базы данных
+            false
+        } catch (e: IllegalStateException) {
+            // Ошибки состояния приложения
             false
         }
     }

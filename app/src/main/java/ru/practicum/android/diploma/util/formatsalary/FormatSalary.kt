@@ -1,6 +1,7 @@
 package ru.practicum.android.diploma.util.formatsalary
 
 import ru.practicum.android.diploma.domain.models.vacancy.Salary
+import java.util.Locale
 
 fun formatSalary(salary: Salary?): String {
     return salary?.let {
@@ -13,7 +14,7 @@ fun formatSalary(salary: Salary?): String {
 }
 
 private fun formatNumber(number: Int): String {
-    return String.format("%,d", number).replace(',', ' ')
+    return String.format(Locale.getDefault(), "%,d", number).replace(',', ' ')
 }
 
 private fun getCurrencySymbol(currency: String): String {

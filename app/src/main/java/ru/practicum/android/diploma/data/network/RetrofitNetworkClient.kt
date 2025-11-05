@@ -7,6 +7,8 @@ import ru.practicum.android.diploma.data.dto.vacancydetailsdto.VacancyDetailsDto
 import ru.practicum.android.diploma.data.mappers.VacancyMapper
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class RetrofitNetworkClient(
     private val apiService: VacancySearchApiService
@@ -36,12 +38,13 @@ class RetrofitNetworkClient(
         return try {
             val apiResponse: VacancyDetailsDto = apiService.getVacancyDetails(vacancyId)
             VacancyMapper.mapToDomain(apiResponse)
+        } catch (e: SocketTimeoutException) {
+            null
+        } catch (e: UnknownHostException) {
+            null
         } catch (e: IOException) {
             null
         } catch (e: retrofit2.HttpException) {
-            null
-        } catch (e: Exception) {
-            e.printStackTrace()
             null
         }
     }

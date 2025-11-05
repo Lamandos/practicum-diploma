@@ -37,7 +37,7 @@ fun ContactsDto.toDomain(id: String): Contacts? {
                         comment = phoneDto.comment
                     )
                 }
-            }?.takeIf { it.isNotEmpty() } as List<Contacts.Phone>?
+            }?.takeIf { it.isNotEmpty() } as? List<Contacts.Phone>
         )
     } else {
         null

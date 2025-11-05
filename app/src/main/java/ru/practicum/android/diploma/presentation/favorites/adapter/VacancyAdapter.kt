@@ -41,7 +41,9 @@ class VacancyAdapter(
             placeholder.setImageResource(R.drawable.placeholder)
         }
 
-        private fun formatSalaryForDetails(salary: ru.practicum.android.diploma.domain.models.vacancydetails.Salary?): String {
+        private fun formatSalaryForDetails(
+            salary: ru.practicum.android.diploma.domain.models.vacancydetails.Salary?
+        ): String {
             salary ?: return "Зарплата не указана"
             val from = salary.from
             val to = salary.to
