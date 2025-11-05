@@ -30,7 +30,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         private const val BULLET_SYMBOL = "• "
         private const val TITLE_SIZE_SP = 18f
         private val NOT_SPECIFIED_TEXT_RES = R.string.not_specified
-
         private const val ERROR_VACANCY_NOT_FOUND = 404
     }
 
@@ -39,7 +38,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     private val viewModel: VacancyViewModel by viewModel()
     private val args: VacancyFragmentArgs by navArgs()
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: android.os.Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentVacancyBinding.bind(view)
 
@@ -59,9 +58,10 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
                     bindVacancyDetails(result.data)
                 }
                 is VacancyResult.Error -> {
-                    when (result.code) {
-                        ERROR_VACANCY_NOT_FOUND -> binding.vacDelError.visibility = View.VISIBLE
-                        else -> binding.serverError.visibility = View.VISIBLE
+                    if (result.code == ERROR_VACANCY_NOT_FOUND) {
+                        binding.vacDelError.visibility = View.VISIBLE
+                    } else {
+                        binding.serverError.visibility = View.VISIBLE
                     }
                 }
             }
@@ -75,7 +75,9 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             .takeIf { it is VacancyResult.Success } as? VacancyResult.Success
 
         binding.shareBtn.setOnClickListener {
-            vacancy?.data?.let { shareVacancy(it.url) }
+            if (vacancy != null) {
+                shareVacancy(vacancy.data.url)
+            }
         }
 
         ContactsClickHandler.makeLinksClickable(binding.contactsInfo)
@@ -100,21 +102,20 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         val titleColor = ContextCompat.getColor(requireContext(), R.color.yp_black)
         val nightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
             Configuration.UI_MODE_NIGHT_YES
-        val sectionColor = if (nightMode) ContextCompat.getColor(requireContext(), R.color.white)
-        else titleColor
+        val sectionColor = if (nightMode) {
+            ContextCompat.getColor(requireContext(), R.color.white)
+        } else {
+            titleColor
+        }
 
         setupSectionTitles(sectionColor)
 
         binding.vacName.text = details.name.orEmpty()
         binding.vacSalary.text = formatSalary(details.salary)
-        binding.vacEmployer.text =
-            details.employer?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
-        binding.vacRegion.text =
-            details.area?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
-        binding.experienceInfo.text =
-            details.experience?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
-        binding.scheduleInfo.text =
-            details.schedule?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.vacEmployer.text = details.employer?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.vacRegion.text = details.area?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.experienceInfo.text = details.experience?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.scheduleInfo.text = details.schedule?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
 
         bindSkills(details.skills, sectionColor)
         bindContacts(details.contacts)
@@ -149,18 +150,18 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     }
 
     private fun formatSalary(salary: Salary?): String {
-        return salary?.let { s ->
-            val from = s.from?.toString().orEmpty()
-            val to = s.to?.toString().orEmpty()
-            val currency = s.currency.orEmpty()
+        if (salary == null) return getString(R.string.salary_not_specified)
 
-            when {
-                from.isNotEmpty() && to.isNotEmpty() -> "от $from до $to $currency"
-                from.isNotEmpty() -> "от $from $currency"
-                to.isNotEmpty() -> "до $to $currency"
-                else -> getString(R.string.salary_not_specified)
-            }
-        } ?: getString(R.string.salary_not_specified)
+        val from = salary.from?.toString().orEmpty()
+        val to = salary.to?.toString().orEmpty()
+        val currency = salary.currency.orEmpty()
+
+        return when {
+            from.isNotEmpty() && to.isNotEmpty() -> "от $from до $to $currency"
+            from.isNotEmpty() -> "от $from $currency"
+            to.isNotEmpty() -> "до $to $currency"
+            else -> getString(R.string.salary_not_specified)
+        }
     }
 
     private fun bindSkills(skills: List<String>?, sectionColor: Int) {
@@ -183,7 +184,11 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             c.phones?.forEach { phone ->
                 val number = phone.number.orEmpty()
                 if (number.isNotBlank()) {
-                    val line = if (!phone.comment.isNullOrBlank()) "$number (${phone.comment})" else number
+                    val line = if (!phone.comment.isNullOrBlank()) {
+                        "$number (${phone.comment})"
+                    } else {
+                        number
+                    }
                     lines.add(line)
                 }
             }
