@@ -34,7 +34,6 @@ class VacancyViewModel(
     private var currentVacancyId: String? = null
     private var isFromFavorites: Boolean = false
 
-    // Константы для сообщений об ошибках
     companion object {
         private const val ERROR_NETWORK = "Ошибка сети"
         private const val ERROR_NO_INTERNET = "Нет подключения к интернету"
@@ -131,9 +130,10 @@ class VacancyViewModel(
             val currentVacancy = getCurrentVacancy(vacancyId)
 
             if (currentVacancy != null) {
-                favoritesInteractor.addToFavorites(currentVacancy)
+                val vacancyToSave = getVacancyWithLogo(currentVacancy, vacancyId)
+                favoritesInteractor.addToFavorites(vacancyToSave)
                 _isFavorite.value = true
-                updateVacancyDetailsIfNeeded(currentVacancy)
+                updateVacancyDetailsIfNeeded(vacancyToSave)
             } else {
                 handleError(ERROR_LOAD_VACANCY)
             }
@@ -152,6 +152,28 @@ class VacancyViewModel(
         }
 
         result.getOrThrow()
+    }
+
+    private suspend fun getVacancyWithLogo(currentVacancy: VacancyDetails, vacancyId: String): VacancyDetails {
+        return if (currentVacancy.employer?.logo.isNullOrEmpty() && !isFromFavorites) {
+            try {
+                vacancyInteractor.getVacancyDetails(vacancyId) ?: currentVacancy
+            } catch (e: IOException) {
+                Log.w(TAG, "Network error while fetching logo: ${e.message}")
+                currentVacancy
+            } catch (e: UnknownHostException) {
+                Log.w(TAG, "No internet while fetching logo: ${e.message}")
+                currentVacancy
+            } catch (e: SecurityException) {
+                Log.w(TAG, "Security error while fetching logo: ${e.message}")
+                currentVacancy
+            } catch (e: IllegalStateException) {
+                Log.w(TAG, "Illegal state while fetching logo: ${e.message}")
+                currentVacancy
+            }
+        } else {
+            currentVacancy
+        }
     }
 
     private suspend fun getCurrentVacancy(vacancyId: String): VacancyDetails? {

@@ -83,6 +83,7 @@ class FavouritesFragment : Fragment(R.layout.fragment_favorites) {
         binding.noVacError.visibility = View.GONE
         binding.noNetError.visibility = View.GONE
 
+        // Просто передаем вакансии как есть - адаптер сам обработает отсутствие логотипа
         adapter.submitList(vacancies)
     }
 

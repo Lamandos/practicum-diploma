@@ -8,6 +8,7 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
@@ -30,15 +31,25 @@ class VacancyAdapter(
         private val nameCity: TextView = itemView.findViewById(R.id.vacancyNameCity)
         private val workPlace: TextView = itemView.findViewById(R.id.vacancyWP)
         private val salary: TextView = itemView.findViewById(R.id.vacancySalary)
-        private val placeholder: ImageView = itemView.findViewById(R.id.vacancyPlaceholder)
+        private val logoImageView: ImageView = itemView.findViewById(R.id.vacancyPlaceholder)
 
         fun bind(vacancy: VacancyDetails) {
             nameCity.text = "${vacancy.name}\n${vacancy.area?.name ?: ""}"
             workPlace.text = vacancy.employer?.name ?: ""
-
             salary.text = formatSalaryForDetails(vacancy.salary)
 
-            placeholder.setImageResource(R.drawable.placeholder)
+            // Загрузка логотипа аналогично SearchVacancyAdapter
+            val logoUrl = vacancy.employer?.logo
+            if (!logoUrl.isNullOrBlank()) {
+                Glide.with(itemView)
+                    .load(logoUrl)
+                    .placeholder(R.drawable.placeholder)
+                    .error(R.drawable.placeholder)
+                    .into(logoImageView)
+            } else {
+                // Если логотипа нет, устанавливаем плейсхолдер
+                logoImageView.setImageResource(R.drawable.placeholder)
+            }
         }
 
         private fun formatSalaryForDetails(
