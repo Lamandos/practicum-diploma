@@ -41,12 +41,15 @@ class VacancyViewModel(
                         else -> DEFAULT_ERROR_CODE
                     }
                     _vacancyDetails.postValue(VacancyResult.Error(code))
+                    exception?.printStackTrace()
                 }
             } catch (e: IOException) {
                 _vacancyDetails.postValue(VacancyResult.Error(DEFAULT_ERROR_CODE))
+                e.printStackTrace()
             } catch (e: HttpException) {
                 val code = e.code()
                 _vacancyDetails.postValue(VacancyResult.Error(code))
+                e.printStackTrace()
             } catch (e: Exception) {
                 _vacancyDetails.postValue(VacancyResult.Error(DEFAULT_ERROR_CODE))
                 e.printStackTrace()
@@ -54,4 +57,5 @@ class VacancyViewModel(
         }
     }
 }
+
 
