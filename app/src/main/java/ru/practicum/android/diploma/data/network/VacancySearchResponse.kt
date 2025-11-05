@@ -3,6 +3,7 @@ package ru.practicum.android.diploma.data.network
 import ru.practicum.android.diploma.domain.models.vacancy.Area
 import ru.practicum.android.diploma.domain.models.vacancy.Salary
 import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
+import ru.practicum.android.diploma.domain.models.vacancydetails.Address
 import ru.practicum.android.diploma.domain.models.vacancydetails.EmployerDetails
 
 data class VacancySearchResponse(
@@ -10,7 +11,8 @@ data class VacancySearchResponse(
     val page: Int,
     val pages: Int,
     val perPage: Int,
-    val found: Int
+    val found: Int,
+    val address: Address?
 )
 
 data class VacancyItem(
@@ -18,7 +20,8 @@ data class VacancyItem(
     val name: String,
     val employer: EmployerDetails,
     val area: Area,
-    val salary: Salary?
+    val salary: Salary?,
+    val address: Address?
 )
 
 fun VacancyItem.toDomain(): Vacancy {
@@ -28,6 +31,7 @@ fun VacancyItem.toDomain(): Vacancy {
         salary = salary,
         employer = employer,
         area = area,
+        address = address,
         publishedAt = "",
         snippet = null
     )

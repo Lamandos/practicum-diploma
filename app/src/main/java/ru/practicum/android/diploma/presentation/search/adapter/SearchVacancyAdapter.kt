@@ -30,12 +30,14 @@ class SearchVacancyAdapter(
         private val placeholder: ImageView = itemView.findViewById(R.id.vacancyPlaceholder)
 
         fun bind(vacancy: Vacancy) {
-            nameCity.text = "${vacancy.name}, ${vacancy.area.name}"
-            workPlace.text = vacancy.employer.name
+            val city = vacancy.address?.city ?: vacancy.area?.name ?: itemView.context.getString(R.string.not_specified)
+
+            nameCity.text = "${vacancy.name}, $city"
+            workPlace.text = vacancy.employer?.name.orEmpty()
             salary.text = formatSalary(vacancy.salary)
 
             Glide.with(itemView)
-                .load(vacancy.employer.logo)
+                .load(vacancy.employer?.logo)
                 .placeholder(R.drawable.placeholder)
                 .error(R.drawable.placeholder)
                 .into(placeholder)
