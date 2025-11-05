@@ -1,10 +1,12 @@
 package ru.practicum.android.diploma.data.repository
 
 import android.graphics.Region
+import android.util.Log
 import ru.practicum.android.diploma.data.dto.ResponseError
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
 import ru.practicum.android.diploma.data.mappers.VacancyMapper
 import ru.practicum.android.diploma.data.network.NetworkClient
+import ru.practicum.android.diploma.data.network.VacancyDetailsRequest
 import ru.practicum.android.diploma.data.network.VacancySearchRequest
 import ru.practicum.android.diploma.data.network.VacancySearchResponse
 import ru.practicum.android.diploma.domain.api.repositories.VacanciesRepository
@@ -12,14 +14,14 @@ import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 class VacanciesRepositoryImpl(
-    private val networkClient: NetworkClient,
+    private val networkClient: NetworkClient
 ) : VacanciesRepository {
 
     override suspend fun searchVacancies(
         query: String,
         page: Int,
         pageSize: Int,
-        filters: FilterIndustry,
+        filters: FilterIndustry
     ): Result<List<VacancyDetails>> {
         val response = networkClient.doRequest(
             VacancySearchRequest(text = query, page = page, perPage = pageSize)
@@ -31,29 +33,36 @@ class VacanciesRepositoryImpl(
                 Result.success(vacancies)
             }
 
+            is ResponseError -> Result.failure(Exception(response.message))
+        }
+    }
+
+    override suspend fun getVacancyDetails(vacancyId: String): Result<VacancyDetails> {
+        Log.d("VacanciesRepository", "Requesting vacancy details for ID: $vacancyId")
+        val response = networkClient.doRequest(
+            VacancyDetailsRequest(vacancyId)
+        )
+
+        return when (response) {
+            is ResponseSuccess<*> -> {
+                val details = response.data as? VacancyDetails
+                    ?: return Result.failure(Exception("Invalid response type"))
+                Log.d("VacanciesRepository", "Received vacancy details: $details")
+                Result.success(details)
+            }
+
             is ResponseError -> {
+                Log.e("VacanciesRepository", "Server error: ${response.message}")
                 Result.failure(Exception(response.message))
             }
         }
     }
 
-    override suspend fun getVacancyDetails(vacancyId: String): Result<VacancyDetails> {
-        return Result.failure(Exception(NOT_IMPLEMENTED_MSG))
-    }
+    override suspend fun getIndustries(): Result<List<VacancyDetails>> =
+        Result.failure(Exception("Not implemented"))
 
-    override suspend fun getIndustries(): Result<List<VacancyDetails>> {
-        return Result.failure(Exception(NOT_IMPLEMENTED_MSG))
-    }
+    override suspend fun getRegions(countryCode: String?): Result<List<Region>> =
+        Result.failure(Exception("Not implemented"))
 
-    override suspend fun getRegions(countryCode: String?): Result<List<Region>> {
-        return Result.failure(Exception(NOT_IMPLEMENTED_MSG))
-    }
-
-    override suspend fun isNetworkAvailable(): Boolean {
-        return true
-    }
-
-    companion object {
-        private const val NOT_IMPLEMENTED_MSG = "Not implemented"
-    }
+    override suspend fun isNetworkAvailable(): Boolean = true
 }
