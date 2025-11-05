@@ -44,6 +44,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 2000L
+        private const val SERVER_ERROR_CODE = 500
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -98,7 +99,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                 is SearchState.Error -> {
                     val hasNetwork = isNetworkAvailable(requireContext())
                     val isServerError =
-                        (state.throwable as? HttpException)?.code() == 500
+                        (state.throwable as? HttpException)?.code() == SERVER_ERROR_CODE
                     updateUI(
                         vacancies = emptyList(),
                         isSearchActive = true,
@@ -244,9 +245,10 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     }
     fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork ?: return false
-        val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        val network = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(network)
+
+        return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
     }
     private fun closeKeyboard(view: View) {
         val imm = requireContext().getSystemService(InputMethodManager::class.java)
