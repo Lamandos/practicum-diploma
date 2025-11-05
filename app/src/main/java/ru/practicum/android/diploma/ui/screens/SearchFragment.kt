@@ -65,11 +65,9 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-
                 if (dy > 0) {
                     val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
                     val totalItemCount = layoutManager.itemCount
-
                     if (lastVisibleItem >= totalItemCount - 1) {
                         viewModel.loadNextPage()
                     }
@@ -80,90 +78,115 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private fun observeViewModel() {
         viewModel.searchState.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is SearchState.Idle -> {
-                    updateUI(emptyList(), isSearchActive = false)
-                    adapter.showLoading(false)
-                }
-                is SearchState.Loading -> {
-                    updateUI(emptyList(), isSearchActive = true, isLoading = true)
-                    adapter.showLoading(false)
-                }
-                is SearchState.Success -> {
-                    updateUI(state.vacancies, isSearchActive = true)
-                }
-                is SearchState.Empty -> {
-                    updateUI(emptyList(), isSearchActive = true)
-                    adapter.showLoading(false)
-                }
-                is SearchState.Error -> {
-                    val hasNetwork = isNetworkAvailable(requireContext())
-                    val isServerError =
-                        (state.throwable as? HttpException)?.code() == SERVER_ERROR_CODE
-                    updateUI(
-                        vacancies = emptyList(),
-                        isSearchActive = true,
-                        isLoading = false,
-                        isNetworkAvailable = hasNetwork,
-                        isServerError = isServerError
-                    )
-                    adapter.showLoading(false)
-                }
-            }
+            handleSearchState(state)
         }
-
         viewModel.isErrorToastShown.observe(viewLifecycleOwner) { isErrorToastShown ->
-            if (isErrorToastShown) {
-                viewModel.errorMessage.value?.let {
-                    Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
-                }
-            }
+            handleErrorToast(isErrorToastShown)
         }
         viewModel.showLoadingState.observe(viewLifecycleOwner) { showLoading ->
             adapter.showLoading(showLoading)
         }
     }
 
+    private fun handleSearchState(state: SearchState) {
+        when (state) {
+            is SearchState.Idle -> handleIdleState()
+            is SearchState.Loading -> handleLoadingState()
+            is SearchState.Success -> handleSuccessState(state.vacancies)
+            is SearchState.Empty -> handleEmptyState()
+            is SearchState.Error -> handleErrorState(state.throwable)
+        }
+    }
+
+    private fun handleIdleState() {
+        updateUI(emptyList(), isSearchActive = false)
+        adapter.showLoading(false)
+    }
+
+    private fun handleLoadingState() {
+        updateUI(emptyList(), isSearchActive = true, isLoading = true)
+        adapter.showLoading(false)
+    }
+
+    private fun handleSuccessState(vacancies: List<Vacancy>) {
+        updateUI(vacancies, isSearchActive = true)
+    }
+
+    private fun handleEmptyState() {
+        updateUI(emptyList(), isSearchActive = true)
+        adapter.showLoading(false)
+    }
+
+    private fun handleErrorState(throwable: Throwable?) {
+        val hasNetwork = isNetworkAvailable(requireContext())
+        val isServerError = (throwable as? HttpException)?.code() == SERVER_ERROR_CODE
+        updateUI(
+            vacancies = emptyList(),
+            isSearchActive = true,
+            isLoading = false,
+            isNetworkAvailable = hasNetwork,
+            isServerError = isServerError
+        )
+        adapter.showLoading(false)
+    }
+
+    private fun handleErrorToast(isErrorToastShown: Boolean) {
+        if (isErrorToastShown) {
+            viewModel.errorMessage.value?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     private fun setupSearchField() {
-        binding.searchField.addTextChangedListener(object : TextWatcher {
+        binding.searchField.addTextChangedListener(createTextWatcher())
+        binding.searchField.setOnEditorActionListener { _, actionId, _ ->
+            handleEditorAction(actionId)
+        }
+    }
+
+    private fun createTextWatcher(): TextWatcher {
+        return object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun afterTextChanged(s: Editable?) {
                 binding.searchField.isCursorVisible = !s.isNullOrEmpty()
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val searchText = s.toString()
-                binding.clearIcon.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
-                binding.searchIcon.visibility = if (searchText.isEmpty()) View.VISIBLE else View.GONE
-
-                searchJob?.cancel()
-
-                if (searchText.isBlank()) {
-                    viewModel.resetSearch()
-                    return
-                }
-
-                searchJob = viewLifecycleOwner.lifecycleScope.launch {
-                    viewModel.setLoading()
-                    delay(SEARCH_DEBOUNCE_MS)
-                    viewModel.searchVacancies(searchText)
-                }
-            }
-        })
-
-        binding.searchField.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                val query = binding.searchField.text.toString()
-                if (query.isNotBlank()) {
-                    viewModel.setLoading()
-                    viewModel.searchVacancies(query)
-                }
-                closeKeyboard(binding.searchField)
-                true
-            } else {
-                false
+                handleTextChanged(s.toString())
             }
         }
+    }
+
+    private fun handleTextChanged(searchText: String) {
+        binding.clearIcon.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
+        binding.searchIcon.visibility = if (searchText.isEmpty()) View.VISIBLE else View.GONE
+
+        searchJob?.cancel()
+
+        if (searchText.isBlank()) {
+            viewModel.resetSearch()
+            return
+        }
+
+        searchJob = viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.setLoading()
+            delay(SEARCH_DEBOUNCE_MS)
+            viewModel.searchVacancies(searchText)
+        }
+    }
+
+    private fun handleEditorAction(actionId: Int): Boolean {
+        if (actionId == EditorInfo.IME_ACTION_DONE) {
+            val query = binding.searchField.text.toString()
+            if (query.isNotBlank()) {
+                viewModel.setLoading()
+                viewModel.searchVacancies(query)
+            }
+            closeKeyboard(binding.searchField)
+            return true
+        }
+        return false
     }
 
     private fun setupClearIcon() {
@@ -206,57 +229,67 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private fun showLoadingState() {
         setViewsVisibility(
-            noNetError = View.GONE,
-            serverError = View.GONE,
-            noVacError = View.GONE,
-            searchStartPic = View.GONE,
-            recyclerView = View.GONE,
-            msgText = View.GONE
+            VisibilityConfig(
+                noNetError = View.GONE,
+                serverError = View.GONE,
+                noVacError = View.GONE,
+                searchStartPic = View.GONE,
+                recyclerView = View.GONE,
+                msgText = View.GONE
+            )
         )
     }
 
     private fun showNoNetworkState() {
         setViewsVisibility(
-            noNetError = View.VISIBLE,
-            serverError = View.GONE,
-            noVacError = View.GONE,
-            searchStartPic = View.GONE,
-            recyclerView = View.GONE,
-            msgText = View.GONE
+            VisibilityConfig(
+                noNetError = View.VISIBLE,
+                serverError = View.GONE,
+                noVacError = View.GONE,
+                searchStartPic = View.GONE,
+                recyclerView = View.GONE,
+                msgText = View.GONE
+            )
         )
     }
 
     private fun showServerErrorState() {
         setViewsVisibility(
-            noNetError = View.GONE,
-            serverError = View.VISIBLE,
-            noVacError = View.GONE,
-            searchStartPic = View.GONE,
-            recyclerView = View.GONE,
-            msgText = View.GONE
+            VisibilityConfig(
+                noNetError = View.GONE,
+                serverError = View.VISIBLE,
+                noVacError = View.GONE,
+                searchStartPic = View.GONE,
+                recyclerView = View.GONE,
+                msgText = View.GONE
+            )
         )
     }
 
     private fun showNoVacanciesState() {
         setViewsVisibility(
-            noNetError = View.GONE,
-            serverError = View.GONE,
-            noVacError = View.VISIBLE,
-            searchStartPic = View.GONE,
-            recyclerView = View.GONE,
-            msgText = View.VISIBLE
+            VisibilityConfig(
+                noNetError = View.GONE,
+                serverError = View.GONE,
+                noVacError = View.VISIBLE,
+                searchStartPic = View.GONE,
+                recyclerView = View.GONE,
+                msgText = View.VISIBLE
+            )
         )
         binding.msgText.text = getString(R.string.no_vac_msg)
     }
 
     private fun showVacanciesState(vacancies: List<Vacancy>) {
         setViewsVisibility(
-            noNetError = View.GONE,
-            serverError = View.GONE,
-            noVacError = View.GONE,
-            searchStartPic = View.GONE,
-            recyclerView = View.VISIBLE,
-            msgText = View.VISIBLE
+            VisibilityConfig(
+                noNetError = View.GONE,
+                serverError = View.GONE,
+                noVacError = View.GONE,
+                searchStartPic = View.GONE,
+                recyclerView = View.VISIBLE,
+                msgText = View.VISIBLE
+            )
         )
         binding.msgText.text = resources.getQuantityString(
             R.plurals.found_vac_msg,
@@ -268,37 +301,42 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private fun showInitialState() {
         setViewsVisibility(
-            noNetError = View.GONE,
-            serverError = View.GONE,
-            noVacError = View.GONE,
-            searchStartPic = View.VISIBLE,
-            recyclerView = View.GONE,
-            msgText = View.GONE
+            VisibilityConfig(
+                noNetError = View.GONE,
+                serverError = View.GONE,
+                noVacError = View.GONE,
+                searchStartPic = View.VISIBLE,
+                recyclerView = View.GONE,
+                msgText = View.GONE
+            )
         )
     }
 
-    private fun setViewsVisibility(
-        noNetError: Int,
-        serverError: Int,
-        noVacError: Int,
-        searchStartPic: Int,
-        recyclerView: Int,
-        msgText: Int
-    ) {
-        binding.noNetError.visibility = noNetError
-        binding.serverError.visibility = serverError
-        binding.noVacError.visibility = noVacError
-        binding.searchStartPic.visibility = searchStartPic
-        binding.recyclerView.visibility = recyclerView
-        binding.msgText.visibility = msgText
+    private fun setViewsVisibility(config: VisibilityConfig) {
+        binding.noNetError.visibility = config.noNetError
+        binding.serverError.visibility = config.serverError
+        binding.noVacError.visibility = config.noVacError
+        binding.searchStartPic.visibility = config.searchStartPic
+        binding.recyclerView.visibility = config.recyclerView
+        binding.msgText.visibility = config.msgText
     }
+
+    private data class VisibilityConfig(
+        val noNetError: Int,
+        val serverError: Int,
+        val noVacError: Int,
+        val searchStartPic: Int,
+        val recyclerView: Int,
+        val msgText: Int
+    )
+
     fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = connectivityManager.activeNetwork
         val capabilities = connectivityManager.getNetworkCapabilities(network)
-
         return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
     }
+
     private fun closeKeyboard(view: View) {
         val imm = requireContext().getSystemService(InputMethodManager::class.java)
         imm?.hideSoftInputFromWindow(view.windowToken, 0)
