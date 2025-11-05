@@ -1,10 +1,12 @@
 package ru.practicum.android.diploma.domain.interactors.impl
 
+import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import ru.practicum.android.diploma.domain.api.repositories.FavoritesRepository
 import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
-import java.sql.SQLException
+
+private const val TAG = "FavoritesInteractor"
 
 class FavoritesInteractorImpl(
     private val favoritesRepository: FavoritesRepository
@@ -29,11 +31,8 @@ class FavoritesInteractorImpl(
     override suspend fun isFavorite(vacancyId: String): Boolean {
         return try {
             favoritesRepository.isFavorite(vacancyId)
-        } catch (e: SQLException) {
-            // Ошибки базы данных
-            false
-        } catch (e: IllegalStateException) {
-            // Ошибки состояния приложения
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking favorite status for vacancy: $vacancyId", e)
             false
         }
     }

@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.presentation.favorites.state.FavoritesState
+import java.io.IOException
+import java.sql.SQLException
 
 class FavoritesViewModel(
     private val favoritesInteractor: FavoritesInteractor
@@ -32,9 +34,14 @@ class FavoritesViewModel(
                         _favoritesState.value = FavoritesState.Success(vacancies)
                     }
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _favoritesState.value = FavoritesState.Error("Не удалось загрузить избранные вакансии: ${e.message}")
+            } catch (e: IOException) {
+                _favoritesState.value = FavoritesState.Error("Ошибка сети при загрузке избранных вакансий")
+            } catch (e: SQLException) {
+                _favoritesState.value = FavoritesState.Error("Ошибка базы данных при загрузке избранных вакансий")
+            } catch (e: IllegalStateException) {
+                _favoritesState.value = FavoritesState.Error("Ошибка состояния приложения при загрузке избранных вакансий")
+            } catch (e: SecurityException) {
+                _favoritesState.value = FavoritesState.Error("Ошибка доступа к данным избранных вакансий")
             }
         }
     }

@@ -55,11 +55,13 @@ class VacancyViewModel(
                     _isFavorite.value = favoritesInteractor.isFavorite(vacancyId)
                 }
             } catch (e: IOException) {
-                _error.value = "Ошибка сети: ${e.message}"
+                handleError("Ошибка сети: ${e.message}")
             } catch (e: UnknownHostException) {
-                _error.value = "Нет подключения к интернету"
-            } catch (e: Exception) {
-                _error.value = "Произошла ошибка: ${e.message}"
+                handleError("Нет подключения к интернету")
+            } catch (e: SecurityException) {
+                handleError("Ошибка доступа к данным")
+            } catch (e: IllegalStateException) {
+                handleError("Ошибка состояния приложения")
             } finally {
                 _isLoading.value = false
             }
@@ -79,31 +81,39 @@ class VacancyViewModel(
                     addToFavorites(vacancyId)
                 }
             } catch (e: IOException) {
-                _error.value = "Ошибка сети при работе с избранным"
+                handleError("Ошибка сети при работе с избранным")
             } catch (e: SecurityException) {
-                _error.value = "Ошибка доступа к данным"
+                handleError("Ошибка доступа к данным")
             } catch (e: IllegalStateException) {
-                _error.value = "Ошибка состояния приложения"
-            } catch (e: Exception) {
-                _error.value = "Не удалось выполнить операцию"
+                handleError("Ошибка состояния приложения")
             }
         }
     }
 
     private suspend fun removeFromFavorites(vacancyId: String) {
-        favoritesInteractor.removeFromFavorites(vacancyId)
-        _isFavorite.value = false
+        try {
+            favoritesInteractor.removeFromFavorites(vacancyId)
+            _isFavorite.value = false
+        } catch (e: Exception) {
+            handleError("Не удалось удалить из избранного")
+            throw e // Пробрасываем исключение дальше
+        }
     }
 
     private suspend fun addToFavorites(vacancyId: String) {
-        val currentVacancy = getCurrentVacancy(vacancyId)
+        try {
+            val currentVacancy = getCurrentVacancy(vacancyId)
 
-        if (currentVacancy != null) {
-            favoritesInteractor.addToFavorites(currentVacancy)
-            _isFavorite.value = true
-            updateVacancyDetailsIfNeeded(currentVacancy)
-        } else {
-            _error.value = "Не удалось загрузить данные вакансии"
+            if (currentVacancy != null) {
+                favoritesInteractor.addToFavorites(currentVacancy)
+                _isFavorite.value = true
+                updateVacancyDetailsIfNeeded(currentVacancy)
+            } else {
+                handleError("Не удалось загрузить данные вакансии")
+            }
+        } catch (e: Exception) {
+            handleError("Не удалось добавить в избранное")
+            throw e // Пробрасываем исключение дальше
         }
     }
 
@@ -115,5 +125,9 @@ class VacancyViewModel(
         if (_vacancyDetails.value == null) {
             _vacancyDetails.value = vacancy
         }
+    }
+
+    private fun handleError(message: String) {
+        _error.value = message
     }
 }

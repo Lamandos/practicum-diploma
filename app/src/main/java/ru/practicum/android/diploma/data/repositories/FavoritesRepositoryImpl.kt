@@ -1,6 +1,6 @@
 package ru.practicum.android.diploma.data.repositories
 
-import androidx.room.RoomDatabase
+import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import ru.practicum.android.diploma.data.db.AppDataBase
@@ -8,6 +8,8 @@ import ru.practicum.android.diploma.data.db.Mappers
 import ru.practicum.android.diploma.domain.api.repositories.FavoritesRepository
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import java.sql.SQLException
+
+private const val TAG = "FavoritesRepository"
 
 class FavoritesRepositoryImpl(
     private val database: AppDataBase,
@@ -25,13 +27,12 @@ class FavoritesRepositoryImpl(
             val entity = mappers.toFavoritesEntity(vacancy)
             database.favoritesDao().insertVacancy(entity)
         } catch (e: SQLException) {
-            // Ошибки базы данных
+            Log.e(TAG, "SQL error adding vacancy to favorites: ${vacancy.id}", e)
             throw e
         } catch (e: IllegalStateException) {
-            // Ошибки состояния (например, попытка вставить дубликат)
+            Log.e(TAG, "Illegal state adding vacancy to favorites: ${vacancy.id}", e)
             throw e
         }
-        // УДАЛИТЬ блок catch (e: Exception) и e.printStackTrace()
     }
 
     override suspend fun getVacancyById(vacancyId: String): VacancyDetails? {
@@ -39,10 +40,10 @@ class FavoritesRepositoryImpl(
             val entity = database.favoritesDao().getVacancyById(vacancyId)
             entity?.let { mappers.toVacancyDetails(it) }
         } catch (e: SQLException) {
-            // Ошибки базы данных
+            Log.e(TAG, "SQL error getting vacancy by id: $vacancyId", e)
             null
         } catch (e: IllegalStateException) {
-            // Ошибки состояния
+            Log.e(TAG, "Illegal state getting vacancy by id: $vacancyId", e)
             null
         }
     }
@@ -51,10 +52,10 @@ class FavoritesRepositoryImpl(
         return try {
             database.favoritesDao().isFavorite(vacancyId)
         } catch (e: SQLException) {
-            // Ошибки базы данных
+            Log.e(TAG, "SQL error checking favorite status: $vacancyId", e)
             false
         } catch (e: IllegalStateException) {
-            // Ошибки состояния
+            Log.e(TAG, "Illegal state checking favorite status: $vacancyId", e)
             false
         }
     }
@@ -63,10 +64,10 @@ class FavoritesRepositoryImpl(
         try {
             database.favoritesDao().deleteVacancyById(vacancyId)
         } catch (e: SQLException) {
-            // Ошибки базы данных
+            Log.e(TAG, "SQL error removing vacancy from favorites: $vacancyId", e)
             throw e
         } catch (e: IllegalStateException) {
-            // Ошибки состояния
+            Log.e(TAG, "Illegal state removing vacancy from favorites: $vacancyId", e)
             throw e
         }
     }

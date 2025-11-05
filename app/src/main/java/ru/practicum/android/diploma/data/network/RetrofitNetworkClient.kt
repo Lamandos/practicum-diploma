@@ -1,5 +1,6 @@
 package ru.practicum.android.diploma.data.network
 
+import android.util.Log
 import ru.practicum.android.diploma.data.dto.Response
 import ru.practicum.android.diploma.data.dto.ResponseError
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
@@ -9,6 +10,8 @@ import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
+
+private const val TAG = "RetrofitNetworkClient"
 
 class RetrofitNetworkClient(
     private val apiService: VacancySearchApiService
@@ -28,8 +31,10 @@ class RetrofitNetworkClient(
                 else -> ResponseError("Неизвестный тип запроса")
             }
         } catch (e: IOException) {
+            Log.e(TAG, "Ошибка сети", e)
             ResponseError("Ошибка сети: ${e.message}")
         } catch (e: retrofit2.HttpException) {
+            Log.e(TAG, "Ошибка HTTP", e)
             ResponseError("Сервер вернул ошибку: ${e.message()}")
         }
     }
@@ -39,12 +44,16 @@ class RetrofitNetworkClient(
             val apiResponse: VacancyDetailsDto = apiService.getVacancyDetails(vacancyId)
             VacancyMapper.mapToDomain(apiResponse)
         } catch (e: SocketTimeoutException) {
+            Log.e(TAG, "Таймаут подключения для vacancyId: $vacancyId", e)
             null
         } catch (e: UnknownHostException) {
+            Log.e(TAG, "Нет подключения к интернету для vacancyId: $vacancyId", e)
             null
         } catch (e: IOException) {
+            Log.e(TAG, "Ошибка ввода-вывода для vacancyId: $vacancyId", e)
             null
         } catch (e: retrofit2.HttpException) {
+            Log.e(TAG, "HTTP ошибка для vacancyId: $vacancyId", e)
             null
         }
     }
