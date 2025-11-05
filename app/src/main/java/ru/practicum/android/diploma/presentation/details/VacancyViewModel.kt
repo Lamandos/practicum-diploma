@@ -14,6 +14,10 @@ class VacancyViewModel(
     private val interactor: VacancyInteractor
 ) : ViewModel() {
 
+    companion object {
+        private const val DEFAULT_ERROR_CODE = 500
+    }
+
     private val _vacancyDetails = MutableLiveData<VacancyResult<VacancyDetails>>()
     val vacancyDetails: LiveData<VacancyResult<VacancyDetails>> get() = _vacancyDetails
 
@@ -23,21 +27,30 @@ class VacancyViewModel(
                 val result = interactor.getVacancyDetails(id)
 
                 if (result.isSuccess) {
-                    result.getOrNull()?.let {
-                        _vacancyDetails.postValue(VacancyResult.Success(it))
-                    } ?: run {
-                        _vacancyDetails.postValue(VacancyResult.Error(500))
+                    val data = result.getOrNull()
+                    if (data != null) {
+                        _vacancyDetails.postValue(VacancyResult.Success(data))
+                    } else {
+                        _vacancyDetails.postValue(VacancyResult.Error(DEFAULT_ERROR_CODE))
                     }
                 } else {
                     val exception = result.exceptionOrNull()
-                    val code = if (exception is HttpException) exception.code() else 500
+                    val code = when (exception) {
+                        is HttpException -> exception.code()
+                        is IOException -> DEFAULT_ERROR_CODE
+                        else -> DEFAULT_ERROR_CODE
+                    }
                     _vacancyDetails.postValue(VacancyResult.Error(code))
                 }
             } catch (e: IOException) {
-                _vacancyDetails.postValue(VacancyResult.Error(500))
-            } catch (e: Exception) {
-                _vacancyDetails.postValue(VacancyResult.Error(500))
+                _vacancyDetails.postValue(VacancyResult.Error(DEFAULT_ERROR_CODE))
+            } catch (e: HttpException) {
+                val code = e.code()
+                _vacancyDetails.postValue(VacancyResult.Error(code))
+            } catch (e: Throwable) {
+                _vacancyDetails.postValue(VacancyResult.Error(DEFAULT_ERROR_CODE))
             }
         }
     }
 }
+

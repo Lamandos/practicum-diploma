@@ -24,13 +24,14 @@ import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import ru.practicum.android.diploma.presentation.details.VacancyResult
 import ru.practicum.android.diploma.presentation.details.VacancyViewModel
 
-
 class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     companion object {
         private const val BULLET_SYMBOL = "• "
         private const val TITLE_SIZE_SP = 18f
         private val NOT_SPECIFIED_TEXT_RES = R.string.not_specified
+
+        private const val ERROR_VACANCY_NOT_FOUND = 404
     }
 
     private var _binding: FragmentVacancyBinding? = null
@@ -59,7 +60,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
                 }
                 is VacancyResult.Error -> {
                     when (result.code) {
-                        404 -> binding.vacDelError.visibility = View.VISIBLE
+                        ERROR_VACANCY_NOT_FOUND -> binding.vacDelError.visibility = View.VISIBLE
                         else -> binding.serverError.visibility = View.VISIBLE
                     }
                 }
@@ -69,11 +70,14 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private fun setupClickListeners() {
         binding.backBtn.setOnClickListener { findNavController().navigateUp() }
+
+        val vacancy = viewModel.vacancyDetails.value
+            .takeIf { it is VacancyResult.Success } as? VacancyResult.Success
+
         binding.shareBtn.setOnClickListener {
-            (viewModel.vacancyDetails.value as? VacancyResult.Success)?.data?.let { vacancy ->
-                shareVacancy(vacancy.url)
-            }
+            vacancy?.data?.let { shareVacancy(it.url) }
         }
+
         ContactsClickHandler.makeLinksClickable(binding.contactsInfo)
     }
 
@@ -94,17 +98,23 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private fun bindVacancyDetails(details: VacancyDetails) {
         val titleColor = ContextCompat.getColor(requireContext(), R.color.yp_black)
-        val nightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
-        val sectionColor = if (nightMode) ContextCompat.getColor(requireContext(), R.color.white) else titleColor
+        val nightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+            Configuration.UI_MODE_NIGHT_YES
+        val sectionColor = if (nightMode) ContextCompat.getColor(requireContext(), R.color.white)
+        else titleColor
 
         setupSectionTitles(sectionColor)
 
         binding.vacName.text = details.name.orEmpty()
         binding.vacSalary.text = formatSalary(details.salary)
-        binding.vacEmployer.text = details.employer?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
-        binding.vacRegion.text = details.area?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
-        binding.experienceInfo.text = details.experience?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
-        binding.scheduleInfo.text = details.schedule?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.vacEmployer.text =
+            details.employer?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.vacRegion.text =
+            details.area?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.experienceInfo.text =
+            details.experience?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.scheduleInfo.text =
+            details.schedule?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
 
         bindSkills(details.skills, sectionColor)
         bindContacts(details.contacts)
@@ -130,6 +140,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
                 visibility = View.VISIBLE
             }
         }
+
         setupTitle(binding.responsibilitiesTitle, R.string.responsibilities)
         setupTitle(binding.requirementsTitle, R.string.requirements)
         setupTitle(binding.termsTitle, R.string.Terms)
@@ -142,6 +153,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             val from = s.from?.toString().orEmpty()
             val to = s.to?.toString().orEmpty()
             val currency = s.currency.orEmpty()
+
             when {
                 from.isNotEmpty() && to.isNotEmpty() -> "от $from до $to $currency"
                 from.isNotEmpty() -> "от $from $currency"
@@ -154,7 +166,9 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     private fun bindSkills(skills: List<String>?, sectionColor: Int) {
         if (!skills.isNullOrEmpty()) {
             binding.skillsInfo.visibility = View.VISIBLE
-            binding.skillsInfo.text = skills.joinToString("\n") { "$BULLET_SYMBOL$it" }
+            binding.skillsInfo.text = skills.joinToString("\n") { skill ->
+                "$BULLET_SYMBOL$skill"
+            }
             binding.skillsInfo.setTextColor(sectionColor)
         } else {
             binding.skillsInfo.visibility = View.GONE
