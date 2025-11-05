@@ -1,15 +1,15 @@
 package ru.practicum.android.diploma.data.db
 
-import ru.practicum.android.diploma.domain.models.vacancydetails.Address
-import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
-import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import com.google.gson.Gson
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterArea
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
+import ru.practicum.android.diploma.domain.models.vacancydetails.Address
 import ru.practicum.android.diploma.domain.models.vacancydetails.Employer
 import ru.practicum.android.diploma.domain.models.vacancydetails.Employment
 import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
+import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 import ru.practicum.android.diploma.domain.models.vacancydetails.Schedule
-import com.google.gson.Gson
+import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 class Mappers(private val gson: Gson = Gson()) {
 

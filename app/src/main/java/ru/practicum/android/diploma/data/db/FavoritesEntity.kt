@@ -3,8 +3,6 @@ package ru.practicum.android.diploma.data.db
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
-import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
 
 @Entity(tableName = "favorites")
 data class FavoritesEntity(

@@ -23,4 +23,3 @@ val viewModelModule: Module = module {
         )
     }
 }
-

@@ -4,7 +4,6 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.QueryMap
 import ru.practicum.android.diploma.data.dto.vacancydetailsdto.VacancyDetailsDto
-import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 interface VacancySearchApiService {
     @GET("/vacancies")
