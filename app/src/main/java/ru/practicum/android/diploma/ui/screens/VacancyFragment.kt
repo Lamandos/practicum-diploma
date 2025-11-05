@@ -52,11 +52,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         setupObservers()
         updateFavoritesButton(false)
 
-        vacancyId?.let { id ->
-            viewModel.init(id)
-        } ?: run {
-            findNavController().popBackStack()
-        }
+        vacancyId?.let { viewModel.init(it) } ?: findNavController().popBackStack()
     }
 
     private fun setupClickListeners() {
@@ -77,9 +73,10 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private fun setupObservers() {
         viewModel.vacancyDetails.observe(viewLifecycleOwner) { vacancy ->
-            vacancy?.let {        Log.d("VacancyFragment", "Contacts: ${it.contacts}")
-
-                bindVacancyDetails(it) }
+            vacancy?.let {
+                Log.d("VacancyFragment", "Contacts: ${it.contacts}")
+                bindVacancyDetails(it)
+            }
         }
 
         viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
@@ -96,7 +93,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private fun bindVacancyDetails(details: VacancyDetails) {
         val sectionColor = getSectionColor()
-
         bindBasics(details)
         bindSkills(details.skills, sectionColor)
         bindContacts(details.contacts)
@@ -106,18 +102,14 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private fun getSectionColor(): Int {
         val titleColor = ContextCompat.getColor(requireContext(), R.color.yp_black)
-        val nightMode =
-            resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        val nightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+            Configuration.UI_MODE_NIGHT_YES
         return if (nightMode) ContextCompat.getColor(requireContext(), R.color.white) else titleColor
     }
 
     private fun bindBasics(details: VacancyDetails) {
-        val city = details.address?.city
-            ?: details.area?.name
-            ?: getString(NOT_SPECIFIED_TEXT_RES)
-
+        val city = details.address?.city ?: details.area?.name ?: getString(NOT_SPECIFIED_TEXT_RES)
         binding.vacName.text = "${details.name.orEmpty()} , $city"
-
         binding.vacSalary.text = formatSalary(details.salary)
         binding.vacEmployer.text =
             details.employer?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
@@ -150,6 +142,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
                 visibility = View.VISIBLE
             }
         }
+
         setupTitle(binding.responsibilitiesTitle, R.string.responsibilities)
         setupTitle(binding.requirementsTitle, R.string.requirements)
         setupTitle(binding.termsTitle, R.string.Terms)
@@ -187,11 +180,13 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             val lines = mutableListOf<String>()
 
             c.email?.takeIf { it.isNotBlank() }?.let { lines.add(it) }
-            c.phones?.forEach { phone ->
-                val number = phone.number.takeIf { it.isNotBlank() } ?: return@forEach
-                val formatted = if (!phone.comment.isNullOrBlank()) "$number (${phone.comment})" else number
-                lines.add(formatted)
-            }
+
+            c.phones?.mapNotNull { phone ->
+                phone.number.takeIf { it.isNotBlank() }?.let { number ->
+                    if (!phone.comment.isNullOrBlank()) "$number (${phone.comment})" else number
+                }
+            }?.let { lines.addAll(it) }
+
             lines.joinToString("\n").takeIf { it.isNotBlank() }
         }
 
@@ -203,7 +198,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             binding.contactsInfo.text = contactText
         }
     }
-
 
     private fun bindEmployerLogo(logoUrl: String?) {
         logoUrl?.let {
@@ -256,10 +250,9 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         val startText = getString(startRes)
         val endText = endRes?.let { getString(it) }
 
-        val startIndex = desc.indexOf("$startText:")
-        if (startIndex == -1) return ""
-
+        val startIndex = desc.indexOf("$startText:").takeIf { it != -1 } ?: return ""
         val from = startIndex + startText.length + 1
+
         val to = endText?.let {
             val endIndex = desc.indexOf("$it:", from)
             if (endIndex == -1) desc.length else endIndex
