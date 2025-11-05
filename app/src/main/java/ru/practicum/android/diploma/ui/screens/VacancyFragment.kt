@@ -276,7 +276,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             updateFavoritesButton(isFavorite)
             if (fromFavorites && !isFavorite) {
                 findNavController().popBackStack()
-                return@observe
             }
         }
     }
