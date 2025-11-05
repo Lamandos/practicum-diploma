@@ -13,7 +13,6 @@ import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 class Mappers(private val gson: Gson = Gson()) {
 
-    // ИЗМЕНИТЬ: сделать обычные методы вместо методов-расширений
     fun toVacancyDetails(entity: FavoritesEntity): VacancyDetails = VacancyDetails(
         id = entity.id,
         name = entity.name,
@@ -32,7 +31,6 @@ class Mappers(private val gson: Gson = Gson()) {
         publishedAt = entity.published
     )
 
-    // ИЗМЕНИТЬ: сделать обычные методы вместо методов-расширений
     fun toFavoritesEntity(vacancy: VacancyDetails): FavoritesEntity = FavoritesEntity(
         id = vacancy.id,
         name = vacancy.name,

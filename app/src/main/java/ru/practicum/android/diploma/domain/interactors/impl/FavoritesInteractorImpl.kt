@@ -1,4 +1,3 @@
-// FavoritesInteractorImpl.kt
 package ru.practicum.android.diploma.domain.interactors.impl
 
 import kotlinx.coroutines.flow.Flow

@@ -13,25 +13,25 @@ data class FavoritesEntity(
     @ColumnInfo(name = "description")
     val description: String,
     @ColumnInfo(name = "salary")
-    val salary: String?, // JSON строка
+    val salary: String?,
     @ColumnInfo(name = "address")
-    val address: String?, // JSON строка
+    val address: String?,
     @ColumnInfo(name = "experience")
-    val experience: String?, // JSON строка
+    val experience: String?,
     @ColumnInfo(name = "schedule")
-    val schedule: String?, // JSON строка
+    val schedule: String?,
     @ColumnInfo(name = "employment")
-    val employment: String?, // JSON строка
+    val employment: String?,
     @ColumnInfo(name = "employer")
-    val employer: String?, // JSON строка
+    val employer: String?,
     @ColumnInfo(name = "area")
-    val area: String?, // JSON строка
+    val area: String?, //
     @ColumnInfo(name = "skills")
     val skills: List<String>,
     @ColumnInfo(name = "url")
     val url: String,
     @ColumnInfo(name = "industry")
-    val industry: String?, // JSON строка
+    val industry: String?,
     @ColumnInfo(name = "published")
     val published: String?
 )

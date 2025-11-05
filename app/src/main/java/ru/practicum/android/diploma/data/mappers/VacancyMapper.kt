@@ -32,7 +32,6 @@ fun EmployerDto.toDomain(): Employer = Employer(
     logo = this.logo
 )
 
-// ИСПРАВИТЬ - убрать .name
 fun List<SkillDto>.toDomainList(): List<String> = this.map { it.name }
 
 fun ExperienceDto.toDomain(): Experience = Experience(

@@ -69,47 +69,34 @@ class VacancyViewModel(
 
     fun onFavoritesClicked() {
         val vacancyId = currentVacancyId ?: run {
-            println("DEBUG: VacancyViewModel - vacancyId is null")
             return
         }
-
-        println("DEBUG: VacancyViewModel - onFavoritesClicked called for: $vacancyId")
-
         viewModelScope.launch {
             try {
                 val isCurrentlyFavorite = _isFavorite.value ?: false
-                println("DEBUG: VacancyViewModel - current favorite state: $isCurrentlyFavorite")
 
                 if (isCurrentlyFavorite) {
-                    println("DEBUG: VacancyViewModel - removing from favorites")
                     favoritesInteractor.removeFromFavorites(vacancyId)
                     _isFavorite.value = false
-                    println("DEBUG: VacancyViewModel - removed from favorites")
                 } else {
-                    println("DEBUG: VacancyViewModel - adding to favorites")
                     var currentVacancy = _vacancyDetails.value
 
                     if (currentVacancy == null) {
-                        println("DEBUG: VacancyViewModel - loading vacancy details")
                         currentVacancy = vacancyInteractor.getVacancyDetails(vacancyId)
                     }
 
                     if (currentVacancy != null) {
-                        println("DEBUG: VacancyViewModel - adding vacancy: ${currentVacancy.id}")
                         favoritesInteractor.addToFavorites(currentVacancy)
                         _isFavorite.value = true
-                        println("DEBUG: VacancyViewModel - added to favorites")
 
                         if (_vacancyDetails.value == null) {
                             _vacancyDetails.value = currentVacancy
                         }
                     } else {
-                        println("DEBUG: VacancyViewModel - failed to load vacancy details")
                         _error.value = "Не удалось загрузить данные вакансии"
                     }
                 }
             } catch (e: Exception) {
-                println("DEBUG: VacancyViewModel - ERROR: ${e.message}")
                 _error.value = "Ошибка: ${e.message}"
                 e.printStackTrace()
             }

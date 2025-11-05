@@ -33,7 +33,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     private var _binding: FragmentVacancyBinding? = null
     private val binding get() = _binding!!
 
-    // УДАЛИТЬ дублирующее объявление viewModel
     private val viewModel: VacancyViewModel by viewModel()
     private var vacancyId: String? = null
     private var fromFavorites: Boolean = false
@@ -48,7 +47,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentVacancyBinding.bind(view)
 
-        // УДАЛИТЬ лишний вызов setupClickListeners()
         setupClickListeners()
         setupObservers()
         updateFavoritesButton(false)
@@ -60,7 +58,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         }
     }
 
-    // ОСТАВИТЬ ТОЛЬКО ОДИН метод setupClickListeners()
     private fun setupClickListeners() {
         binding.backBtn.setOnClickListener {
             findNavController().popBackStack()
@@ -71,7 +68,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         binding.shareBtn.setOnClickListener {
             viewModel.vacancyDetails.value?.let { shareVacancy(it.url) }
         }
-        // ContactsClickHandler.makeLinksClickable(binding.contactsInfo) // Закомментировать если нет этого класса
     }
 
     private fun showLoadingState() {
@@ -105,7 +101,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         startActivity(Intent.createChooser(intent, getString(R.string.share_vacancy_title)))
     }
 
-    // ------------------- BINDING SECTIONS -------------------
 
     private fun bindVacancyDetails(details: VacancyDetails) {
         val sectionColor = getSectionColor()
@@ -264,10 +259,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         } ?: desc.length
 
         return desc.substring(from, to).trim()
-        // УДАЛИТЬ лишний код ниже
-        // binding.backBtn.setOnClickListener {
-        //     findNavController().popBackStack()
-        // }
     }
 
     private fun setupObservers() {
@@ -292,7 +283,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private fun showVacancy(vacancy: VacancyDetails) {
         binding.vacName.text = vacancy.name
-        binding.vacEmployer.text = vacancy.employer?.name ?: "" // ИСПРАВИТЬ - добавить ?.name
+        binding.vacEmployer.text = vacancy.employer?.name ?: ""
         binding.vacSalary.text = formatSalary(vacancy.salary)
     }
 

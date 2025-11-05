@@ -21,24 +21,18 @@ class FavoritesViewModel(
     }
 
     fun loadFavorites() {
-        println("DEBUG: FavoritesViewModel - loadFavorites started")
         _favoritesState.value = FavoritesState.Loading
 
         viewModelScope.launch {
             try {
-                println("DEBUG: FavoritesViewModel - calling getAllFavorites")
                 favoritesInteractor.getAllFavorites().collect { vacancies ->
-                    println("DEBUG: FavoritesViewModel - collected ${vacancies.size} vacancies")
                     if (vacancies.isEmpty()) {
-                        println("DEBUG: FavoritesViewModel - showing empty state")
                         _favoritesState.value = FavoritesState.Empty
                     } else {
-                        println("DEBUG: FavoritesViewModel - showing success with ${vacancies.size} vacancies")
                         _favoritesState.value = FavoritesState.Success(vacancies)
                     }
                 }
             } catch (e: Exception) {
-                println("DEBUG: FavoritesViewModel - ERROR: ${e.message}")
                 e.printStackTrace()
                 _favoritesState.value = FavoritesState.Error("Не удалось загрузить избранные вакансии: ${e.message}")
             }
