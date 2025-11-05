@@ -39,8 +39,10 @@ class VacancyViewModel(
                 }
             } catch (e: IOException) {
                 _vacancyDetails.postValue(VacancyResult.Error(DEFAULT_ERROR_CODE))
+                e.printStackTrace()
             } catch (e: HttpException) {
                 _vacancyDetails.postValue(VacancyResult.Error(e.code()))
+                e.printStackTrace()
             } catch (e: CancellationException) {
                 throw e
             }
@@ -54,7 +56,6 @@ class VacancyViewModel(
             else -> DEFAULT_ERROR_CODE
         }
         _vacancyDetails.postValue(VacancyResult.Error(code))
+        exception?.printStackTrace()
     }
 }
-
-
