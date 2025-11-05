@@ -19,6 +19,10 @@ class RetrofitNetworkClient(
                     val result = apiService.searchVacancies(dto.toQueryMap())
                     ResponseSuccess(result)
                 }
+                is VacancyDetailsRequest -> {
+                    val result = apiService.getVacancyDetails(dto.vacancyId)
+                    ResponseSuccess(result)
+                }
                 else -> ResponseError("Неизвестный тип запроса")
             }
         } catch (e: IOException) {

@@ -16,7 +16,6 @@
     <string name="No_internet">Нет интернета</string>
     <string name="no_vac">Не удалось получить\nсписок вакансий</string>
     <string name="no_vac_msg">Таких вакансий нет</string>
-    <string name="found_vac_msg">Найдено вакансий: %1$d</string>
     <string name="empty_list">Список пуст</string>
     <string name="Server_error">Ошибка сервера</string>
     <string name="vac_deleted">Вакансия не найдена или\nудалена</string>
@@ -28,5 +27,16 @@
     <string name="skills">Ключевые навыки</string>
     <string name="contacts">Контакты</string>
     <string name="salary_not_specified">Зарплата не указана</string>
+    <string name="share_vac">Зарплата не указана</string>
+    <string name="not_specified">Не указано</string>
+    <string name="share_vacancy_title">Поделиться вакансией</string>
+
+
+    <plurals name="found_vac_msg">
+        <item quantity="one">Найдена %d вакансия</item>
+        <item quantity="few">Найдено %d вакансии</item>
+        <item quantity="many">Найдено %d вакансий</item>
+        <item quantity="other">Найдено %d вакансий</item>
+    </plurals>
 
 </resources>

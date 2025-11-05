@@ -13,9 +13,15 @@ import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
 
 class SearchVacancyAdapter(
     private val onItemClick: (Vacancy) -> Unit
-) : RecyclerView.Adapter<SearchVacancyAdapter.VacancyViewHolder>() {
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val items = mutableListOf<Vacancy>()
+    private var showLoading = false
+
+    companion object {
+        private const val TYPE_VACANCY = 0
+        private const val TYPE_LOADING = 1
+    }
 
     inner class VacancyViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val nameCity: TextView = itemView.findViewById(R.id.vacancyNameCity)
@@ -39,11 +45,9 @@ class SearchVacancyAdapter(
 
         private fun formatSalary(salary: Salary?): String {
             salary ?: return "Зарплата не указана"
-
             val from = salary.from
             val to = salary.to
             val currency = salary.currency ?: ""
-
             return when {
                 from != null && to != null -> "от $from до $to $currency"
                 from != null -> "от $from $currency"
@@ -53,21 +57,74 @@ class SearchVacancyAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VacancyViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.fragment_vacancy_for_rv, parent, false)
-        return VacancyViewHolder(view)
+    inner class LoadingViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+
+    override fun getItemViewType(position: Int): Int {
+        return if (showLoading && position == items.size) {
+            TYPE_LOADING
+        } else {
+            TYPE_VACANCY
+        }
     }
 
-    override fun onBindViewHolder(holder: VacancyViewHolder, position: Int) {
-        holder.bind(items[position])
+    override fun getItemCount(): Int = items.size + if (showLoading) 1 else 0
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        return when (viewType) {
+            TYPE_LOADING -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_progress, parent, false)
+                LoadingViewHolder(view)
+            }
+            else -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.fragment_vacancy_for_rv, parent, false)
+                VacancyViewHolder(view)
+            }
+        }
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (holder) {
+            is VacancyViewHolder -> {
+                if (position < items.size) {
+                    holder.bind(items[position])
+                }
+            }
+            is LoadingViewHolder -> {
+            }
+        }
+    }
 
     fun setItems(newItems: List<Vacancy>) {
+        val wasShowingLoading = showLoading
+
+        if (wasShowingLoading) {
+            showLoading = false
+            notifyItemRemoved(items.size)
+        }
+
         items.clear()
         items.addAll(newItems)
         notifyDataSetChanged()
+
+        if (wasShowingLoading) {
+            showLoading = true
+            notifyItemInserted(items.size)
+        }
+    }
+
+    fun showLoading(loading: Boolean) {
+        val wasShowing = showLoading
+        showLoading = loading
+
+        when {
+            loading && !wasShowing -> {
+                notifyItemInserted(items.size)
+            }
+            !loading && wasShowing -> {
+                notifyItemRemoved(items.size)
+            }
+        }
     }
 }

@@ -6,19 +6,28 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-@Database(entities = [FavoritesEntity::class], version = 3)
+@Database(entities = [FavoritesEntity::class], version = 3,
+    exportSchema = false)
 @TypeConverters(ListConverter::class, ExperienceConverter::class)
 abstract class AppDataBase : RoomDatabase() {
     abstract fun favoritesDao(): FavoritesDao
 
     companion object {
+        @Volatile
+        private var INSTANCE: AppDataBase? = null
+
         fun getDb(context: Context): AppDataBase {
-            return Room.databaseBuilder(
-                context.applicationContext,
-                AppDataBase::class.java,
-                "favorites.db"
-            ).fallbackToDestructiveMigration()
-                .build()
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDataBase::class.java,
+                    "favorites.db"
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+                INSTANCE = instance
+                instance
+            }
         }
     }
 }

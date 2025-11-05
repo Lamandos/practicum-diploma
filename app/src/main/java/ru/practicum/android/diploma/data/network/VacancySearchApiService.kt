@@ -3,12 +3,14 @@ package ru.practicum.android.diploma.data.network
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.QueryMap
-import ru.practicum.android.diploma.data.dto.vacancydetailsdto.VacancyDetailsDto
+import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 interface VacancySearchApiService {
     @GET("/vacancies")
     suspend fun searchVacancies(@QueryMap options: Map<String, String>): VacancySearchResponse
 
-    @GET("/vacancies/{vacancy_id}")
-    suspend fun getVacancyDetails(@Path("vacancy_id") vacancyId: String): VacancyDetailsDto
+    @GET("/vacancies/{id}")
+    suspend fun getVacancyDetails(
+        @Path("id") id: String
+    ): VacancyDetails
 }
