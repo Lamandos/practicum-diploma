@@ -1,42 +1,41 @@
 package ru.practicum.android.diploma.data.db
 
-import ru.practicum.android.diploma.domain.models.vacancydetails.Address
-import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 class Mappers {
-    fun FavoritesEntity.toModel(): VacancyDetails = VacancyDetails(
-        id = id,
-        name = name,
-        description = description,
-        salary = salary as? Salary,
-        address = address as? Address,
-        experience = experience,
-        schedule = schedule,
-        employer = employer,
+
+    fun toVacancyDetails(entity: FavoritesEntity): VacancyDetails = VacancyDetails(
+        id = entity.id,
+        name = entity.name,
+        description = entity.description,
+        salary = null,
+        address = null,
+        experience = entity.experience,
+        schedule = entity.schedule,
+        employer = entity.employer,
         contacts = null,
-        area = area,
-        skills = skills,
-        url = url,
-        industry = industry,
-        publishedAt = published,
-        employment = employment
+        area = entity.area,
+        skills = entity.skills,
+        url = entity.url,
+        industry = entity.industry,
+        publishedAt = entity.published,
+        employment = entity.employment
     )
 
-    fun VacancyDetails.toEntity(): FavoritesEntity = FavoritesEntity(
-        id = id,
-        name = name,
-        description = description,
-        salary = salary as? String,
-        address = address as? String,
-        experience = experience,
-        schedule = schedule,
-        employment = employment,
-        employer = employer,
-        area = area,
-        skills = skills,
-        url = url,
-        industry = industry,
-        published = publishedAt
+    fun toFavoritesEntity(vacancy: VacancyDetails): FavoritesEntity = FavoritesEntity(
+        id = vacancy.id,
+        name = vacancy.name,
+        description = vacancy.description,
+        salary = null,
+        address = null,
+        experience = vacancy.experience,
+        schedule = vacancy.schedule,
+        employment = vacancy.employment,
+        employer = vacancy.employer,
+        area = vacancy.area,
+        skills = vacancy.skills,
+        url = vacancy.url,
+        industry = vacancy.industry,
+        published = vacancy.publishedAt
     )
 }

@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverters
+import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
 
 @Entity(tableName = "favorites")
 @TypeConverters(ListConverter::class)
@@ -19,7 +20,7 @@ data class FavoritesEntity(
     @ColumnInfo(name = "address")
     val address: String?,
     @ColumnInfo(name = "experience")
-    val experience: String,
+    val experience: Experience,
     @ColumnInfo(name = "schedule")
     val schedule: String,
     @ColumnInfo(name = "employment")

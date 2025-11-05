@@ -2,6 +2,7 @@ package ru.practicum.android.diploma.di
 
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import org.koin.core.module.Module
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -12,7 +13,7 @@ import ru.practicum.android.diploma.data.network.VacancySearchApiService
 
 private const val BASE_URL_API = "https://practicum-diploma-8bc38133faba.herokuapp.com"
 
-val dataModule = module {
+val dataModule: Module = module {
 
     single {
         OkHttpClient.Builder()

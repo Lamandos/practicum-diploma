@@ -30,7 +30,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     private var searchJob: Job? = null
     private val adapter: SearchVacancyAdapter by lazy {
         SearchVacancyAdapter { vacancy ->
-            val action = SearchFragmentDirections.actionSearchFragmentToVacancyFragment2()
+            val action = SearchFragmentDirections.actionSearchFragmentToVacancyFragment2(vacancy.id)
             findNavController().navigate(action)
         }
     }
