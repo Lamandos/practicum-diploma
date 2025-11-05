@@ -3,10 +3,8 @@ package ru.practicum.android.diploma.data.db
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
 
 @Entity(tableName = "favorites")
-@TypeConverters(ListConverter::class)
 data class FavoritesEntity(
     @PrimaryKey
     val id: String,
@@ -19,21 +17,21 @@ data class FavoritesEntity(
     @ColumnInfo(name = "address")
     val address: String?,
     @ColumnInfo(name = "experience")
-    val experience: String,
+    val experience: String?,
     @ColumnInfo(name = "schedule")
-    val schedule: String,
+    val schedule: String?,
     @ColumnInfo(name = "employment")
-    val employment: String,
+    val employment: String?,
     @ColumnInfo(name = "employer")
-    val employer: String,
+    val employer: String?,
     @ColumnInfo(name = "area")
-    val area: String,
+    val area: String?, //
     @ColumnInfo(name = "skills")
     val skills: List<String>,
     @ColumnInfo(name = "url")
     val url: String,
     @ColumnInfo(name = "industry")
-    val industry: String,
+    val industry: String?,
     @ColumnInfo(name = "published")
     val published: String?
 )

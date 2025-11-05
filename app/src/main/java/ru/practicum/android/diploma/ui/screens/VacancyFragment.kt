@@ -13,7 +13,6 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.R
@@ -33,47 +32,41 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private var _binding: FragmentVacancyBinding? = null
     private val binding get() = _binding!!
+
     private val viewModel: VacancyViewModel by viewModel()
-    private val args: VacancyFragmentArgs by navArgs()
+    private var vacancyId: String? = null
+    private var fromFavorites: Boolean = false
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        vacancyId = arguments?.getString("vacancyId")
+        fromFavorites = arguments?.getBoolean("fromFavorites", false) ?: false
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentVacancyBinding.bind(view)
 
         setupClickListeners()
-        showLoadingState()
-        observeVacancyDetails()
-        viewModel.loadVacancyDetails(args.vacancyId)
+        setupObservers()
+        updateFavoritesButton(false)
+
+        vacancyId?.let { id ->
+            viewModel.init(id, fromFavorites)
+        } ?: run {
+            findNavController().popBackStack()
+        }
     }
 
     private fun setupClickListeners() {
-        binding.backBtn.setOnClickListener { findNavController().navigateUp() }
+        binding.backBtn.setOnClickListener {
+            findNavController().popBackStack()
+        }
+        binding.favoritesBtn.setOnClickListener {
+            viewModel.onFavoritesClicked()
+        }
         binding.shareBtn.setOnClickListener {
             viewModel.vacancyDetails.value?.let { shareVacancy(it.url) }
-        }
-        ContactsClickHandler.makeLinksClickable(binding.contactsInfo)
-    }
-
-    private fun showLoadingState() {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.fullVacInfo.visibility = View.GONE
-        binding.vacDelError.visibility = View.GONE
-        binding.serverError.visibility = View.GONE
-    }
-
-    private fun observeVacancyDetails() {
-        viewModel.vacancyDetails.observe(viewLifecycleOwner) { details ->
-            binding.progressBar.visibility = View.GONE
-            if (details != null) {
-                binding.fullVacInfo.visibility = View.VISIBLE
-                binding.vacDelError.visibility = View.GONE
-                binding.serverError.visibility = View.GONE
-                bindVacancyDetails(details)
-            } else {
-                binding.fullVacInfo.visibility = View.GONE
-                binding.vacDelError.visibility = View.GONE
-                binding.serverError.visibility = View.VISIBLE
-            }
         }
     }
 
@@ -84,8 +77,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         }
         startActivity(Intent.createChooser(intent, getString(R.string.share_vacancy_title)))
     }
-
-    // ------------------- BINDING SECTIONS -------------------
 
     private fun bindVacancyDetails(details: VacancyDetails) {
         val sectionColor = getSectionColor()
@@ -244,6 +235,39 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         } ?: desc.length
 
         return desc.substring(from, to).trim()
+    }
+
+    private fun setupObservers() {
+        viewModel.vacancyDetails.observe(viewLifecycleOwner) { vacancy ->
+            if (vacancy != null) {
+                showVacancy(vacancy)
+            } else {
+                if (fromFavorites) {
+                    findNavController().popBackStack()
+                }
+            }
+        }
+
+        viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
+            updateFavoritesButton(isFavorite)
+            if (fromFavorites && !isFavorite) {
+                findNavController().popBackStack()
+            }
+        }
+    }
+
+    private fun showVacancy(vacancy: VacancyDetails) {
+        binding.vacName.text = vacancy.name
+        binding.vacEmployer.text = vacancy.employer?.name ?: ""
+        binding.vacSalary.text = formatSalary(vacancy.salary)
+    }
+
+    private fun updateFavoritesButton(isFavorite: Boolean) {
+        if (isFavorite) {
+            binding.favoritesBtn.setImageResource(R.drawable.favorite_fill_icon)
+        } else {
+            binding.favoritesBtn.setImageResource(R.drawable.favorite_icon)
+        }
     }
 
     override fun onDestroyView() {

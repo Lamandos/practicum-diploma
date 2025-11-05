@@ -16,7 +16,7 @@ data class VacancyDetailsDto(
     val employer: EmployerDto,
     val area: FilterAreaDto,
     val publishedAt: String?,
-    val skills: List<SkillDto>?,
+    val skills: List<String>?,
     val url: String,
     val industry: FilterIndustryDto?
 )

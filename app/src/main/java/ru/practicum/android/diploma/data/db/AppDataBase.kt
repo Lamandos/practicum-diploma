@@ -8,12 +8,11 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [FavoritesEntity::class],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
-@TypeConverters(ListConverter::class, ObjectConverter::class) // 👈 подключаем конвертеры
+@TypeConverters(ListConverter::class)
 abstract class AppDataBase : RoomDatabase() {
-
     abstract fun favoritesDao(): FavoritesDao
 
     companion object {
