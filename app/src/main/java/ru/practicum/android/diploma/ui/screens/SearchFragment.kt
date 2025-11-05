@@ -79,46 +79,70 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     }
 
     private fun observeViewModel() {
+        observeSearchState()
+        observeErrorToast()
+        observeLoadingState()
+    }
+
+    private fun observeSearchState() {
         viewModel.searchState.observe(viewLifecycleOwner) { state ->
             when (state) {
-                is SearchState.Idle -> {
-                    updateUI(emptyList(), isSearchActive = false)
-                    adapter.showLoading(false)
-                }
-                is SearchState.Loading -> {
-                    updateUI(emptyList(), isSearchActive = true, isLoading = true)
-                    adapter.showLoading(false)
-                }
-                is SearchState.Success -> {
-                    updateUI(state.vacancies, isSearchActive = true)
-                }
-                is SearchState.Empty -> {
-                    updateUI(emptyList(), isSearchActive = true)
-                    adapter.showLoading(false)
-                }
-                is SearchState.Error -> {
-                    val hasNetwork = isNetworkAvailable(requireContext())
-                    val isServerError =
-                        (state.throwable as? HttpException)?.code() == SERVER_ERROR_CODE
-                    updateUI(
-                        vacancies = emptyList(),
-                        isSearchActive = true,
-                        isLoading = false,
-                        isNetworkAvailable = hasNetwork,
-                        isServerError = isServerError
-                    )
-                    adapter.showLoading(false)
-                }
+                is SearchState.Idle -> handleIdleState()
+                is SearchState.Loading -> handleLoadingState()
+                is SearchState.Success -> handleSuccessState(state.vacancies)
+                is SearchState.Empty -> handleEmptyState()
+                is SearchState.Error -> handleErrorState(state.throwable)
             }
         }
+    }
 
+    private fun handleIdleState() {
+        updateUI(emptyList(), isSearchActive = false)
+        adapter.showLoading(false)
+    }
+
+    private fun handleLoadingState() {
+        updateUI(emptyList(), isSearchActive = true, isLoading = true)
+        adapter.showLoading(false)
+    }
+
+    private fun handleSuccessState(vacancies: List<Vacancy>) {
+        updateUI(vacancies, isSearchActive = true)
+    }
+
+    private fun handleEmptyState() {
+        updateUI(emptyList(), isSearchActive = true)
+        adapter.showLoading(false)
+    }
+
+    private fun handleErrorState(throwable: Throwable?) {
+        val hasNetwork = isNetworkAvailable(requireContext())
+        val isServerError = (throwable as? HttpException)?.code() == SERVER_ERROR_CODE
+        updateUI(
+            vacancies = emptyList(),
+            isSearchActive = true,
+            isLoading = false,
+            isNetworkAvailable = hasNetwork,
+            isServerError = isServerError
+        )
+        adapter.showLoading(false)
+    }
+
+    private fun observeErrorToast() {
         viewModel.isErrorToastShown.observe(viewLifecycleOwner) { isErrorToastShown ->
             if (isErrorToastShown) {
                 viewModel.errorMessage.value?.let {
-                    Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                    showToast(it)
                 }
             }
         }
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun observeLoadingState() {
         viewModel.showLoadingState.observe(viewLifecycleOwner) { showLoading ->
             adapter.showLoading(showLoading)
         }
@@ -186,62 +210,74 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
 
         when {
-            isLoading -> {
-                binding.noNetError.visibility = View.GONE
-                binding.serverError.visibility = View.GONE
-                binding.noVacError.visibility = View.GONE
-                binding.searchStartPic.visibility = View.GONE
-                binding.recyclerView.visibility = View.GONE
-                binding.msgText.visibility = View.GONE
-            }
-            !isNetworkAvailable -> {
-                binding.noNetError.visibility = View.VISIBLE
-                binding.serverError.visibility = View.GONE
-                binding.noVacError.visibility = View.GONE
-                binding.searchStartPic.visibility = View.GONE
-                binding.recyclerView.visibility = View.GONE
-                binding.msgText.visibility = View.GONE
-            }
-            isServerError -> {
-                binding.noNetError.visibility = View.GONE
-                binding.serverError.visibility = View.VISIBLE
-                binding.noVacError.visibility = View.GONE
-                binding.searchStartPic.visibility = View.GONE
-                binding.recyclerView.visibility = View.GONE
-                binding.msgText.visibility = View.GONE
-            }
-            vacancies.isEmpty() && isSearchActive -> {
-                binding.noNetError.visibility = View.GONE
-                binding.serverError.visibility = View.GONE
-                binding.noVacError.visibility = View.VISIBLE
-                binding.searchStartPic.visibility = View.GONE
-                binding.recyclerView.visibility = View.GONE
-                binding.msgText.visibility = View.VISIBLE
-                binding.msgText.text = getString(R.string.no_vac_msg)
-            }
-            vacancies.isNotEmpty() -> {
-                binding.noNetError.visibility = View.GONE
-                binding.serverError.visibility = View.GONE
-                binding.noVacError.visibility = View.GONE
-                binding.searchStartPic.visibility = View.GONE
-                binding.recyclerView.visibility = View.VISIBLE
-                binding.msgText.visibility = View.VISIBLE
-                binding.msgText.text = resources.getQuantityString(
-                    R.plurals.found_vac_msg,
-                    viewModel.totalFoundCount,
-                    viewModel.totalFoundCount
-                )
-                adapter.setItems(vacancies)
-            }
-            else -> {
-                binding.noNetError.visibility = View.GONE
-                binding.serverError.visibility = View.GONE
-                binding.noVacError.visibility = View.GONE
-                binding.searchStartPic.visibility = View.VISIBLE
-                binding.recyclerView.visibility = View.GONE
-                binding.msgText.visibility = View.GONE
-            }
+            isLoading -> showLoadingState()
+            !isNetworkAvailable -> showNoNetworkError()
+            isServerError -> showServerError()
+            vacancies.isEmpty() && isSearchActive -> showNoVacanciesError()
+            vacancies.isNotEmpty() -> showVacancies(vacancies)
+            else -> showInitialState()
         }
+    }
+
+    private fun showLoadingState() {
+        binding.noNetError.visibility = View.GONE
+        binding.serverError.visibility = View.GONE
+        binding.noVacError.visibility = View.GONE
+        binding.searchStartPic.visibility = View.GONE
+        binding.recyclerView.visibility = View.GONE
+        binding.msgText.visibility = View.GONE
+    }
+
+    private fun showNoNetworkError() {
+        binding.noNetError.visibility = View.VISIBLE
+        binding.serverError.visibility = View.GONE
+        binding.noVacError.visibility = View.GONE
+        binding.searchStartPic.visibility = View.GONE
+        binding.recyclerView.visibility = View.GONE
+        binding.msgText.visibility = View.GONE
+    }
+
+    private fun showServerError() {
+        binding.noNetError.visibility = View.GONE
+        binding.serverError.visibility = View.VISIBLE
+        binding.noVacError.visibility = View.GONE
+        binding.searchStartPic.visibility = View.GONE
+        binding.recyclerView.visibility = View.GONE
+        binding.msgText.visibility = View.GONE
+    }
+
+    private fun showNoVacanciesError() {
+        binding.noNetError.visibility = View.GONE
+        binding.serverError.visibility = View.GONE
+        binding.noVacError.visibility = View.VISIBLE
+        binding.searchStartPic.visibility = View.GONE
+        binding.recyclerView.visibility = View.GONE
+        binding.msgText.visibility = View.VISIBLE
+        binding.msgText.text = getString(R.string.no_vac_msg)
+    }
+
+    private fun showVacancies(vacancies: List<Vacancy>) {
+        binding.noNetError.visibility = View.GONE
+        binding.serverError.visibility = View.GONE
+        binding.noVacError.visibility = View.GONE
+        binding.searchStartPic.visibility = View.GONE
+        binding.recyclerView.visibility = View.VISIBLE
+        binding.msgText.visibility = View.VISIBLE
+        binding.msgText.text = resources.getQuantityString(
+            R.plurals.found_vac_msg,
+            viewModel.totalFoundCount,
+            viewModel.totalFoundCount
+        )
+        adapter.setItems(vacancies)
+    }
+
+    private fun showInitialState() {
+        binding.noNetError.visibility = View.GONE
+        binding.serverError.visibility = View.GONE
+        binding.noVacError.visibility = View.GONE
+        binding.searchStartPic.visibility = View.VISIBLE
+        binding.recyclerView.visibility = View.GONE
+        binding.msgText.visibility = View.GONE
     }
     fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
