@@ -9,6 +9,7 @@ import retrofit2.HttpException
 import ru.practicum.android.diploma.domain.interactor.VacancyInteractor
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import java.io.IOException
+import kotlin.coroutines.cancellation.CancellationException
 
 class VacancyViewModel(
     private val interactor: VacancyInteractor
@@ -34,27 +35,25 @@ class VacancyViewModel(
                         _vacancyDetails.postValue(VacancyResult.Error(DEFAULT_ERROR_CODE))
                     }
                 } else {
-                    val exception = result.exceptionOrNull()
-                    val code = when (exception) {
-                        is HttpException -> exception.code()
-                        is IOException -> DEFAULT_ERROR_CODE
-                        else -> DEFAULT_ERROR_CODE
-                    }
-                    _vacancyDetails.postValue(VacancyResult.Error(code))
-                    exception?.printStackTrace()
+                    handleResultException(result.exceptionOrNull())
                 }
             } catch (e: IOException) {
                 _vacancyDetails.postValue(VacancyResult.Error(DEFAULT_ERROR_CODE))
-                e.printStackTrace()
             } catch (e: HttpException) {
-                val code = e.code()
-                _vacancyDetails.postValue(VacancyResult.Error(code))
-                e.printStackTrace()
-            } catch (e: Exception) {
-                _vacancyDetails.postValue(VacancyResult.Error(DEFAULT_ERROR_CODE))
-                e.printStackTrace()
+                _vacancyDetails.postValue(VacancyResult.Error(e.code()))
+            } catch (e: CancellationException) {
+                throw e
             }
         }
+    }
+
+    private fun handleResultException(exception: Throwable?) {
+        val code = when (exception) {
+            is HttpException -> exception.code()
+            is IOException -> DEFAULT_ERROR_CODE
+            else -> DEFAULT_ERROR_CODE
+        }
+        _vacancyDetails.postValue(VacancyResult.Error(code))
     }
 }
 
