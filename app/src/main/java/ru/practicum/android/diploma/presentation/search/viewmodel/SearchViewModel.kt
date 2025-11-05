@@ -19,7 +19,7 @@ sealed class SearchState {
     object Loading : SearchState()
     data class Success(val vacancies: List<Vacancy>) : SearchState()
     object Empty : SearchState()
-    object Error : SearchState()
+    data class Error(val throwable: Throwable? = null) : SearchState()
 }
 
 class SearchViewModel(
@@ -28,7 +28,8 @@ class SearchViewModel(
 
     private val _searchState = MutableLiveData<SearchState>(SearchState.Idle)
     val searchState: LiveData<SearchState> get() = _searchState
-
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> get() = _errorMessage
     private var isLoading = false
     private var isLoadingNextPageInternal = false
     private var currentPage = 0
@@ -36,6 +37,8 @@ class SearchViewModel(
     private var lastQuery: String = ""
     private var _totalFoundCount: Int = 0
     val totalFoundCount: Int get() = _totalFoundCount
+    private val _isErrorToastShown = MutableLiveData(false)
+    val isErrorToastShown: LiveData<Boolean> get() = _isErrorToastShown
     private val _showLoadingState = MutableLiveData<Boolean>()
     val showLoadingState: LiveData<Boolean> get() = _showLoadingState
     val isLoadingNextPage: Boolean get() = isLoadingNextPageInternal
@@ -50,6 +53,7 @@ class SearchViewModel(
         currentPage = 0
         maxPages = Int.MAX_VALUE
         isLoadingNextPageInternal = false
+        _isErrorToastShown.value = false
 
         isLoading = true
         _searchState.value = SearchState.Loading
@@ -88,14 +92,32 @@ class SearchViewModel(
         _totalFoundCount = 0
         isLoadingNextPageInternal = false
         _searchState.value = SearchState.Idle
+        _isErrorToastShown.value = false
     }
 
     private fun handleResponse(response: Response, append: Boolean) {
         when (response) {
             is ResponseSuccess<*> -> handleSuccess(response.data as VacancySearchResponse, append)
             is ResponseError -> {
+                val message = response.exception?.message ?: "Произошла ошибка"
                 if (!append) {
-                    _searchState.postValue(SearchState.Empty)
+                    _searchState.postValue(SearchState.Error(response.exception))
+                } else {
+                    if (_isErrorToastShown.value == false) {
+                        _errorMessage.postValue("Проверьте подключение к интернету")
+                        _isErrorToastShown.postValue(true)
+                    }
+                }
+                isLoadingNextPageInternal = false
+            }
+            else -> {
+                if (!append) {
+                    _searchState.postValue(SearchState.Error(Throwable("Unknown error")))
+                } else {
+                    if (_isErrorToastShown.value == false) {
+                        _errorMessage.postValue("Произошла ошибка")
+                        _isErrorToastShown.postValue(true)
+                    }
                 }
                 isLoadingNextPageInternal = false
             }
@@ -113,6 +135,7 @@ class SearchViewModel(
         maxPages = data.pages
 
         if (append) {
+            _isErrorToastShown.value = false
             val current = (_searchState.value as? SearchState.Success)?.vacancies ?: emptyList()
             _searchState.postValue(SearchState.Success(current + newItems))
         } else {

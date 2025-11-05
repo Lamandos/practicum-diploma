@@ -32,7 +32,7 @@ class VacanciesRepositoryImpl(
                 Result.success(vacancies)
             }
 
-            is ResponseError -> Result.failure(Exception(response.message))
+            is ResponseError -> Result.failure(response.exception ?: Exception("Неизвестная ошибка"))
         }
     }
 
@@ -49,7 +49,7 @@ class VacanciesRepositoryImpl(
             }
 
             is ResponseError -> {
-                Result.failure(Exception(response.message))
+                Result.failure(response.exception ?: Exception("Неизвестная ошибка"))
             }
         }
     }
