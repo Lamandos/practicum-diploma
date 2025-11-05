@@ -21,7 +21,9 @@ import ru.practicum.android.diploma.databinding.FragmentVacancyBinding
 import ru.practicum.android.diploma.domain.models.vacancydetails.Contacts
 import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import ru.practicum.android.diploma.presentation.details.VacancyResult
 import ru.practicum.android.diploma.presentation.details.VacancyViewModel
+
 
 class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
@@ -42,14 +44,35 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
         setupClickListeners()
         showLoadingState()
-        observeVacancyDetails()
+
         viewModel.loadVacancyDetails(args.vacancyId)
+        viewModel.vacancyDetails.observe(viewLifecycleOwner) { result ->
+            binding.progressBar.visibility = View.GONE
+            binding.fullVacInfo.visibility = View.GONE
+            binding.vacDelError.visibility = View.GONE
+            binding.serverError.visibility = View.GONE
+
+            when (result) {
+                is VacancyResult.Success -> {
+                    binding.fullVacInfo.visibility = View.VISIBLE
+                    bindVacancyDetails(result.data)
+                }
+                is VacancyResult.Error -> {
+                    when (result.code) {
+                        404 -> binding.vacDelError.visibility = View.VISIBLE
+                        else -> binding.serverError.visibility = View.VISIBLE
+                    }
+                }
+            }
+        }
     }
 
     private fun setupClickListeners() {
         binding.backBtn.setOnClickListener { findNavController().navigateUp() }
         binding.shareBtn.setOnClickListener {
-            viewModel.vacancyDetails.value?.let { shareVacancy(it.url) }
+            (viewModel.vacancyDetails.value as? VacancyResult.Success)?.data?.let { vacancy ->
+                shareVacancy(vacancy.url)
+            }
         }
         ContactsClickHandler.makeLinksClickable(binding.contactsInfo)
     }
@@ -61,22 +84,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         binding.serverError.visibility = View.GONE
     }
 
-    private fun observeVacancyDetails() {
-        viewModel.vacancyDetails.observe(viewLifecycleOwner) { details ->
-            binding.progressBar.visibility = View.GONE
-            if (details != null) {
-                binding.fullVacInfo.visibility = View.VISIBLE
-                binding.vacDelError.visibility = View.GONE
-                binding.serverError.visibility = View.GONE
-                bindVacancyDetails(details)
-            } else {
-                binding.fullVacInfo.visibility = View.GONE
-                binding.vacDelError.visibility = View.GONE
-                binding.serverError.visibility = View.VISIBLE
-            }
-        }
-    }
-
     private fun shareVacancy(url: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             putExtra(Intent.EXTRA_TEXT, url)
@@ -85,26 +92,13 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         startActivity(Intent.createChooser(intent, getString(R.string.share_vacancy_title)))
     }
 
-    // ------------------- BINDING SECTIONS -------------------
-
     private fun bindVacancyDetails(details: VacancyDetails) {
-        val sectionColor = getSectionColor()
-
-        bindBasics(details)
-        bindSkills(details.skills, sectionColor)
-        bindContacts(details.contacts)
-        bindDescription(details, sectionColor)
-        bindEmployerLogo(details.employer?.logo)
-    }
-
-    private fun getSectionColor(): Int {
         val titleColor = ContextCompat.getColor(requireContext(), R.color.yp_black)
-        val nightMode =
-            resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
-        return if (nightMode) ContextCompat.getColor(requireContext(), R.color.white) else titleColor
-    }
+        val nightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        val sectionColor = if (nightMode) ContextCompat.getColor(requireContext(), R.color.white) else titleColor
 
-    private fun bindBasics(details: VacancyDetails) {
+        setupSectionTitles(sectionColor)
+
         binding.vacName.text = details.name.orEmpty()
         binding.vacSalary.text = formatSalary(details.salary)
         binding.vacEmployer.text = details.employer?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
@@ -112,13 +106,24 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         binding.experienceInfo.text = details.experience?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
         binding.scheduleInfo.text = details.schedule?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
 
-        setupSectionTitles(getSectionColor())
+        bindSkills(details.skills, sectionColor)
+        bindContacts(details.contacts)
+
+        details.employer?.logo?.let { logoUrl ->
+            Glide.with(binding.vacImg.context)
+                .load(logoUrl)
+                .placeholder(R.drawable.placeholder)
+                .error(R.drawable.placeholder)
+                .into(binding.vacImg)
+        }
+
+        bindDescription(details, sectionColor)
     }
 
     private fun setupSectionTitles(sectionColor: Int) {
-        fun setupTitle(view: TextView, resId: Int) {
-            view.apply {
-                text = getString(resId)
+        fun setupTitle(textView: TextView, stringRes: Int) {
+            textView.apply {
+                text = getString(stringRes)
                 setTextColor(sectionColor)
                 textSize = TITLE_SIZE_SP
                 setTypeface(typeface, Typeface.BOLD)
@@ -133,10 +138,10 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     }
 
     private fun formatSalary(salary: Salary?): String {
-        return salary?.let {
-            val from = it.from?.toString().orEmpty()
-            val to = it.to?.toString().orEmpty()
-            val currency = it.currency.orEmpty()
+        return salary?.let { s ->
+            val from = s.from?.toString().orEmpty()
+            val to = s.to?.toString().orEmpty()
+            val currency = s.currency.orEmpty()
             when {
                 from.isNotEmpty() && to.isNotEmpty() -> "от $from до $to $currency"
                 from.isNotEmpty() -> "от $from $currency"
@@ -147,48 +152,36 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     }
 
     private fun bindSkills(skills: List<String>?, sectionColor: Int) {
-        if (skills.isNullOrEmpty()) {
+        if (!skills.isNullOrEmpty()) {
+            binding.skillsInfo.visibility = View.VISIBLE
+            binding.skillsInfo.text = skills.joinToString("\n") { "$BULLET_SYMBOL$it" }
+            binding.skillsInfo.setTextColor(sectionColor)
+        } else {
             binding.skillsInfo.visibility = View.GONE
             binding.skillsTitle.visibility = View.GONE
-            return
         }
-
-        binding.skillsInfo.visibility = View.VISIBLE
-        binding.skillsInfo.setTextColor(sectionColor)
-        binding.skillsInfo.text = skills.joinToString("\n") { "$BULLET_SYMBOL$it" }
     }
 
     private fun bindContacts(contacts: Contacts?) {
         val contactText = contacts?.let { c ->
             val lines = mutableListOf<String>()
-            c.email?.takeIf { it.isNotBlank() }?.let(lines::add)
+            c.email?.takeIf { it.isNotBlank() }?.let { lines.add(it) }
             c.phones?.forEach { phone ->
                 val number = phone.number.orEmpty()
                 if (number.isNotBlank()) {
-                    lines.add(
-                        if (!phone.comment.isNullOrBlank()) "$number (${phone.comment})" else number
-                    )
+                    val line = if (!phone.comment.isNullOrBlank()) "$number (${phone.comment})" else number
+                    lines.add(line)
                 }
             }
             lines.joinToString("\n").takeIf { it.isNotBlank() }
         }
 
-        if (contactText.isNullOrBlank()) {
-            binding.contactsInfo.visibility = View.GONE
-            binding.contactsTitle.visibility = View.GONE
-        } else {
+        if (!contactText.isNullOrBlank()) {
             binding.contactsInfo.visibility = View.VISIBLE
             binding.contactsInfo.text = contactText
-        }
-    }
-
-    private fun bindEmployerLogo(logoUrl: String?) {
-        logoUrl?.let {
-            Glide.with(binding.vacImg.context)
-                .load(it)
-                .placeholder(R.drawable.placeholder)
-                .error(R.drawable.placeholder)
-                .into(binding.vacImg)
+        } else {
+            binding.contactsInfo.visibility = View.GONE
+            binding.contactsTitle.visibility = View.GONE
         }
     }
 
@@ -206,27 +199,33 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     }
 
     private fun bindSection(titleView: TextView, infoView: TextView, text: String, sectionColor: Int) {
-        if (text.isBlank()) {
+        if (text.isNotBlank()) {
+            titleView.visibility = View.VISIBLE
+            infoView.visibility = View.VISIBLE
+            infoView.text = addBullets(text, sectionColor)
+        } else {
             titleView.visibility = View.GONE
             infoView.visibility = View.GONE
-            return
         }
-
-        titleView.visibility = View.VISIBLE
-        infoView.visibility = View.VISIBLE
-        infoView.text = addBullets(text, sectionColor)
     }
 
     private fun addBullets(text: String, sectionColor: Int): SpannableStringBuilder {
         val result = SpannableStringBuilder()
-        text.lines().filter { it.isNotBlank() }.forEach { line ->
-            val bullet = SpannableString(BULLET_SYMBOL).apply {
-                setSpan(ForegroundColorSpan(sectionColor), 0, BULLET_SYMBOL.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        text.lines()
+            .filter { it.isNotBlank() }
+            .forEach { line ->
+                val spannableBullet = SpannableString(BULLET_SYMBOL).apply {
+                    setSpan(
+                        ForegroundColorSpan(sectionColor),
+                        0,
+                        BULLET_SYMBOL.length,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+                result.append(spannableBullet)
+                result.append(line.trim())
+                result.append("\n")
             }
-            result.append(bullet)
-            result.append(line.trim())
-            result.append("\n")
-        }
         return result
     }
 
