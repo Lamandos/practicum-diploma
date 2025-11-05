@@ -109,12 +109,14 @@ class VacancyViewModel(
         try {
             favoritesInteractor.removeFromFavorites(vacancyId)
             _isFavorite.value = false
-        } catch (e: Exception) {
-            when (e) {
-                is IOException, is SecurityException, is IllegalStateException -> {
-                    handleErrorWithLog(ERROR_REMOVE_FAVORITE, "removeFromFavorites - ${e::class.simpleName}", e)
-                }
-            }
+        } catch (e: IOException) {
+            handleErrorWithLog(ERROR_REMOVE_FAVORITE, "removeFromFavorites - IOException", e)
+            throw e
+        } catch (e: SecurityException) {
+            handleErrorWithLog(ERROR_REMOVE_FAVORITE, "removeFromFavorites - SecurityException", e)
+            throw e
+        } catch (e: IllegalStateException) {
+            handleErrorWithLog(ERROR_REMOVE_FAVORITE, "removeFromFavorites - IllegalStateException", e)
             throw e
         }
     }
@@ -130,12 +132,14 @@ class VacancyViewModel(
             } else {
                 handleError(ERROR_LOAD_VACANCY)
             }
-        } catch (e: Exception) {
-            when (e) {
-                is IOException, is SecurityException, is IllegalStateException -> {
-                    handleErrorWithLog(ERROR_ADD_FAVORITE, "addToFavorites - ${e::class.simpleName}", e)
-                }
-            }
+        } catch (e: IOException) {
+            handleErrorWithLog(ERROR_ADD_FAVORITE, "addToFavorites - IOException", e)
+            throw e
+        } catch (e: SecurityException) {
+            handleErrorWithLog(ERROR_ADD_FAVORITE, "addToFavorites - SecurityException", e)
+            throw e
+        } catch (e: IllegalStateException) {
+            handleErrorWithLog(ERROR_ADD_FAVORITE, "addToFavorites - IllegalStateException", e)
             throw e
         }
     }
