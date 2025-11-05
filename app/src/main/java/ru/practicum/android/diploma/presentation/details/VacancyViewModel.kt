@@ -106,23 +106,24 @@ class VacancyViewModel(
     }
 
     private suspend fun removeFromFavorites(vacancyId: String) {
-        try {
+        val result = runCatching {
             favoritesInteractor.removeFromFavorites(vacancyId)
             _isFavorite.value = false
-        } catch (e: IOException) {
-            handleErrorWithLog(ERROR_REMOVE_FAVORITE, "removeFromFavorites - IOException", e)
-            throw e
-        } catch (e: SecurityException) {
-            handleErrorWithLog(ERROR_REMOVE_FAVORITE, "removeFromFavorites - SecurityException", e)
-            throw e
-        } catch (e: IllegalStateException) {
-            handleErrorWithLog(ERROR_REMOVE_FAVORITE, "removeFromFavorites - IllegalStateException", e)
-            throw e
         }
+
+        result.onFailure { exception ->
+            when (exception) {
+                is IOException, is SecurityException, is IllegalStateException -> {
+                    handleErrorWithLog(ERROR_REMOVE_FAVORITE, "removeFromFavorites - ${exception::class.simpleName}", exception)
+                }
+            }
+        }
+
+        result.getOrThrow()
     }
 
     private suspend fun addToFavorites(vacancyId: String) {
-        try {
+        val result = runCatching {
             val currentVacancy = getCurrentVacancy(vacancyId)
 
             if (currentVacancy != null) {
@@ -132,16 +133,17 @@ class VacancyViewModel(
             } else {
                 handleError(ERROR_LOAD_VACANCY)
             }
-        } catch (e: IOException) {
-            handleErrorWithLog(ERROR_ADD_FAVORITE, "addToFavorites - IOException", e)
-            throw e
-        } catch (e: SecurityException) {
-            handleErrorWithLog(ERROR_ADD_FAVORITE, "addToFavorites - SecurityException", e)
-            throw e
-        } catch (e: IllegalStateException) {
-            handleErrorWithLog(ERROR_ADD_FAVORITE, "addToFavorites - IllegalStateException", e)
-            throw e
         }
+
+        result.onFailure { exception ->
+            when (exception) {
+                is IOException, is SecurityException, is IllegalStateException -> {
+                    handleErrorWithLog(ERROR_ADD_FAVORITE, "addToFavorites - ${exception::class.simpleName}", exception)
+                }
+            }
+        }
+
+        result.getOrThrow()
     }
 
     private suspend fun getCurrentVacancy(vacancyId: String): VacancyDetails? {
