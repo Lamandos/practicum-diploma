@@ -114,7 +114,11 @@ class VacancyViewModel(
         result.onFailure { exception ->
             when (exception) {
                 is IOException, is SecurityException, is IllegalStateException -> {
-                    handleErrorWithLog(ERROR_REMOVE_FAVORITE, "removeFromFavorites - ${exception::class.simpleName}", exception)
+                    handleErrorWithLog(
+                        message = ERROR_REMOVE_FAVORITE,
+                        operation = "removeFromFavorites - ${exception::class.simpleName}",
+                        exception = exception
+                    )
                 }
             }
         }
@@ -138,7 +142,11 @@ class VacancyViewModel(
         result.onFailure { exception ->
             when (exception) {
                 is IOException, is SecurityException, is IllegalStateException -> {
-                    handleErrorWithLog(ERROR_ADD_FAVORITE, "addToFavorites - ${exception::class.simpleName}", exception)
+                    handleErrorWithLog(
+                        message = ERROR_ADD_FAVORITE,
+                        operation = "addToFavorites - ${exception::class.simpleName}",
+                        exception = exception
+                    )
                 }
             }
         }
