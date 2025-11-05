@@ -6,9 +6,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-@Database(entities = [FavoritesEntity::class], version = 3,
+@Database(entities = [FavoritesEntity::class], version = 4,
     exportSchema = false)
-@TypeConverters(ListConverter::class, ExperienceConverter::class)
+@TypeConverters(ListConverter::class)
 abstract class AppDataBase : RoomDatabase() {
     abstract fun favoritesDao(): FavoritesDao
 

@@ -95,11 +95,6 @@
         android:id="@+id/vacancyFragment2"
         android:name="ru.practicum.android.diploma.ui.screens.VacancyFragment"
         android:label="VacancyFragment" >
-
-        <argument
-            android:name="vacancy_id"
-            app:argType="string" />
-
         <action
             android:id="@+id/action_vacancyFragment2_to_searchFragment"
             app:destination="@id/searchFragment" />

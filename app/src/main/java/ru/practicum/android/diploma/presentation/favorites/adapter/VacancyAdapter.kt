@@ -9,9 +9,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import ru.practicum.android.diploma.R
-import ru.practicum.android.diploma.domain.models.vacancy.Salary
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
-import ru.practicum.android.diploma.util.formatsalary.formatSalary
 
 class VacancyAdapter(
     private val onItemClick: (VacancyDetails) -> Unit
@@ -35,11 +33,25 @@ class VacancyAdapter(
         private val placeholder: ImageView = itemView.findViewById(R.id.vacancyPlaceholder)
 
         fun bind(vacancy: VacancyDetails) {
-            nameCity.text = "${vacancy.name}\n${vacancy.area}"
-            workPlace.text = vacancy.employer
-            salary.text = formatSalary(vacancy.salary as Salary?)
+            nameCity.text = "${vacancy.name}\n${vacancy.area?.name ?: ""}"
+            workPlace.text = vacancy.employer?.name ?: ""
+
+            salary.text = formatSalaryForDetails(vacancy.salary)
 
             placeholder.setImageResource(R.drawable.placeholder)
+        }
+
+        private fun formatSalaryForDetails(salary: ru.practicum.android.diploma.domain.models.vacancydetails.Salary?): String {
+            salary ?: return "Зарплата не указана"
+            val from = salary.from
+            val to = salary.to
+            val currency = salary.currency ?: ""
+            return when {
+                from != null && to != null -> "от $from до $to $currency"
+                from != null -> "от $from $currency"
+                to != null -> "до $to $currency"
+                else -> "Зарплата не указана"
+            }
         }
     }
 

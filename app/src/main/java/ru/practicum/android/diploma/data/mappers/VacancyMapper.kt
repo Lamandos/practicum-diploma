@@ -31,6 +31,8 @@ fun EmployerDto.toDomain(): Employer = Employer(
     name = this.name,
     logo = this.logo
 )
+
+// ИСПРАВИТЬ - убрать .name
 fun List<SkillDto>.toDomainList(): List<String> = this.map { it.name }
 
 fun ExperienceDto.toDomain(): Experience = Experience(
@@ -42,14 +44,17 @@ fun ScheduleDto.toDomain(): Schedule = Schedule(
     id = this.id,
     name = this.name
 )
+
 fun FilterIndustryDto.toDomain(): FilterIndustry = FilterIndustry(
     id = this.id,
     name = this.name
 )
+
 fun EmploymentDto.toDomain(): Employment = Employment(
     id = this.id,
     name = this.name
 )
+
 fun SalaryDto.toDomain(): Salary = Salary(
     from = this.from,
     to = this.to,
@@ -105,7 +110,7 @@ object VacancyMapper {
             contacts = dto.contacts?.toDomain(dto.id),
             area = dto.area.toDomain(),
             publishedAt = dto.publishedAt,
-            skills = dto.skills?.map { it.name } ?: emptyList(),
+            skills = dto.skills ?: emptyList(),
             url = dto.url,
             industry = dto.industry?.toDomain()
         )

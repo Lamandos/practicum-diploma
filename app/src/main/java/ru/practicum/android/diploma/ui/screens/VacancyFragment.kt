@@ -33,9 +33,8 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private var _binding: FragmentVacancyBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: VacancyViewModel by viewModel()
-    private val args: VacancyFragmentArgs by navArgs()
 
+    // УДАЛИТЬ дублирующее объявление viewModel
     private val viewModel: VacancyViewModel by viewModel()
     private var vacancyId: String? = null
     private var fromFavorites: Boolean = false
@@ -49,6 +48,8 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentVacancyBinding.bind(view)
+
+        // УДАЛИТЬ лишний вызов setupClickListeners()
         setupClickListeners()
         setupObservers()
         updateFavoritesButton(false)
@@ -60,23 +61,18 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         }
     }
 
+    // ОСТАВИТЬ ТОЛЬКО ОДИН метод setupClickListeners()
     private fun setupClickListeners() {
+        binding.backBtn.setOnClickListener {
+            findNavController().popBackStack()
+        }
         binding.favoritesBtn.setOnClickListener {
             viewModel.onFavoritesClicked()
         }
-
-        setupClickListeners()
-        showLoadingState()
-        observeVacancyDetails()
-        viewModel.loadVacancyDetails(args.vacancyId)
-    }
-
-    private fun setupClickListeners() {
-        binding.backBtn.setOnClickListener { findNavController().navigateUp() }
         binding.shareBtn.setOnClickListener {
             viewModel.vacancyDetails.value?.let { shareVacancy(it.url) }
         }
-        ContactsClickHandler.makeLinksClickable(binding.contactsInfo)
+        // ContactsClickHandler.makeLinksClickable(binding.contactsInfo) // Закомментировать если нет этого класса
     }
 
     private fun showLoadingState() {
@@ -269,9 +265,10 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         } ?: desc.length
 
         return desc.substring(from, to).trim()
-        binding.backBtn.setOnClickListener {
-            findNavController().popBackStack()
-        }
+        // УДАЛИТЬ лишний код ниже
+        // binding.backBtn.setOnClickListener {
+        //     findNavController().popBackStack()
+        // }
     }
 
     private fun setupObservers() {
@@ -296,8 +293,8 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private fun showVacancy(vacancy: VacancyDetails) {
         binding.vacName.text = vacancy.name
-        binding.vacEmployer.text = vacancy.employer
-        binding.vacSalary.text = formatSalary(vacancy.salary as Salary?)
+        binding.vacEmployer.text = vacancy.employer?.name ?: "" // ИСПРАВИТЬ - добавить ?.name
+        binding.vacSalary.text = formatSalary(vacancy.salary)
     }
 
     private fun updateFavoritesButton(isFavorite: Boolean) {

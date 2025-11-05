@@ -5,6 +5,7 @@ import ru.practicum.android.diploma.data.dto.ResponseError
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
 import ru.practicum.android.diploma.data.dto.vacancydetailsdto.VacancyDetailsDto
 import ru.practicum.android.diploma.data.dto.vacancydetailsdto.toDomain
+import ru.practicum.android.diploma.data.mappers.VacancyMapper
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import java.io.IOException
 
@@ -35,8 +36,7 @@ class RetrofitNetworkClient(
     override suspend fun getVacancyDetails(vacancyId: String): VacancyDetails? {
         return try {
             val apiResponse: VacancyDetailsDto = apiService.getVacancyDetails(vacancyId)
-            val domainModel = apiResponse.toDomain()
-            domainModel
+            VacancyMapper.mapToDomain(apiResponse)
         } catch (e: IOException) {
             null
         } catch (e: retrofit2.HttpException) {

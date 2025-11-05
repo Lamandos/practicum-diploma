@@ -1,5 +1,6 @@
 package ru.practicum.android.diploma.data.dto.vacancydetailsdto
 
+import ru.practicum.android.diploma.data.mappers.VacancyMapper
 import ru.practicum.android.diploma.domain.models.vacancydetails.Address
 import ru.practicum.android.diploma.domain.models.vacancydetails.Contacts
 import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
@@ -26,10 +27,10 @@ fun SalaryDto.toDomain(): Salary? {
     }
 }
 
-fun ContactsDto.toDomain(): Contacts? {
+fun ContactsDto.toDomain(id: String): Contacts? {
     return if (name != null || email != null || !phones.isNullOrEmpty()) {
         Contacts(
-            id = "", // временно
+            id = id,
             name = name,
             email = email,
             phones = phones?.mapNotNull { phoneDto ->
@@ -44,24 +45,4 @@ fun ContactsDto.toDomain(): Contacts? {
     } else {
         null
     }
-}
-
-fun VacancyDetailsDto.toDomain(): VacancyDetails {
-    return VacancyDetails(
-        id = id,
-        name = name,
-        description = description,
-        salary = salary?.toDomain(),
-        address = address?.fullAddress as Address?,
-        experience = experience.toDomain(),
-        schedule = schedule.name,
-        employment = employment.name,
-        employer = employer.name,
-        contacts = contacts?.toDomain(),
-        area = area.name,
-        skills = skills ?: emptyList(),
-        url = url,
-        industry = industry?.name ?: "",
-        publishedAt = publishedAt
-    )
 }
