@@ -18,15 +18,22 @@ import com.bumptech.glide.Glide
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentVacancyBinding
+import ru.practicum.android.diploma.domain.models.vacancydetails.Contacts
+import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import ru.practicum.android.diploma.presentation.details.VacancyViewModel
 
 class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
+    companion object {
+        private const val BULLET_SYMBOL = "• "
+        private const val TITLE_SIZE_SP = 18f
+        private val NOT_SPECIFIED_TEXT_RES = R.string.not_specified
+    }
+
     private var _binding: FragmentVacancyBinding? = null
     private val binding get() = _binding!!
     private val viewModel: VacancyViewModel by viewModel()
-
     private val args: VacancyFragmentArgs by navArgs()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -34,24 +41,16 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         _binding = FragmentVacancyBinding.bind(view)
 
         setupClickListeners()
-
-        binding.progressBar.visibility = View.VISIBLE
-        binding.fullVacInfo.visibility = View.GONE
-        binding.vacDelError.visibility = View.GONE
-        binding.serverError.visibility = View.GONE
+        showLoadingState()
 
         viewModel.loadVacancyDetails(args.vacancyId)
-
         viewModel.vacancyDetails.observe(viewLifecycleOwner) { details ->
             binding.progressBar.visibility = View.GONE
-
             if (details != null) {
                 binding.fullVacInfo.visibility = View.VISIBLE
                 binding.vacDelError.visibility = View.GONE
                 binding.serverError.visibility = View.GONE
-
                 bindVacancyDetails(details)
-
             } else {
                 binding.fullVacInfo.visibility = View.GONE
                 binding.vacDelError.visibility = View.GONE
@@ -67,8 +66,14 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
                 shareVacancy(vacancy.url)
             }
         }
-
         ContactsClickHandler.makeLinksClickable(binding.contactsInfo)
+    }
+
+    private fun showLoadingState() {
+        binding.progressBar.visibility = View.VISIBLE
+        binding.fullVacInfo.visibility = View.GONE
+        binding.vacDelError.visibility = View.GONE
+        binding.serverError.visibility = View.GONE
     }
 
     private fun shareVacancy(url: String) {
@@ -76,7 +81,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             putExtra(Intent.EXTRA_TEXT, url)
             type = "text/plain"
         }
-        startActivity(Intent.createChooser(intent, "Поделиться вакансией"))
+        startActivity(Intent.createChooser(intent, getString(R.string.share_vacancy_title)))
     }
 
     private fun bindVacancyDetails(details: VacancyDetails) {
@@ -84,71 +89,17 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         val nightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
         val sectionColor = if (nightMode) ContextCompat.getColor(requireContext(), R.color.white) else titleColor
 
-        val titleSizeSp = 18f
-
-        fun setupTitle(textView: TextView, stringRes: Int) {
-            textView.apply {
-                text = getString(stringRes)
-                setTextColor(sectionColor)
-                textSize = titleSizeSp
-                setTypeface(typeface, Typeface.BOLD)
-                visibility = View.VISIBLE
-            }
-        }
-
-        setupTitle(binding.responsibilitiesTitle, R.string.responsibilities)
-        setupTitle(binding.requirementsTitle, R.string.requirements)
-        setupTitle(binding.termsTitle, R.string.Terms)
-        setupTitle(binding.skillsTitle, R.string.skills)
-        setupTitle(binding.contactsTitle, R.string.contacts)
+        setupSectionTitles(sectionColor)
 
         binding.vacName.text = details.name.orEmpty()
-        binding.vacSalary.text = details.salary?.let { salary ->
-            val from = salary.from?.toString().orEmpty()
-            val to = salary.to?.toString().orEmpty()
-            val currency = salary.currency.orEmpty()
-            when {
-                from.isNotEmpty() && to.isNotEmpty() -> "от $from до $to $currency"
-                from.isNotEmpty() -> "от $from $currency"
-                to.isNotEmpty() -> "до $to $currency"
-                else -> getString(R.string.salary_not_specified)
-            }
-        } ?: getString(R.string.salary_not_specified)
+        binding.vacSalary.text = formatSalary(details.salary)
+        binding.vacEmployer.text = details.employer?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.vacRegion.text = details.area?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.experienceInfo.text = details.experience?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+        binding.scheduleInfo.text = details.schedule?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
 
-        binding.vacEmployer.text = details.employer?.name.orEmpty().ifBlank { getString(R.string.not_specified) }
-        binding.vacRegion.text = details.area?.name.orEmpty().ifBlank { getString(R.string.not_specified) }
-        binding.experienceInfo.text = details.experience?.name.orEmpty().ifBlank { getString(R.string.not_specified) }
-        binding.scheduleInfo.text = details.schedule?.name.orEmpty().ifBlank { getString(R.string.not_specified) }
-
-        if (!details.skills.isNullOrEmpty()) {
-            binding.skillsInfo.visibility = View.VISIBLE
-            binding.skillsInfo.text = details.skills.joinToString("\n") { "• $it" }
-            binding.skillsInfo.setTextColor(sectionColor)
-        } else {
-            binding.skillsInfo.visibility = View.GONE
-            binding.skillsTitle.visibility = View.GONE
-        }
-
-        val contactText = details.contacts?.let { contacts ->
-            val contactLines = mutableListOf<String>()
-            contacts.email?.takeIf { it.isNotBlank() }?.let { contactLines.add(it) }
-            contacts.phones?.forEach { phone ->
-                val phoneNumber = phone.number.orEmpty()
-                if (phoneNumber.isNotBlank()) {
-                    val line = if (!phone.comment.isNullOrBlank()) "$phoneNumber (${phone.comment})" else phoneNumber
-                    contactLines.add(line)
-                }
-            }
-            contactLines.joinToString("\n").takeIf { it.isNotBlank() }
-        }
-
-        if (!contactText.isNullOrBlank()) {
-            binding.contactsInfo.visibility = View.VISIBLE
-            binding.contactsInfo.text = contactText
-        } else {
-            binding.contactsInfo.visibility = View.GONE
-            binding.contactsTitle.visibility = View.GONE
-        }
+        bindSkills(details.skills, sectionColor)
+        bindContacts(details.contacts)
 
         details.employer?.logo?.let { logoUrl ->
             Glide.with(binding.vacImg.context)
@@ -158,46 +109,132 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
                 .into(binding.vacImg)
         }
 
-        val desc = details.description.orEmpty()
+        bindDescription(details, sectionColor)
+    }
 
-        fun addBullets(text: String?): SpannableStringBuilder {
-            val safeText = text.orEmpty()
-            if (safeText.isBlank()) return SpannableStringBuilder(getString(R.string.not_specified))
-            val result = SpannableStringBuilder()
-            safeText.lines().filter { it.isNotBlank() }.forEach { line ->
-                val bullet = "• "
-                val spannableBullet = SpannableString(bullet)
-                spannableBullet.setSpan(
-                    ForegroundColorSpan(sectionColor),
-                    0, bullet.length,
-                    Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
+    private fun setupSectionTitles(sectionColor: Int) {
+        fun setupTitle(textView: TextView, stringRes: Int) {
+            textView.apply {
+                text = getString(stringRes)
+                setTextColor(sectionColor)
+                textSize = TITLE_SIZE_SP
+                setTypeface(typeface, Typeface.BOLD)
+                visibility = View.VISIBLE
+            }
+        }
+        setupTitle(binding.responsibilitiesTitle, R.string.responsibilities)
+        setupTitle(binding.requirementsTitle, R.string.requirements)
+        setupTitle(binding.termsTitle, R.string.Terms)
+        setupTitle(binding.skillsTitle, R.string.skills)
+        setupTitle(binding.contactsTitle, R.string.contacts)
+    }
+
+    private fun formatSalary(salary: Salary?): String {
+        return salary?.let { s ->
+            val from = s.from?.toString().orEmpty()
+            val to = s.to?.toString().orEmpty()
+            val currency = s.currency.orEmpty()
+            when {
+                from.isNotEmpty() && to.isNotEmpty() -> "от $from до $to $currency"
+                from.isNotEmpty() -> "от $from $currency"
+                to.isNotEmpty() -> "до $to $currency"
+                else -> getString(R.string.salary_not_specified)
+            }
+        } ?: getString(R.string.salary_not_specified)
+    }
+
+    private fun bindSkills(skills: List<String>?, sectionColor: Int) {
+        if (!skills.isNullOrEmpty()) {
+            binding.skillsInfo.visibility = View.VISIBLE
+            binding.skillsInfo.text = skills.joinToString("\n") { "$BULLET_SYMBOL$it" }
+            binding.skillsInfo.setTextColor(sectionColor)
+        } else {
+            binding.skillsInfo.visibility = View.GONE
+            binding.skillsTitle.visibility = View.GONE
+        }
+    }
+
+    private fun bindContacts(contacts: Contacts?) {
+        val contactText = contacts?.let { c ->
+            val lines = mutableListOf<String>()
+            c.email?.takeIf { it.isNotBlank() }?.let { lines.add(it) }
+            c.phones?.forEach { phone ->
+                val number = phone.number.orEmpty()
+                if (number.isNotBlank()) {
+                    val line = if (!phone.comment.isNullOrBlank()) "$number (${phone.comment})" else number
+                    lines.add(line)
+                }
+            }
+            lines.joinToString("\n").takeIf { it.isNotBlank() }
+        }
+
+        if (!contactText.isNullOrBlank()) {
+            binding.contactsInfo.visibility = View.VISIBLE
+            binding.contactsInfo.text = contactText
+        } else {
+            binding.contactsInfo.visibility = View.GONE
+            binding.contactsTitle.visibility = View.GONE
+        }
+    }
+
+    private fun bindDescription(details: VacancyDetails, sectionColor: Int) {
+        val desc = details.description.orEmpty()
+        if (desc.isBlank()) return
+
+        val responsibilityText = extractSection(desc, R.string.responsibilities, R.string.requirements)
+        val requirementsText = extractSection(desc, R.string.requirements, R.string.Terms)
+        val termsText = extractSection(desc, R.string.Terms, null)
+
+        bindSection(binding.responsibilitiesTitle, binding.responsibilitiesInfo, responsibilityText, sectionColor)
+        bindSection(binding.requirementsTitle, binding.requirementsInfo, requirementsText, sectionColor)
+        bindSection(binding.termsTitle, binding.termsInfo, termsText, sectionColor)
+    }
+
+    private fun bindSection(titleView: TextView, infoView: TextView, text: String, sectionColor: Int) {
+        if (text.isNotBlank()) {
+            titleView.visibility = View.VISIBLE
+            infoView.visibility = View.VISIBLE
+            infoView.text = addBullets(text, sectionColor)
+        } else {
+            titleView.visibility = View.GONE
+            infoView.visibility = View.GONE
+        }
+    }
+
+    private fun addBullets(text: String, sectionColor: Int): SpannableStringBuilder {
+        val result = SpannableStringBuilder()
+        text.lines()
+            .filter { it.isNotBlank() }
+            .forEach { line ->
+                val spannableBullet = SpannableString(BULLET_SYMBOL).apply {
+                    setSpan(
+                        ForegroundColorSpan(sectionColor),
+                        0,
+                        BULLET_SYMBOL.length,
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
                 result.append(spannableBullet)
                 result.append(line.trim())
                 result.append("\n")
             }
-            return result
-        }
+        return result
+    }
 
-        val responsibilityRegex = Regex("${getString(R.string.responsibilities)}:(.*?)((?=${getString(R.string.requirements)}:)|$)", RegexOption.DOT_MATCHES_ALL)
-        val requirementsRegex = Regex("${getString(R.string.requirements)}:(.*?)((?=${getString(R.string.Terms)}:)|$)", RegexOption.DOT_MATCHES_ALL)
-        val termsRegex = Regex("${getString(R.string.Terms)}:(.*)", RegexOption.DOT_MATCHES_ALL)
+    private fun extractSection(desc: String, startRes: Int, endRes: Int?): String {
+        val startText = getString(startRes)
+        val endText = endRes?.let { getString(it) }
 
-        val responsibilityText = responsibilityRegex.find(desc)?.groups?.get(1)?.value.orEmpty()
-        val requirementsText = requirementsRegex.find(desc)?.groups?.get(1)?.value.orEmpty()
-        val termsText = termsRegex.find(desc)?.groups?.get(1)?.value.orEmpty()
+        val startIndex = desc.indexOf("$startText:")
+        if (startIndex == -1) return ""
 
-        binding.responsibilitiesInfo.text = addBullets(responsibilityText)
-        binding.requirementsInfo.text = addBullets(requirementsText)
+        val from = startIndex + startText.length + 1
+        val to = endText?.let {
+            val endIndex = desc.indexOf("$it:", from)
+            if (endIndex == -1) desc.length else endIndex
+        } ?: desc.length
 
-        if (termsText.isNotBlank()) {
-            binding.termsTitle.visibility = View.VISIBLE
-            binding.termsInfo.visibility = View.VISIBLE
-            binding.termsInfo.text = addBullets(termsText)
-        } else {
-            binding.termsTitle.visibility = View.GONE
-            binding.termsInfo.visibility = View.GONE
-        }
+        return desc.substring(from, to).trim()
     }
 
     override fun onDestroyView() {
@@ -205,3 +242,4 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         _binding = null
     }
 }
+

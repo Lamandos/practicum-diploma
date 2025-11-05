@@ -37,7 +37,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
     }
 
-
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 2000L
     }

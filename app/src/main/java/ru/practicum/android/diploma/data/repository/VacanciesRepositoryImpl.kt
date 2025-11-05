@@ -1,7 +1,6 @@
 package ru.practicum.android.diploma.data.repository
 
 import android.graphics.Region
-import android.util.Log
 import ru.practicum.android.diploma.data.dto.ResponseError
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
 import ru.practicum.android.diploma.data.mappers.VacancyMapper
@@ -38,7 +37,6 @@ class VacanciesRepositoryImpl(
     }
 
     override suspend fun getVacancyDetails(vacancyId: String): Result<VacancyDetails> {
-        Log.d("VacanciesRepository", "Requesting vacancy details for ID: $vacancyId")
         val response = networkClient.doRequest(
             VacancyDetailsRequest(vacancyId)
         )
@@ -47,12 +45,10 @@ class VacanciesRepositoryImpl(
             is ResponseSuccess<*> -> {
                 val details = response.data as? VacancyDetails
                     ?: return Result.failure(Exception("Invalid response type"))
-                Log.d("VacanciesRepository", "Received vacancy details: $details")
                 Result.success(details)
             }
 
             is ResponseError -> {
-                Log.e("VacanciesRepository", "Server error: ${response.message}")
                 Result.failure(Exception(response.message))
             }
         }
