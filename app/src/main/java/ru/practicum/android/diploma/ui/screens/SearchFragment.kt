@@ -229,57 +229,67 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private fun showLoadingState() {
         setViewsVisibility(
-            noNetError = View.GONE,
-            serverError = View.GONE,
-            noVacError = View.GONE,
-            searchStartPic = View.GONE,
-            recyclerView = View.GONE,
-            msgText = View.GONE
+            VisibilityConfig(
+                noNetError = View.GONE,
+                serverError = View.GONE,
+                noVacError = View.GONE,
+                searchStartPic = View.GONE,
+                recyclerView = View.GONE,
+                msgText = View.GONE
+            )
         )
     }
 
     private fun showNoNetworkState() {
         setViewsVisibility(
-            noNetError = View.VISIBLE,
-            serverError = View.GONE,
-            noVacError = View.GONE,
-            searchStartPic = View.GONE,
-            recyclerView = View.GONE,
-            msgText = View.GONE
+            VisibilityConfig(
+                noNetError = View.VISIBLE,
+                serverError = View.GONE,
+                noVacError = View.GONE,
+                searchStartPic = View.GONE,
+                recyclerView = View.GONE,
+                msgText = View.GONE
+            )
         )
     }
 
     private fun showServerErrorState() {
         setViewsVisibility(
-            noNetError = View.GONE,
-            serverError = View.VISIBLE,
-            noVacError = View.GONE,
-            searchStartPic = View.GONE,
-            recyclerView = View.GONE,
-            msgText = View.GONE
+            VisibilityConfig(
+                noNetError = View.GONE,
+                serverError = View.VISIBLE,
+                noVacError = View.GONE,
+                searchStartPic = View.GONE,
+                recyclerView = View.GONE,
+                msgText = View.GONE
+            )
         )
     }
 
     private fun showNoVacanciesState() {
         setViewsVisibility(
-            noNetError = View.GONE,
-            serverError = View.GONE,
-            noVacError = View.VISIBLE,
-            searchStartPic = View.GONE,
-            recyclerView = View.GONE,
-            msgText = View.VISIBLE
+            VisibilityConfig(
+                noNetError = View.GONE,
+                serverError = View.GONE,
+                noVacError = View.VISIBLE,
+                searchStartPic = View.GONE,
+                recyclerView = View.GONE,
+                msgText = View.VISIBLE
+            )
         )
         binding.msgText.text = getString(R.string.no_vac_msg)
     }
 
     private fun showVacanciesState(vacancies: List<Vacancy>) {
         setViewsVisibility(
-            noNetError = View.GONE,
-            serverError = View.GONE,
-            noVacError = View.GONE,
-            searchStartPic = View.GONE,
-            recyclerView = View.VISIBLE,
-            msgText = View.VISIBLE
+            VisibilityConfig(
+                noNetError = View.GONE,
+                serverError = View.GONE,
+                noVacError = View.GONE,
+                searchStartPic = View.GONE,
+                recyclerView = View.VISIBLE,
+                msgText = View.VISIBLE
+            )
         )
         binding.msgText.text = resources.getQuantityString(
             R.plurals.found_vac_msg,
@@ -291,30 +301,34 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
 
     private fun showInitialState() {
         setViewsVisibility(
-            noNetError = View.GONE,
-            serverError = View.GONE,
-            noVacError = View.GONE,
-            searchStartPic = View.VISIBLE,
-            recyclerView = View.GONE,
-            msgText = View.GONE
+            VisibilityConfig(
+                noNetError = View.GONE,
+                serverError = View.GONE,
+                noVacError = View.GONE,
+                searchStartPic = View.VISIBLE,
+                recyclerView = View.GONE,
+                msgText = View.GONE
+            )
         )
     }
 
-    private fun setViewsVisibility(
-        noNetError: Int,
-        serverError: Int,
-        noVacError: Int,
-        searchStartPic: Int,
-        recyclerView: Int,
-        msgText: Int
-    ) {
-        binding.noNetError.visibility = noNetError
-        binding.serverError.visibility = serverError
-        binding.noVacError.visibility = noVacError
-        binding.searchStartPic.visibility = searchStartPic
-        binding.recyclerView.visibility = recyclerView
-        binding.msgText.visibility = msgText
+    private fun setViewsVisibility(config: VisibilityConfig) {
+        binding.noNetError.visibility = config.noNetError
+        binding.serverError.visibility = config.serverError
+        binding.noVacError.visibility = config.noVacError
+        binding.searchStartPic.visibility = config.searchStartPic
+        binding.recyclerView.visibility = config.recyclerView
+        binding.msgText.visibility = config.msgText
     }
+
+    private data class VisibilityConfig(
+        val noNetError: Int,
+        val serverError: Int,
+        val noVacError: Int,
+        val searchStartPic: Int,
+        val recyclerView: Int,
+        val msgText: Int
+    )
 
     fun isNetworkAvailable(context: Context): Boolean {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
