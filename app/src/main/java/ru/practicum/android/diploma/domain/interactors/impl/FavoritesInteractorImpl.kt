@@ -5,6 +5,8 @@ import kotlinx.coroutines.flow.Flow
 import ru.practicum.android.diploma.domain.api.repositories.FavoritesRepository
 import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import java.io.IOException
+import java.sql.SQLException
 
 private const val TAG = "FavoritesInteractor"
 
@@ -31,8 +33,17 @@ class FavoritesInteractorImpl(
     override suspend fun isFavorite(vacancyId: String): Boolean {
         return try {
             favoritesRepository.isFavorite(vacancyId)
-        } catch (e: RuntimeException) {
-            Log.e(TAG, "Error checking favorite status for vacancy: $vacancyId", e)
+        } catch (e: IOException) {
+            Log.e(TAG, "I/O error checking favorite status for vacancy: $vacancyId", e)
+            false
+        } catch (e: SQLException) {
+            Log.e(TAG, "Database error checking favorite status for vacancy: $vacancyId", e)
+            false
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "Illegal state checking favorite status for vacancy: $vacancyId", e)
+            false
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Security error checking favorite status for vacancy: $vacancyId", e)
             false
         }
     }

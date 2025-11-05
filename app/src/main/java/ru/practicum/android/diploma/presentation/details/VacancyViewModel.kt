@@ -12,6 +12,8 @@ import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import java.io.IOException
 import java.net.UnknownHostException
 
+private const val TAG = "VacancyViewModel"
+
 class VacancyViewModel(
     private val vacancyInteractor: VacancyInteractor,
     private val favoritesInteractor: FavoritesInteractor
@@ -31,6 +33,18 @@ class VacancyViewModel(
 
     private var currentVacancyId: String? = null
     private var isFromFavorites: Boolean = false
+
+    // Константы для сообщений об ошибках
+    companion object {
+        private const val ERROR_NETWORK = "Ошибка сети"
+        private const val ERROR_NO_INTERNET = "Нет подключения к интернету"
+        private const val ERROR_ACCESS = "Ошибка доступа к данным"
+        private const val ERROR_STATE = "Ошибка состояния приложения"
+        private const val ERROR_FAVORITES_NETWORK = "Ошибка сети при работе с избранным"
+        private const val ERROR_LOAD_VACANCY = "Не удалось загрузить данные вакансии"
+        private const val ERROR_REMOVE_FAVORITE = "Ошибка при удалении из избранного"
+        private const val ERROR_ADD_FAVORITE = "Ошибка при добавлении в избранное"
+    }
 
     fun init(vacancyId: String, fromFavorites: Boolean = false) {
         this.currentVacancyId = vacancyId
@@ -56,13 +70,13 @@ class VacancyViewModel(
                     _isFavorite.value = favoritesInteractor.isFavorite(vacancyId)
                 }
             } catch (e: IOException) {
-                handleError("Ошибка сети: ${e.message}")
+                handleErrorWithLog("$ERROR_NETWORK: ${e.message}", "loadVacancy - IOException", e)
             } catch (e: UnknownHostException) {
-                handleError("Нет подключения к интернету")
+                handleErrorWithLog(ERROR_NO_INTERNET, "loadVacancy - UnknownHostException", e)
             } catch (e: SecurityException) {
-                handleError("Ошибка доступа к данным")
+                handleErrorWithLog(ERROR_ACCESS, "loadVacancy - SecurityException", e)
             } catch (e: IllegalStateException) {
-                handleError("Ошибка состояния приложения")
+                handleErrorWithLog(ERROR_STATE, "loadVacancy - IllegalStateException", e)
             } finally {
                 _isLoading.value = false
             }
@@ -82,11 +96,11 @@ class VacancyViewModel(
                     addToFavorites(vacancyId)
                 }
             } catch (e: IOException) {
-                handleError("Ошибка сети при работе с избранным")
+                handleErrorWithLog(ERROR_FAVORITES_NETWORK, "onFavoritesClicked - IOException", e)
             } catch (e: SecurityException) {
-                handleError("Ошибка доступа к данным")
+                handleErrorWithLog(ERROR_ACCESS, "onFavoritesClicked - SecurityException", e)
             } catch (e: IllegalStateException) {
-                handleError("Ошибка состояния приложения")
+                handleErrorWithLog(ERROR_STATE, "onFavoritesClicked - IllegalStateException", e)
             }
         }
     }
@@ -95,17 +109,8 @@ class VacancyViewModel(
         try {
             favoritesInteractor.removeFromFavorites(vacancyId)
             _isFavorite.value = false
-        } catch (e: IOException) {
-            Log.e("VacancyViewModel", "Network error removing favorite", e)
-            handleError("Ошибка сети при удалении из избранного")
-            throw e
-        } catch (e: SecurityException) {
-            Log.e("VacancyViewModel", "Security error removing favorite", e)
-            handleError("Ошибка доступа при удалении из избранного")
-            throw e
-        } catch (e: IllegalStateException) {
-            Log.e("VacancyViewModel", "Illegal state removing favorite", e)
-            handleError("Ошибка состояния при удалении из избранного")
+        } catch (e: Exception) {
+            handleErrorWithLog(ERROR_REMOVE_FAVORITE, "removeFromFavorites", e)
             throw e
         }
     }
@@ -119,22 +124,14 @@ class VacancyViewModel(
                 _isFavorite.value = true
                 updateVacancyDetailsIfNeeded(currentVacancy)
             } else {
-                handleError("Не удалось загрузить данные вакансии")
+                handleError(ERROR_LOAD_VACANCY)
             }
-        } catch (e: IOException) {
-            Log.e("VacancyViewModel", "Network error adding favorite", e)
-            handleError("Ошибка сети при добавлении в избранное")
-            throw e
-        } catch (e: SecurityException) {
-            Log.e("VacancyViewModel", "Security error adding favorite", e)
-            handleError("Ошибка доступа при добавлении в избранное")
-            throw e
-        } catch (e: IllegalStateException) {
-            Log.e("VacancyViewModel", "Illegal state adding favorite", e)
-            handleError("Ошибка состояния при добавлении в избранное")
+        } catch (e: Exception) {
+            handleErrorWithLog(ERROR_ADD_FAVORITE, "addToFavorites", e)
             throw e
         }
     }
+
     private suspend fun getCurrentVacancy(vacancyId: String): VacancyDetails? {
         return _vacancyDetails.value ?: vacancyInteractor.getVacancyDetails(vacancyId)
     }
@@ -147,5 +144,10 @@ class VacancyViewModel(
 
     private fun handleError(message: String) {
         _error.value = message
+    }
+
+    private fun handleErrorWithLog(message: String, operation: String, exception: Exception) {
+        Log.e(TAG, "Error in $operation: ${exception.message}", exception)
+        handleError(message)
     }
 }
