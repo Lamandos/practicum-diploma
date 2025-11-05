@@ -70,29 +70,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         }
     }
 
-    private fun showLoadingState() {
-        binding.progressBar.visibility = View.VISIBLE
-        binding.fullVacInfo.visibility = View.GONE
-        binding.vacDelError.visibility = View.GONE
-        binding.serverError.visibility = View.GONE
-    }
-
-    private fun observeVacancyDetails() {
-        viewModel.vacancyDetails.observe(viewLifecycleOwner) { details ->
-            binding.progressBar.visibility = View.GONE
-            if (details != null) {
-                binding.fullVacInfo.visibility = View.VISIBLE
-                binding.vacDelError.visibility = View.GONE
-                binding.serverError.visibility = View.GONE
-                bindVacancyDetails(details)
-            } else {
-                binding.fullVacInfo.visibility = View.GONE
-                binding.vacDelError.visibility = View.GONE
-                binding.serverError.visibility = View.VISIBLE
-            }
-        }
-    }
-
     private fun shareVacancy(url: String) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             putExtra(Intent.EXTRA_TEXT, url)
@@ -100,7 +77,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         }
         startActivity(Intent.createChooser(intent, getString(R.string.share_vacancy_title)))
     }
-
 
     private fun bindVacancyDetails(details: VacancyDetails) {
         val sectionColor = getSectionColor()

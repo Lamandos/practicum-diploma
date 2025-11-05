@@ -31,7 +31,7 @@ class FavoritesInteractorImpl(
     override suspend fun isFavorite(vacancyId: String): Boolean {
         return try {
             favoritesRepository.isFavorite(vacancyId)
-        } catch (e: Exception) {
+        } catch (e: RuntimeException) {
             Log.e(TAG, "Error checking favorite status for vacancy: $vacancyId", e)
             false
         }

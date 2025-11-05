@@ -1,5 +1,6 @@
 package ru.practicum.android.diploma.presentation.details
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -94,9 +95,18 @@ class VacancyViewModel(
         try {
             favoritesInteractor.removeFromFavorites(vacancyId)
             _isFavorite.value = false
-        } catch (e: Exception) {
-            handleError("Не удалось удалить из избранного")
-            throw e // Пробрасываем исключение дальше
+        } catch (e: IOException) {
+            Log.e("VacancyViewModel", "Network error removing favorite", e)
+            handleError("Ошибка сети при удалении из избранного")
+            throw e
+        } catch (e: SecurityException) {
+            Log.e("VacancyViewModel", "Security error removing favorite", e)
+            handleError("Ошибка доступа при удалении из избранного")
+            throw e
+        } catch (e: IllegalStateException) {
+            Log.e("VacancyViewModel", "Illegal state removing favorite", e)
+            handleError("Ошибка состояния при удалении из избранного")
+            throw e
         }
     }
 
@@ -111,12 +121,20 @@ class VacancyViewModel(
             } else {
                 handleError("Не удалось загрузить данные вакансии")
             }
-        } catch (e: Exception) {
-            handleError("Не удалось добавить в избранное")
-            throw e // Пробрасываем исключение дальше
+        } catch (e: IOException) {
+            Log.e("VacancyViewModel", "Network error adding favorite", e)
+            handleError("Ошибка сети при добавлении в избранное")
+            throw e
+        } catch (e: SecurityException) {
+            Log.e("VacancyViewModel", "Security error adding favorite", e)
+            handleError("Ошибка доступа при добавлении в избранное")
+            throw e
+        } catch (e: IllegalStateException) {
+            Log.e("VacancyViewModel", "Illegal state adding favorite", e)
+            handleError("Ошибка состояния при добавлении в избранное")
+            throw e
         }
     }
-
     private suspend fun getCurrentVacancy(vacancyId: String): VacancyDetails? {
         return _vacancyDetails.value ?: vacancyInteractor.getVacancyDetails(vacancyId)
     }

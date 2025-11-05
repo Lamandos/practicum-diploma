@@ -1,5 +1,6 @@
 package ru.practicum.android.diploma.presentation.favorites.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -10,6 +11,8 @@ import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.presentation.favorites.state.FavoritesState
 import java.io.IOException
 import java.sql.SQLException
+
+private const val TAG = "FavoritesViewModel"
 
 class FavoritesViewModel(
     private val favoritesInteractor: FavoritesInteractor
@@ -35,13 +38,17 @@ class FavoritesViewModel(
                     }
                 }
             } catch (e: IOException) {
-                _favoritesState.value = FavoritesState.Error("Ошибка сети при загрузке избранных вакансий")
+                Log.e(TAG, "Network error loading favorites", e)
+                _favoritesState.value = FavoritesState.Error("Ошибка сети")
             } catch (e: SQLException) {
-                _favoritesState.value = FavoritesState.Error("Ошибка базы данных при загрузке избранных вакансий")
+                Log.e(TAG, "Database error loading favorites", e)
+                _favoritesState.value = FavoritesState.Error("Ошибка базы данных")
             } catch (e: IllegalStateException) {
-                _favoritesState.value = FavoritesState.Error("Ошибка состояния приложения при загрузке избранных вакансий")
+                Log.e(TAG, "Illegal state loading favorites", e)
+                _favoritesState.value = FavoritesState.Error("Ошибка состояния")
             } catch (e: SecurityException) {
-                _favoritesState.value = FavoritesState.Error("Ошибка доступа к данным избранных вакансий")
+                Log.e(TAG, "Security error loading favorites", e)
+                _favoritesState.value = FavoritesState.Error("Ошибка доступа")
             }
         }
     }
