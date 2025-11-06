@@ -186,7 +186,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         }
     }
 
-
     private fun bindDescription(details: VacancyDetails, sectionColor: Int) {
         val desc = details.description.orEmpty()
         if (desc.isBlank()) return

@@ -158,39 +158,57 @@ class VacancyViewModel(
     }
 
     private suspend fun getVacancyWithLogo(currentVacancy: VacancyDetails, vacancyId: String): VacancyDetails {
-        return if (currentVacancy.employer?.logo.isNullOrEmpty() && !isFromFavorites) {
-            // Проверяем наличие интернета перед загрузкой логотипа
-            if (NetworkUtils.isInternetAvailable(context)) {
-                try {
-                    val vacancyWithLogo = vacancyInteractor.getVacancyDetails(vacancyId)
+        // Если лого уже есть или это из избранного - возвращаем как есть
+        if (!currentVacancy.employer?.logo.isNullOrEmpty() || isFromFavorites) {
+            return currentVacancy
+        }
 
-                    if (!vacancyWithLogo?.employer?.logo.isNullOrEmpty()) {
-                        vacancyWithLogo ?: currentVacancy
-                    } else {
-                        // Логотипа нет даже в сети - возвращаем оригинал
-                        currentVacancy
-                    }
-                } catch (e: IOException) {
-                    Log.w(TAG, "Network error while fetching logo: ${e.message}")
-                    currentVacancy
-                } catch (e: UnknownHostException) {
-                    Log.w(TAG, "No internet while fetching logo: ${e.message}")
-                    currentVacancy
-                } catch (e: SecurityException) {
-                    Log.w(TAG, "Security error while fetching logo: ${e.message}")
-                    currentVacancy
-                } catch (e: IllegalStateException) {
-                    Log.w(TAG, "Illegal state while fetching logo: ${e.message}")
-                    currentVacancy
-                }
-            } else {
-                // Интернета нет - возвращаем вакансию без логотипа (будет placeholder)
-                Log.w(TAG, "No internet available - skipping logo download")
-                currentVacancy
+        // Проверяем наличие интернета перед загрузкой логотипа
+        if (!NetworkUtils.isInternetAvailable(context)) {
+            Log.w(TAG, "No internet available - skipping logo download")
+            return currentVacancy
+        }
+
+        return tryDownloadLogo(currentVacancy, vacancyId)
+    }
+
+    private suspend fun tryDownloadLogo(currentVacancy: VacancyDetails, vacancyId: String): VacancyDetails {
+        return try {
+            val vacancyWithLogo = vacancyInteractor.getVacancyDetails(vacancyId)
+
+            // Используем when вместо вложенных if для уменьшения сложности
+            when {
+                !vacancyWithLogo?.employer?.logo.isNullOrEmpty() -> vacancyWithLogo ?: currentVacancy
+                else -> currentVacancy
             }
-        } else {
+        } catch (e: IOException) {
+            handleLogoDownloadException(e, "Network error while fetching logo")
+            currentVacancy
+        } catch (e: UnknownHostException) {
+            handleLogoDownloadException(e, "No internet while fetching logo")
+            currentVacancy
+        } catch (e: SecurityException) {
+            handleLogoDownloadException(e, "Security error while fetching logo")
+            currentVacancy
+        } catch (e: IllegalStateException) {
+            handleLogoDownloadException(e, "Illegal state while fetching logo")
             currentVacancy
         }
+    }
+
+    private fun handleLogoDownloadException(exception: Exception, message: String) {
+        Log.w(TAG, "$message: ${exception.message}")
+    }
+
+    private fun handleLogoDownloadException(exception: Exception) {
+        val errorMessage = when (exception) {
+            is IOException -> "Network error while fetching logo"
+            is UnknownHostException -> "No internet while fetching logo"
+            is SecurityException -> "Security error while fetching logo"
+            is IllegalStateException -> "Illegal state while fetching logo"
+            else -> "Unknown error while fetching logo"
+        }
+        Log.w(TAG, "$errorMessage: ${exception.message}")
     }
 
     private suspend fun getCurrentVacancy(vacancyId: String): VacancyDetails? {
