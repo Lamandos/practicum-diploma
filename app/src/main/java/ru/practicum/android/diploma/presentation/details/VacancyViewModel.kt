@@ -158,18 +158,16 @@ class VacancyViewModel(
     }
 
     private suspend fun getVacancyWithLogo(currentVacancy: VacancyDetails, vacancyId: String): VacancyDetails {
-        // Если лого уже есть или это из избранного - возвращаем как есть
-        if (!currentVacancy.employer?.logo.isNullOrEmpty() || isFromFavorites) {
-            return currentVacancy
-        }
+        val result = when {
+            !currentVacancy.employer?.logo.isNullOrEmpty() || isFromFavorites -> currentVacancy
+            !NetworkUtils.isInternetAvailable(context) -> {
+                Log.w(TAG, "No internet available - skipping logo download")
+                currentVacancy
+            }
 
-        // Проверяем наличие интернета перед загрузкой логотипа
-        if (!NetworkUtils.isInternetAvailable(context)) {
-            Log.w(TAG, "No internet available - skipping logo download")
-            return currentVacancy
+            else -> tryDownloadLogo(currentVacancy, vacancyId)
         }
-
-        return tryDownloadLogo(currentVacancy, vacancyId)
+        return result
     }
 
     private suspend fun tryDownloadLogo(currentVacancy: VacancyDetails, vacancyId: String): VacancyDetails {
