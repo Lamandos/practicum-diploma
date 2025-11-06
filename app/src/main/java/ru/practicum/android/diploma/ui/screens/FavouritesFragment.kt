@@ -21,9 +21,12 @@ class FavouritesFragment : Fragment(R.layout.fragment_favorites) {
     private val viewModel: FavoritesViewModel by viewModel()
 
     private val adapter: VacancyAdapter by lazy {
-        VacancyAdapter { vacancy ->
-            navigateToVacancyDetails(vacancy.id)
-        }
+        VacancyAdapter(
+            onItemClick = { vacancy ->
+                navigateToVacancyDetails(vacancy.id)
+            },
+            context = requireContext() // Передаем контекст для проверки интернета
+        )
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

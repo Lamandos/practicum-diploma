@@ -1,5 +1,6 @@
 package ru.practicum.android.diploma.di
 
+import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.module.Module
 import org.koin.dsl.module
@@ -11,15 +12,18 @@ val viewModelModule: Module = module {
     viewModel {
         SearchViewModel(get())
     }
+
     viewModel {
         FavoritesViewModel(
             favoritesInteractor = get()
         )
     }
+
     viewModel {
         VacancyViewModel(
             vacancyInteractor = get(),
-            favoritesInteractor = get()
+            favoritesInteractor = get(),
+            context = androidContext()
         )
     }
 }

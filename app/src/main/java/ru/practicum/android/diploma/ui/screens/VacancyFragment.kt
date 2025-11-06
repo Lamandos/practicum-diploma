@@ -21,6 +21,7 @@ import ru.practicum.android.diploma.domain.models.vacancydetails.Contacts
 import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import ru.practicum.android.diploma.presentation.details.VacancyViewModel
+import ru.practicum.android.diploma.util.networkutils.NetworkUtils
 
 class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
@@ -170,14 +171,21 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     }
 
     private fun bindEmployerLogo(logoUrl: String?) {
-        logoUrl?.let {
+        // Проверяем наличие интернета и логотипа
+        val shouldLoadLogo = !logoUrl.isNullOrBlank() && NetworkUtils.isInternetAvailable(requireContext())
+
+        if (shouldLoadLogo) {
             Glide.with(binding.vacImg.context)
-                .load(it)
+                .load(logoUrl)
                 .placeholder(R.drawable.placeholder)
                 .error(R.drawable.placeholder)
                 .into(binding.vacImg)
+        } else {
+            // Если нет интернета или логотипа - показываем placeholder
+            binding.vacImg.setImageResource(R.drawable.placeholder)
         }
     }
+
 
     private fun bindDescription(details: VacancyDetails, sectionColor: Int) {
         val desc = details.description.orEmpty()

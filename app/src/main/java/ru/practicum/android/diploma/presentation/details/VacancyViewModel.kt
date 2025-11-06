@@ -1,5 +1,6 @@
 package ru.practicum.android.diploma.presentation.details
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,6 +10,7 @@ import kotlinx.coroutines.launch
 import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.domain.interactors.VacancyInteractor
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import ru.practicum.android.diploma.util.networkutils.NetworkUtils
 import java.io.IOException
 import java.net.UnknownHostException
 
@@ -16,7 +18,8 @@ private const val TAG = "VacancyViewModel"
 
 class VacancyViewModel(
     private val vacancyInteractor: VacancyInteractor,
-    private val favoritesInteractor: FavoritesInteractor
+    private val favoritesInteractor: FavoritesInteractor,
+    private val context: Context
 ) : ViewModel() {
 
     private val _vacancyDetails = MutableLiveData<VacancyDetails?>()
@@ -156,19 +159,33 @@ class VacancyViewModel(
 
     private suspend fun getVacancyWithLogo(currentVacancy: VacancyDetails, vacancyId: String): VacancyDetails {
         return if (currentVacancy.employer?.logo.isNullOrEmpty() && !isFromFavorites) {
-            try {
-                vacancyInteractor.getVacancyDetails(vacancyId) ?: currentVacancy
-            } catch (e: IOException) {
-                Log.w(TAG, "Network error while fetching logo: ${e.message}")
-                currentVacancy
-            } catch (e: UnknownHostException) {
-                Log.w(TAG, "No internet while fetching logo: ${e.message}")
-                currentVacancy
-            } catch (e: SecurityException) {
-                Log.w(TAG, "Security error while fetching logo: ${e.message}")
-                currentVacancy
-            } catch (e: IllegalStateException) {
-                Log.w(TAG, "Illegal state while fetching logo: ${e.message}")
+            // Проверяем наличие интернета перед загрузкой логотипа
+            if (NetworkUtils.isInternetAvailable(context)) {
+                try {
+                    val vacancyWithLogo = vacancyInteractor.getVacancyDetails(vacancyId)
+
+                    if (!vacancyWithLogo?.employer?.logo.isNullOrEmpty()) {
+                        vacancyWithLogo ?: currentVacancy
+                    } else {
+                        // Логотипа нет даже в сети - возвращаем оригинал
+                        currentVacancy
+                    }
+                } catch (e: IOException) {
+                    Log.w(TAG, "Network error while fetching logo: ${e.message}")
+                    currentVacancy
+                } catch (e: UnknownHostException) {
+                    Log.w(TAG, "No internet while fetching logo: ${e.message}")
+                    currentVacancy
+                } catch (e: SecurityException) {
+                    Log.w(TAG, "Security error while fetching logo: ${e.message}")
+                    currentVacancy
+                } catch (e: IllegalStateException) {
+                    Log.w(TAG, "Illegal state while fetching logo: ${e.message}")
+                    currentVacancy
+                }
+            } else {
+                // Интернета нет - возвращаем вакансию без логотипа (будет placeholder)
+                Log.w(TAG, "No internet available - skipping logo download")
                 currentVacancy
             }
         } else {
