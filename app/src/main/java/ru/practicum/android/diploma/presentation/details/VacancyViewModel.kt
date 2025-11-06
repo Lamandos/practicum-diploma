@@ -1,5 +1,6 @@
 package ru.practicum.android.diploma.presentation.details
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,6 +10,7 @@ import kotlinx.coroutines.launch
 import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.domain.interactors.VacancyInteractor
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import ru.practicum.android.diploma.util.networkutils.NetworkUtils
 import java.io.IOException
 import java.net.UnknownHostException
 
@@ -16,7 +18,8 @@ private const val TAG = "VacancyViewModel"
 
 class VacancyViewModel(
     private val vacancyInteractor: VacancyInteractor,
-    private val favoritesInteractor: FavoritesInteractor
+    private val favoritesInteractor: FavoritesInteractor,
+    private val context: Context
 ) : ViewModel() {
 
     private val _vacancyDetails = MutableLiveData<VacancyDetails?>()
@@ -34,7 +37,6 @@ class VacancyViewModel(
     private var currentVacancyId: String? = null
     private var isFromFavorites: Boolean = false
 
-    // Константы для сообщений об ошибках
     companion object {
         private const val ERROR_NETWORK = "Ошибка сети"
         private const val ERROR_NO_INTERNET = "Нет подключения к интернету"
@@ -131,9 +133,10 @@ class VacancyViewModel(
             val currentVacancy = getCurrentVacancy(vacancyId)
 
             if (currentVacancy != null) {
-                favoritesInteractor.addToFavorites(currentVacancy)
+                val vacancyToSave = getVacancyWithLogo(currentVacancy, vacancyId)
+                favoritesInteractor.addToFavorites(vacancyToSave)
                 _isFavorite.value = true
-                updateVacancyDetailsIfNeeded(currentVacancy)
+                updateVacancyDetailsIfNeeded(vacancyToSave)
             } else {
                 handleError(ERROR_LOAD_VACANCY)
             }
@@ -152,6 +155,43 @@ class VacancyViewModel(
         }
 
         result.getOrThrow()
+    }
+
+    private suspend fun getVacancyWithLogo(currentVacancy: VacancyDetails, vacancyId: String): VacancyDetails {
+        val result = when {
+            !currentVacancy.employer?.logo.isNullOrEmpty() || isFromFavorites -> currentVacancy
+            !NetworkUtils.isInternetAvailable(context) -> {
+                Log.w(TAG, "No internet available - skipping logo download")
+                currentVacancy
+            }
+
+            else -> tryDownloadLogo(currentVacancy, vacancyId)
+        }
+        return result
+    }
+
+    private suspend fun tryDownloadLogo(currentVacancy: VacancyDetails, vacancyId: String): VacancyDetails {
+        return try {
+            val vacancyWithLogo = vacancyInteractor.getVacancyDetails(vacancyId)
+
+            // Используем when вместо вложенных if для уменьшения сложности
+            when {
+                !vacancyWithLogo?.employer?.logo.isNullOrEmpty() -> vacancyWithLogo ?: currentVacancy
+                else -> currentVacancy
+            }
+        } catch (e: IOException) {
+            Log.w(TAG, "Network error while fetching logo: ${e.message}")
+            currentVacancy
+        } catch (e: UnknownHostException) {
+            Log.w(TAG, "No internet while fetching logo: ${e.message}")
+            currentVacancy
+        } catch (e: SecurityException) {
+            Log.w(TAG, "Security error while fetching logo: ${e.message}")
+            currentVacancy
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "Illegal state while fetching logo: ${e.message}")
+            currentVacancy
+        }
     }
 
     private suspend fun getCurrentVacancy(vacancyId: String): VacancyDetails? {

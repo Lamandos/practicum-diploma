@@ -1,5 +1,6 @@
 package ru.practicum.android.diploma.presentation.favorites.adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,11 +9,14 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import ru.practicum.android.diploma.util.networkutils.NetworkUtils
 
 class VacancyAdapter(
-    private val onItemClick: (VacancyDetails) -> Unit
+    private val onItemClick: (VacancyDetails) -> Unit,
+    private val context: Context
 ) : ListAdapter<VacancyDetails, VacancyAdapter.VacancyViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VacancyViewHolder {
@@ -30,15 +34,28 @@ class VacancyAdapter(
         private val nameCity: TextView = itemView.findViewById(R.id.vacancyNameCity)
         private val workPlace: TextView = itemView.findViewById(R.id.vacancyWP)
         private val salary: TextView = itemView.findViewById(R.id.vacancySalary)
-        private val placeholder: ImageView = itemView.findViewById(R.id.vacancyPlaceholder)
+        private val logoImageView: ImageView = itemView.findViewById(R.id.vacancyPlaceholder)
 
         fun bind(vacancy: VacancyDetails) {
             nameCity.text = "${vacancy.name}\n${vacancy.area?.name ?: ""}"
             workPlace.text = vacancy.employer?.name ?: ""
-
             salary.text = formatSalaryForDetails(vacancy.salary)
 
-            placeholder.setImageResource(R.drawable.placeholder)
+            val logoUrl = vacancy.employer?.logo
+
+            // Проверяем наличие интернета и логотипа
+            val shouldLoadLogo = !logoUrl.isNullOrBlank() && NetworkUtils.isInternetAvailable(context)
+
+            if (shouldLoadLogo) {
+                Glide.with(itemView)
+                    .load(logoUrl)
+                    .placeholder(R.drawable.placeholder)
+                    .error(R.drawable.placeholder)
+                    .into(logoImageView)
+            } else {
+                // Если нет интернета или логотипа - показываем placeholder
+                logoImageView.setImageResource(R.drawable.placeholder)
+            }
         }
 
         private fun formatSalaryForDetails(
