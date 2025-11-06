@@ -182,33 +182,18 @@ class VacancyViewModel(
                 else -> currentVacancy
             }
         } catch (e: IOException) {
-            handleLogoDownloadException(e, "Network error while fetching logo")
+            Log.w(TAG, "Network error while fetching logo: ${e.message}")
             currentVacancy
         } catch (e: UnknownHostException) {
-            handleLogoDownloadException(e, "No internet while fetching logo")
+            Log.w(TAG, "No internet while fetching logo: ${e.message}")
             currentVacancy
         } catch (e: SecurityException) {
-            handleLogoDownloadException(e, "Security error while fetching logo")
+            Log.w(TAG, "Security error while fetching logo: ${e.message}")
             currentVacancy
         } catch (e: IllegalStateException) {
-            handleLogoDownloadException(e, "Illegal state while fetching logo")
+            Log.w(TAG, "Illegal state while fetching logo: ${e.message}")
             currentVacancy
         }
-    }
-
-    private fun handleLogoDownloadException(exception: Exception, message: String) {
-        Log.w(TAG, "$message: ${exception.message}")
-    }
-
-    private fun handleLogoDownloadException(exception: Exception) {
-        val errorMessage = when (exception) {
-            is IOException -> "Network error while fetching logo"
-            is UnknownHostException -> "No internet while fetching logo"
-            is SecurityException -> "Security error while fetching logo"
-            is IllegalStateException -> "Illegal state while fetching logo"
-            else -> "Unknown error while fetching logo"
-        }
-        Log.w(TAG, "$errorMessage: ${exception.message}")
     }
 
     private suspend fun getCurrentVacancy(vacancyId: String): VacancyDetails? {
