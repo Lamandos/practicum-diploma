@@ -80,7 +80,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private fun bindVacancyDetails(details: VacancyDetails) {
         val sectionColor = getSectionColor()
-
         bindBasics(details)
         bindSkills(details.skills, sectionColor)
         bindContacts(details.contacts)
@@ -142,7 +141,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             binding.skillsTitle.visibility = View.GONE
             return
         }
-
         binding.skillsInfo.visibility = View.VISIBLE
         binding.skillsInfo.setTextColor(sectionColor)
         binding.skillsInfo.text = skills.joinToString("\n") { "$BULLET_SYMBOL$it" }
@@ -162,7 +160,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             }
             lines.joinToString("\n").takeIf { it.isNotBlank() }
         }
-
         if (contactText.isNullOrBlank()) {
             binding.contactsInfo.visibility = View.GONE
             binding.contactsTitle.visibility = View.GONE
@@ -201,7 +198,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             infoView.visibility = View.GONE
             return
         }
-
         titleView.visibility = View.VISIBLE
         infoView.visibility = View.VISIBLE
         infoView.text = addBullets(text, sectionColor)
