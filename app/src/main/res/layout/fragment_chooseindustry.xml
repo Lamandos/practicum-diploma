@@ -89,7 +89,7 @@
         android:layout_marginEnd="@dimen/button_marg"
         android:insetTop="0dp"
         android:insetBottom="0dp"
-        android:text="@string/accept"
+        android:text="@string/Choose"
         android:textColor="@color/white"
         android:layout_marginBottom="@dimen/margin_24"
         app:cornerRadius="12dp"
