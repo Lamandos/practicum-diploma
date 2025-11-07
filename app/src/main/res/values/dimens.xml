@@ -11,4 +11,9 @@
     <dimen name="size_16sp">16sp</dimen>
     <dimen name="size_22sp">22sp</dimen>
     <dimen name="margin_9">9dp</dimen>
+    <dimen name="margin_24">24dp</dimen>
+    <dimen name="container_60">60dp</dimen>
+    <dimen name="header">64dp</dimen>
+    <dimen name="button_marg">17dp</dimen>
+    <dimen name="button_height">59dp</dimen>
 </resources>

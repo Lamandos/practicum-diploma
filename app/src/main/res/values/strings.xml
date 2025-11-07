@@ -30,6 +30,13 @@
     <string name="share_vac">Зарплата не указана</string>
     <string name="not_specified">Не указано</string>
     <string name="share_vacancy_title">Поделиться вакансией</string>
+    <string name="job_loc">Место работы</string>
+    <string name="industry">Отрасль</string>
+    <string name="exp_salary">Ожидаемая зарплата</string>
+    <string name="summary">Введите сумму</string>
+    <string name="no_salary">Не показывать без зарплаты</string>
+    <string name="accept">Применить</string>
+    <string name="deny">Сбросить</string>
 
 
     <plurals name="found_vac_msg">
