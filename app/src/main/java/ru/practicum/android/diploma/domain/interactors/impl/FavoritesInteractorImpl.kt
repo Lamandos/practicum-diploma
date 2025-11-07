@@ -47,4 +47,8 @@ class FavoritesInteractorImpl(
             false
         }
     }
+
+    override suspend fun updateFavorite(vacancy: VacancyDetails) {
+        favoritesRepository.updateVacancy(vacancy)
+    }
 }

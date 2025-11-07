@@ -71,4 +71,18 @@ class FavoritesRepositoryImpl(
             throw e
         }
     }
+
+    override suspend fun updateVacancy(vacancy: VacancyDetails) {
+        try {
+            val entity = mappers.toFavoritesEntity(vacancy)
+            database.favoritesDao().deleteVacancyById(vacancy.id)
+            database.favoritesDao().insertVacancy(entity)
+        } catch (e: SQLException) {
+            Log.e(TAG, "SQL error updating vacancy: ${vacancy.id}", e)
+            throw e
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "Illegal state updating vacancy: ${vacancy.id}", e)
+            throw e
+        }
+    }
 }

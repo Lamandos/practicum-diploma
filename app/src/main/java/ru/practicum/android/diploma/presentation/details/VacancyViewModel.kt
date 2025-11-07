@@ -37,6 +37,9 @@ class VacancyViewModel(
     private var currentVacancyId: String? = null
     private var isFromFavorites: Boolean = false
 
+    private val _isVacancyDeleted = MutableLiveData<Boolean>(false)
+    val isVacancyDeleted: LiveData<Boolean> = _isVacancyDeleted
+
     companion object {
         private const val ERROR_NETWORK = "Ошибка сети"
         private const val ERROR_NO_INTERNET = "Нет подключения к интернету"
@@ -51,6 +54,7 @@ class VacancyViewModel(
     fun init(vacancyId: String, fromFavorites: Boolean = false) {
         this.currentVacancyId = vacancyId
         this.isFromFavorites = fromFavorites
+        _isVacancyDeleted.value = false
         loadVacancy()
     }
 
@@ -59,14 +63,41 @@ class VacancyViewModel(
 
         _isLoading.value = true
         _error.value = null
+        _isVacancyDeleted.value = false
 
         viewModelScope.launch {
             try {
                 if (isFromFavorites) {
-                    val vacancy = favoritesInteractor.getVacancyById(vacancyId)
-                    _vacancyDetails.value = vacancy
-                    _isFavorite.value = vacancy != null
+                    // Сначала пытаемся получить из избранного
+                    val favoriteVacancy = favoritesInteractor.getVacancyById(vacancyId)
+
+                    if (favoriteVacancy != null) {
+                        _vacancyDetails.value = favoriteVacancy
+                        _isFavorite.value = true
+
+                        // Если есть интернет, пытаемся обновить данные с сервера
+                        if (NetworkUtils.isInternetAvailable(context)) {
+                            try {
+                                val serverVacancy = vacancyInteractor.getVacancyDetails(vacancyId)
+                                // Если вакансия найдена на сервере - обновляем данные
+                                _vacancyDetails.value = serverVacancy
+                                serverVacancy?.let {
+                                    favoritesInteractor.updateFavorite(it)
+                                }
+                            } catch (e: Exception) {
+                                // Если вакансии нет на сервере, но она есть в избранном
+                                // Устанавливаем флаг, что вакансия удалена с сервера
+                                _isVacancyDeleted.value = true
+                                Log.w(TAG, "Vacancy not found on server, but exists in favorites: ${e.message}")
+                            }
+                        }
+                    } else {
+                        // Вакансия не найдена в избранном
+                        _vacancyDetails.value = null
+                        _isFavorite.value = false
+                    }
                 } else {
+                    // Обычная загрузка вакансии (не из избранного)
                     val vacancy = vacancyInteractor.getVacancyDetails(vacancyId)
                     _vacancyDetails.value = vacancy
                     _isFavorite.value = favoritesInteractor.isFavorite(vacancyId)
@@ -74,7 +105,10 @@ class VacancyViewModel(
             } catch (e: IOException) {
                 handleErrorWithLog("$ERROR_NETWORK: ${e.message}", "loadVacancy - IOException", e)
             } catch (e: UnknownHostException) {
-                handleErrorWithLog(ERROR_NO_INTERNET, "loadVacancy - UnknownHostException", e)
+                // При отсутствии интернета и fromFavorites = true не считаем это ошибкой
+                if (!isFromFavorites) {
+                    handleErrorWithLog(ERROR_NO_INTERNET, "loadVacancy - UnknownHostException", e)
+                }
             } catch (e: SecurityException) {
                 handleErrorWithLog(ERROR_ACCESS, "loadVacancy - SecurityException", e)
             } catch (e: IllegalStateException) {
