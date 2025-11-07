@@ -171,7 +171,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     }
 
     private fun bindEmployerLogo(logoUrl: String?) {
-        // Проверяем наличие интернета и логотипа
         val shouldLoadLogo = !logoUrl.isNullOrBlank() && NetworkUtils.isInternetAvailable(requireContext())
 
         if (shouldLoadLogo) {
@@ -181,7 +180,6 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
                 .error(R.drawable.placeholder)
                 .into(binding.vacImg)
         } else {
-            // Если нет интернета или логотипа - показываем placeholder
             binding.vacImg.setImageResource(R.drawable.placeholder)
         }
     }
@@ -243,21 +241,63 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
             handleFavoriteState(isFavorite)
         }
+        viewModel.isVacancyDeleted.observe(viewLifecycleOwner) { isDeleted ->
+            handleVacancyDeletedState(isDeleted)
+        }
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            handleLoadingState(isLoading)
+        }
     }
 
     private fun handleVacancyDetails(vacancy: VacancyDetails?) {
         if (vacancy != null) {
             showVacancy(vacancy)
             bindVacancyDetails(vacancy)
-        } else if (fromFavorites) {
-            findNavController().popBackStack()
+            // Скрываем все ошибки при успешной загрузке
+            hideAllErrorViews()
+        } else {
+            if (fromFavorites) {
+                // Если вакансия из избранного, но не найдена ни в БД, ни на сервере
+                showVacancyNotFoundMessage()
+            } else {
+                findNavController().popBackStack()
+            }
+        }
+    }
+
+    private fun handleVacancyDeletedState(isDeleted: Boolean) {
+        if (isDeleted) {
+            showVacancyDeletedMessage()
+        } else {
+            hideAllErrorViews()
         }
     }
 
     private fun handleFavoriteState(isFavorite: Boolean) {
         updateFavoritesButton(isFavorite)
         if (fromFavorites && !isFavorite) {
-            findNavController().popBackStack()
+            showVacancyRemovedFromFavorites()
+        }
+    }
+
+    private fun showVacancyRemovedFromFavorites() {
+        findNavController().popBackStack()
+    }
+
+    private fun showVacancyDeletedMessage() {
+        binding.vacDelError.visibility = View.VISIBLE
+        binding.fullVacInfo.visibility = View.GONE
+        binding.serverError.visibility = View.GONE
+        binding.shareBtn.visibility = View.GONE
+    }
+
+    private fun handleLoadingState(isLoading: Boolean) {
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        if (isLoading) {
+            binding.fullVacInfo.visibility = View.GONE
+            hideAllErrorViews()
+        } else {
+            binding.fullVacInfo.visibility = View.VISIBLE
         }
     }
 
@@ -273,6 +313,18 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         } else {
             binding.favoritesBtn.setImageResource(R.drawable.favorite_icon)
         }
+    }
+
+    private fun hideAllErrorViews() {
+        binding.vacDelError.visibility = View.GONE
+        binding.serverError.visibility = View.GONE
+        binding.fullVacInfo.visibility = View.VISIBLE
+    }
+
+    private fun showVacancyNotFoundMessage() {
+        binding.vacDelError.visibility = View.VISIBLE
+        binding.fullVacInfo.visibility = View.GONE
+        binding.serverError.visibility = View.GONE
     }
 
     override fun onDestroyView() {

@@ -37,6 +37,9 @@ class VacancyViewModel(
     private var currentVacancyId: String? = null
     private var isFromFavorites: Boolean = false
 
+    private val _isVacancyDeleted = MutableLiveData<Boolean>(false)
+    val isVacancyDeleted: LiveData<Boolean> = _isVacancyDeleted
+
     companion object {
         private const val ERROR_NETWORK = "Ошибка сети"
         private const val ERROR_NO_INTERNET = "Нет подключения к интернету"
@@ -51,6 +54,7 @@ class VacancyViewModel(
     fun init(vacancyId: String, fromFavorites: Boolean = false) {
         this.currentVacancyId = vacancyId
         this.isFromFavorites = fromFavorites
+        _isVacancyDeleted.value = false
         loadVacancy()
     }
 
@@ -59,13 +63,42 @@ class VacancyViewModel(
 
         _isLoading.value = true
         _error.value = null
+        _isVacancyDeleted.value = false
 
         viewModelScope.launch {
             try {
                 if (isFromFavorites) {
-                    val vacancy = favoritesInteractor.getVacancyById(vacancyId)
-                    _vacancyDetails.value = vacancy
-                    _isFavorite.value = vacancy != null
+                    val favoriteVacancy = favoritesInteractor.getVacancyById(vacancyId)
+
+                    if (favoriteVacancy != null) {
+                        _vacancyDetails.value = favoriteVacancy
+                        _isFavorite.value = true
+
+                        if (NetworkUtils.isInternetAvailable(context)) {
+                            try {
+                                val serverVacancy = vacancyInteractor.getVacancyDetails(vacancyId)
+                                _vacancyDetails.value = serverVacancy
+                                serverVacancy?.let {
+                                    favoritesInteractor.updateFavorite(it)
+                                }
+                            } catch (e: IOException) {
+                                _isVacancyDeleted.value = true
+                                Log.w(TAG, "Network error while checking vacancy on server: ${e.message}")
+                            } catch (e: UnknownHostException) {
+                                _isVacancyDeleted.value = true
+                                Log.w(TAG, "Host error while checking vacancy on server: ${e.message}")
+                            } catch (e: SecurityException) {
+                                _isVacancyDeleted.value = true
+                                Log.w(TAG, "Security error while checking vacancy on server: ${e.message}")
+                            } catch (e: IllegalStateException) {
+                                _isVacancyDeleted.value = true
+                                Log.w(TAG, "Illegal state while checking vacancy on server: ${e.message}")
+                            }
+                        }
+                    } else {
+                        _vacancyDetails.value = null
+                        _isFavorite.value = false
+                    }
                 } else {
                     val vacancy = vacancyInteractor.getVacancyDetails(vacancyId)
                     _vacancyDetails.value = vacancy
@@ -74,7 +107,9 @@ class VacancyViewModel(
             } catch (e: IOException) {
                 handleErrorWithLog("$ERROR_NETWORK: ${e.message}", "loadVacancy - IOException", e)
             } catch (e: UnknownHostException) {
-                handleErrorWithLog(ERROR_NO_INTERNET, "loadVacancy - UnknownHostException", e)
+                if (!isFromFavorites) {
+                    handleErrorWithLog(ERROR_NO_INTERNET, "loadVacancy - UnknownHostException", e)
+                }
             } catch (e: SecurityException) {
                 handleErrorWithLog(ERROR_ACCESS, "loadVacancy - SecurityException", e)
             } catch (e: IllegalStateException) {
