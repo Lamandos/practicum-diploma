@@ -2,8 +2,12 @@ package ru.practicum.android.diploma.ui.screens
 
 import android.os.Bundle
 import android.view.View
+import androidx.core.content.ContextCompat
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentChooseworkplaceBinding
 
@@ -14,22 +18,60 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         _binding = FragmentChooseworkplaceBinding.bind(view)
 
-        // Переход на FilterSettingsFragment
-        binding.buttonToFilterSettings.setOnClickListener {
-            findNavController().navigate(R.id.action_chooseWorkPlaceFragment_to_filterSettingsFragment)
+        val countryLayout: TextInputLayout = binding.country
+        val countryEditText: TextInputEditText = binding.editCountry
+        val regionLayout: TextInputLayout = binding.region
+        val regionEditText: TextInputEditText = binding.editRegion
+
+        countryLayout.endIconMode = TextInputLayout.END_ICON_CUSTOM
+        regionLayout.endIconMode = TextInputLayout.END_ICON_CUSTOM
+
+        countryEditText.addTextChangedListener {
+            updateIconAndState(countryLayout, it?.toString().orEmpty())
         }
 
-        // Переход на ChooseCountryFragment
-        binding.buttonToChooseCountry.setOnClickListener {
-            findNavController().navigate(R.id.action_chooseWorkPlaceFragment_to_chooseCountryFragment)
+        regionEditText.addTextChangedListener {
+            updateIconAndState(regionLayout, it?.toString().orEmpty())
         }
 
-        // Переход на ChooseRegionFragment
-        binding.buttonToChooseRegion.setOnClickListener {
-            findNavController().navigate(R.id.action_chooseWorkPlaceFragment_to_chooseRegionFragment)
+        countryLayout.setEndIconOnClickListener {
+            navigateOrClear(countryEditText, countryLayout, "country")
+        }
+
+        regionLayout.setEndIconOnClickListener {
+            navigateOrClear(regionEditText, regionLayout, "region")
+        }
+
+        updateIconAndState(countryLayout, countryEditText.text.toString())
+
+        updateIconAndState(regionLayout, regionEditText.text.toString())
+    }
+
+    private fun updateIconAndState(layout: TextInputLayout, text: String) {
+        if (text.isEmpty()) {
+            layout.endIconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.arrow_right)
+            layout.isSelected = false
+            layout.isActivated = false
+        } else {
+            layout.endIconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.clear_icon)
+            layout.isSelected = true
+            layout.isActivated = true
+        }
+    }
+
+    private fun navigateOrClear(editText: TextInputEditText, layout: TextInputLayout, field: String) {
+        if (editText.text.isNullOrEmpty()) {
+            when (field) {
+                "country" -> findNavController().navigate(
+                    R.id.action_chooseWorkPlaceFragment_to_chooseCountryFragment
+                )
+                "region" -> findNavController().navigate(R.id.action_chooseWorkPlaceFragment_to_chooseRegionFragment)
+            }
+        } else {
+            editText.text?.clear()
+            updateIconAndState(layout, "")
         }
     }
 

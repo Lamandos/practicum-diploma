@@ -2,9 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/vacancyTVForRV"
+    android:id="@+id/industryForRV"
     android:layout_width="match_parent"
-    android:layout_height="60dp"
+    android:layout_height="@dimen/container_60"
     android:orientation="horizontal"
     android:clickable="true"
     android:focusable="true"
@@ -27,8 +27,8 @@
 
     <com.google.android.material.checkbox.MaterialCheckBox
         android:id="@+id/check_industry"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
+        android:layout_width="@dimen/size_48dp"
+        android:layout_height="@dimen/size_48dp"
         android:layout_gravity="center"
         android:button="@drawable/checkbox_circle"
         android:buttonTint="@color/yp_blue"

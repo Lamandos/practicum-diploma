@@ -37,6 +37,22 @@
     <string name="no_salary">Не показывать без зарплаты</string>
     <string name="accept">Применить</string>
     <string name="deny">Сбросить</string>
+    <string name="Country">Страна</string>
+    <string name="Region">Регион</string>
+    <string name="Russia">Россия</string>
+    <string name="Ukraine">Украина</string>
+    <string name="Kazakhstan">Казахстан</string>
+    <string name="Azerbaijan">Азербайджан</string>
+    <string name="Belarus">Беларусь</string>
+    <string name="Georgia">Грузия</string>
+    <string name="Kyrgyzstan">Кыргыстан</string>
+    <string name="Uzbekistan">Узбекистан</string>
+    <string name="Other_regions">Другие регионы</string>
+    <string name="enter_industry">Введите отрасль</string>
+    <string name="enter_region">Введите регион</string>
+    <string name="no_region_error">Такого региона нет</string>
+    <string name="no_region_list">Не удалось получить\nсписок</string>
+    <string name="Choose">Выбрать</string>
 
 
     <plurals name="found_vac_msg">
