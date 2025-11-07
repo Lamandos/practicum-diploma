@@ -11,9 +11,6 @@ import com.google.android.material.textfield.TextInputLayout
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentFilterSettingsBinding
 
-
-
-
 class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
     private var _binding: FragmentFilterSettingsBinding? = null
@@ -67,7 +64,9 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private fun navigateOrClear(editText: TextInputEditText, layout: TextInputLayout, field: String) {
         if (editText.text.isNullOrEmpty()) {
             when (field) {
-                "jobLocation" -> findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseWorkPlaceFragment)
+                "jobLocation" -> findNavController().navigate(
+                    R.id.action_filterSettingsFragment_to_chooseWorkPlaceFragment
+                )
                 "industry" -> findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseIndustryFragment)
             }
         } else {
