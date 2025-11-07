@@ -38,7 +38,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:background="@drawable/search_field_corners"
-        android:hint="Введите отрасль"
+        android:hint="@string/enter_industry"
         android:imeOptions="actionDone"
         android:inputType="text"
         android:layout_marginTop="@dimen/margin_half_8"
