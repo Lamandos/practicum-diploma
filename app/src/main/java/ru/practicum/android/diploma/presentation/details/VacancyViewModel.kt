@@ -68,36 +68,38 @@ class VacancyViewModel(
         viewModelScope.launch {
             try {
                 if (isFromFavorites) {
-                    // Сначала пытаемся получить из избранного
                     val favoriteVacancy = favoritesInteractor.getVacancyById(vacancyId)
 
                     if (favoriteVacancy != null) {
                         _vacancyDetails.value = favoriteVacancy
                         _isFavorite.value = true
 
-                        // Если есть интернет, пытаемся обновить данные с сервера
                         if (NetworkUtils.isInternetAvailable(context)) {
                             try {
                                 val serverVacancy = vacancyInteractor.getVacancyDetails(vacancyId)
-                                // Если вакансия найдена на сервере - обновляем данные
                                 _vacancyDetails.value = serverVacancy
                                 serverVacancy?.let {
                                     favoritesInteractor.updateFavorite(it)
                                 }
-                            } catch (e: Exception) {
-                                // Если вакансии нет на сервере, но она есть в избранном
-                                // Устанавливаем флаг, что вакансия удалена с сервера
+                            } catch (e: IOException) {
                                 _isVacancyDeleted.value = true
-                                Log.w(TAG, "Vacancy not found on server, but exists in favorites: ${e.message}")
+                                Log.w(TAG, "Network error while checking vacancy on server: ${e.message}")
+                            } catch (e: UnknownHostException) {
+                                _isVacancyDeleted.value = true
+                                Log.w(TAG, "Host error while checking vacancy on server: ${e.message}")
+                            } catch (e: SecurityException) {
+                                _isVacancyDeleted.value = true
+                                Log.w(TAG, "Security error while checking vacancy on server: ${e.message}")
+                            } catch (e: IllegalStateException) {
+                                _isVacancyDeleted.value = true
+                                Log.w(TAG, "Illegal state while checking vacancy on server: ${e.message}")
                             }
                         }
                     } else {
-                        // Вакансия не найдена в избранном
                         _vacancyDetails.value = null
                         _isFavorite.value = false
                     }
                 } else {
-                    // Обычная загрузка вакансии (не из избранного)
                     val vacancy = vacancyInteractor.getVacancyDetails(vacancyId)
                     _vacancyDetails.value = vacancy
                     _isFavorite.value = favoritesInteractor.isFavorite(vacancyId)
@@ -105,7 +107,6 @@ class VacancyViewModel(
             } catch (e: IOException) {
                 handleErrorWithLog("$ERROR_NETWORK: ${e.message}", "loadVacancy - IOException", e)
             } catch (e: UnknownHostException) {
-                // При отсутствии интернета и fromFavorites = true не считаем это ошибкой
                 if (!isFromFavorites) {
                     handleErrorWithLog(ERROR_NO_INTERNET, "loadVacancy - UnknownHostException", e)
                 }
