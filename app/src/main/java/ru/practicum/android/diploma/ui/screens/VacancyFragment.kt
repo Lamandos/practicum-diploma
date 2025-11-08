@@ -10,6 +10,7 @@ import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
 import android.view.View
 import android.widget.TextView
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
@@ -57,6 +58,8 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         } ?: run {
             findNavController().popBackStack()
         }
+//        viewModel._error.value = VacancyViewModel.ERROR_SERVER
+
     }
 
     private fun setupClickListeners() {
@@ -96,12 +99,25 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     }
 
     private fun bindBasics(details: VacancyDetails) {
-        binding.vacName.text = details.name.orEmpty()
+        val city = details.address?.city ?: details.area?.name ?: getString(NOT_SPECIFIED_TEXT_RES)
+        binding.vacName.text = "${details.name.orEmpty()} , $city"
+
         binding.vacSalary.text = formatSalary(details.salary)
         binding.vacEmployer.text = details.employer?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
-        binding.vacRegion.text = details.area?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+
+        val address = details.address
+        val companyAddress = when {
+            !address?.street.isNullOrBlank() && !address?.building.isNullOrBlank() ->
+                "${address?.street.orEmpty()}, ${address?.building.orEmpty()}"
+            !address?.city.isNullOrBlank() -> address?.city.orEmpty()
+            !details.area?.name.isNullOrBlank() -> details.area?.name.orEmpty()
+            else -> getString(NOT_SPECIFIED_TEXT_RES)
+        }
+        binding.vacRegion.text = companyAddress
+
         binding.experienceInfo.text = details.experience?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
         binding.scheduleInfo.text = details.schedule?.name.orEmpty().ifBlank { getString(NOT_SPECIFIED_TEXT_RES) }
+
         setupSectionTitles(getSectionColor())
     }
 
@@ -154,9 +170,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             c.phones?.forEach { phone ->
                 val number = phone.number.orEmpty()
                 if (number.isNotBlank()) {
-                    lines.add(
-                        if (!phone.comment.isNullOrBlank()) "$number (${phone.comment})" else number
-                    )
+                    lines.add(if (!phone.comment.isNullOrBlank()) "$number (${phone.comment})" else number)
                 }
             }
             lines.joinToString("\n").takeIf { it.isNotBlank() }
@@ -238,93 +252,47 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         viewModel.vacancyDetails.observe(viewLifecycleOwner) { vacancy ->
             handleVacancyDetails(vacancy)
         }
-        viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
-            handleFavoriteState(isFavorite)
+        viewModel.error.observe(viewLifecycleOwner) { errorCode ->
+            handleErrorState(errorCode)
         }
-        viewModel.isVacancyDeleted.observe(viewLifecycleOwner) { isDeleted ->
-            handleVacancyDeletedState(isDeleted)
+        viewModel.isFavorite.observe(viewLifecycleOwner) { isFavorite ->
+            updateFavoritesButton(isFavorite)
         }
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            handleLoadingState(isLoading)
+            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
     }
 
     private fun handleVacancyDetails(vacancy: VacancyDetails?) {
         if (vacancy != null) {
-            showVacancy(vacancy)
+            binding.fullVacInfo.visibility = View.VISIBLE
             bindVacancyDetails(vacancy)
-            // Скрываем все ошибки при успешной загрузке
-            hideAllErrorViews()
-        } else {
-            if (fromFavorites) {
-                // Если вакансия из избранного, но не найдена ни в БД, ни на сервере
-                showVacancyNotFoundMessage()
-            } else {
-                findNavController().popBackStack()
+            binding.vacDelError.visibility = View.GONE
+            binding.serverError.visibility = View.GONE
+        }
+    }
+
+    private fun handleErrorState(errorCode: String?) {
+        binding.fullVacInfo.visibility = View.GONE
+        when (errorCode) {
+            VacancyViewModel.ERROR_VACANCY_NOT_FOUND -> {
+                binding.vacDelError.visibility = View.VISIBLE
+                binding.serverError.visibility = View.GONE
+            }
+            VacancyViewModel.ERROR_SERVER -> {
+                binding.serverError.visibility = View.VISIBLE
+                binding.vacDelError.visibility = View.GONE
             }
         }
     }
 
-    private fun handleVacancyDeletedState(isDeleted: Boolean) {
-        if (isDeleted) {
-            showVacancyDeletedMessage()
-        } else {
-            hideAllErrorViews()
-        }
-    }
-
-    private fun handleFavoriteState(isFavorite: Boolean) {
-        updateFavoritesButton(isFavorite)
-        if (fromFavorites && !isFavorite) {
-            showVacancyRemovedFromFavorites()
-        }
-    }
-
-    private fun showVacancyRemovedFromFavorites() {
-        findNavController().popBackStack()
-    }
-
-    private fun showVacancyDeletedMessage() {
-        binding.vacDelError.visibility = View.VISIBLE
-        binding.fullVacInfo.visibility = View.GONE
-        binding.serverError.visibility = View.GONE
-        binding.shareBtn.visibility = View.GONE
-    }
-
-    private fun handleLoadingState(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        if (isLoading) {
-            binding.fullVacInfo.visibility = View.GONE
-            hideAllErrorViews()
-        } else {
-            binding.fullVacInfo.visibility = View.VISIBLE
-        }
-    }
-
-    private fun showVacancy(vacancy: VacancyDetails) {
-        binding.vacName.text = vacancy.name
-        binding.vacEmployer.text = vacancy.employer?.name ?: ""
-        binding.vacSalary.text = formatSalary(vacancy.salary)
-    }
-
     private fun updateFavoritesButton(isFavorite: Boolean) {
-        if (isFavorite) {
-            binding.favoritesBtn.setImageResource(R.drawable.favorite_fill_icon)
+        val drawable = if (isFavorite) {
+            AppCompatResources.getDrawable(requireContext(), R.drawable.favorite_fill_icon)
         } else {
-            binding.favoritesBtn.setImageResource(R.drawable.favorite_icon)
+            AppCompatResources.getDrawable(requireContext(), R.drawable.favorite_icon)
         }
-    }
-
-    private fun hideAllErrorViews() {
-        binding.vacDelError.visibility = View.GONE
-        binding.serverError.visibility = View.GONE
-        binding.fullVacInfo.visibility = View.VISIBLE
-    }
-
-    private fun showVacancyNotFoundMessage() {
-        binding.vacDelError.visibility = View.VISIBLE
-        binding.fullVacInfo.visibility = View.GONE
-        binding.serverError.visibility = View.GONE
+        binding.favoritesBtn.setImageDrawable(drawable)
     }
 
     override fun onDestroyView() {

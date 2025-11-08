@@ -1,7 +1,7 @@
-// FavoritesRepository.kt
 package ru.practicum.android.diploma.domain.api.repositories
 
 import kotlinx.coroutines.flow.Flow
+import ru.practicum.android.diploma.data.db.FavoritesEntity
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 interface FavoritesRepository {
@@ -11,4 +11,4 @@ interface FavoritesRepository {
     fun getAllFavorites(): Flow<List<VacancyDetails>>
     suspend fun isFavorite(vacancyId: String): Boolean
     suspend fun updateVacancy(vacancy: VacancyDetails)
-}
+    suspend fun getById(vacancyId: String): FavoritesEntity? }

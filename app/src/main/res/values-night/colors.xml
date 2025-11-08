@@ -24,4 +24,6 @@
     <color name="border_placeholder_vacancy_color">#E6E8EB</color>
     <color name="hint_color">#FDFDFD</color>
     <color name="filter_sel_color">#FDFDFD</color>
+    <color name="fav_color">#FDFDFD</color>
+
 </resources>

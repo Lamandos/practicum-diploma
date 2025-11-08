@@ -10,6 +10,7 @@ import com.bumptech.glide.Glide
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.domain.models.vacancy.Salary
 import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
+import ru.practicum.android.diploma.util.networkutils.NetworkUtils
 
 class SearchVacancyAdapter(
     private val onItemClick: (Vacancy) -> Unit
@@ -30,17 +31,28 @@ class SearchVacancyAdapter(
         private val placeholder: ImageView = itemView.findViewById(R.id.vacancyPlaceholder)
 
         fun bind(vacancy: Vacancy) {
-            val city = vacancy.address?.city ?: vacancy.area?.name ?: itemView.context.getString(R.string.not_specified)
+            val city = if (!vacancy.address?.city.isNullOrBlank()) {
+                vacancy.address!!.city
+            } else {
+                vacancy.area.name // area не nullable, поэтому можно безопасно брать name
+            }
+            nameCity.text = "${vacancy.name}\n$city"
+            workPlace.text = vacancy.employer.name.orEmpty()
 
-            nameCity.text = "${vacancy.name}, $city"
-            workPlace.text = vacancy.employer?.name.orEmpty()
             salary.text = formatSalary(vacancy.salary)
 
-            Glide.with(itemView)
-                .load(vacancy.employer?.logo)
-                .placeholder(R.drawable.placeholder)
-                .error(R.drawable.placeholder)
-                .into(placeholder)
+            val logoUrl = vacancy.employer.logo
+            val shouldLoadLogo = !logoUrl.isNullOrBlank() && NetworkUtils.isInternetAvailable(itemView.context)
+
+            if (shouldLoadLogo) {
+                Glide.with(itemView)
+                    .load(logoUrl)
+                    .placeholder(R.drawable.placeholder)
+                    .error(R.drawable.placeholder)
+                    .into(placeholder)
+            } else {
+                placeholder.setImageResource(R.drawable.placeholder)
+            }
 
             itemView.setOnClickListener { onItemClick(vacancy) }
         }

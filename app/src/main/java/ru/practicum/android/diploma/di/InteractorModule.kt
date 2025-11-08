@@ -12,7 +12,8 @@ import ru.practicum.android.diploma.domain.interactors.impl.VacancyInteractorImp
 val interactorModule: Module = module {
     factory<FavoritesInteractor> {
         FavoritesInteractorImpl(
-            favoritesRepository = get()
+            favoritesRepository = get(),
+            mappers = get()
         )
     }
     factory<SearchVacanciesInteractor> {
