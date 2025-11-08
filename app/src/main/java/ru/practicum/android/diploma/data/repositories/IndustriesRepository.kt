@@ -9,9 +9,7 @@ class IndustriesRepository(private val networkClient: NetworkClient) {
 
     suspend fun getAllIndustries(): List<FilterIndustryDto>? {
         return when (val response = networkClient.getIndustries()) {
-            is ResponseSuccess<*> -> {
-                (response.data as? List<FilterIndustryDto>)
-            }
+            is ResponseSuccess<*> -> response.data as? List<FilterIndustryDto>
             is ResponseError -> null
             else -> null
         }
