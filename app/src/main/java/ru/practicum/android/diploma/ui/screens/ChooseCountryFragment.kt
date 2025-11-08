@@ -3,6 +3,7 @@ package ru.practicum.android.diploma.ui.screens
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentChoosecountryBinding
 
@@ -13,10 +14,14 @@ class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         _binding = FragmentChoosecountryBinding.bind(view)
+        setupClickListeners()
     }
-
+    private fun setupClickListeners() {
+        binding.backBtn.setOnClickListener {
+            findNavController().popBackStack()
+        }
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
