@@ -5,6 +5,8 @@ import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 interface VacanciesRepository {
+
+    val totalFoundCount: Int
     suspend fun searchVacancies(
         query: String,
         page: Int = 1,

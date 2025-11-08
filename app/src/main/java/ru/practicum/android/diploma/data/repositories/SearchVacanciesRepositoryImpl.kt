@@ -1,58 +1,61 @@
-package ru.practicum.android.diploma.data.repository
+package ru.practicum.android.diploma.data.repositories
 
 import android.graphics.Region
-import ru.practicum.android.diploma.data.dto.ResponseError
+import kotlinx.serialization.SerializationException
+import retrofit2.HttpException
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
 import ru.practicum.android.diploma.data.mappers.VacancyMapper
 import ru.practicum.android.diploma.data.network.NetworkClient
-import ru.practicum.android.diploma.data.network.VacancyDetailsRequest
 import ru.practicum.android.diploma.data.network.VacancySearchRequest
 import ru.practicum.android.diploma.data.network.VacancySearchResponse
 import ru.practicum.android.diploma.domain.api.repositories.VacanciesRepository
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import java.io.IOException
 
-class VacanciesRepositoryImpl(
-    private val networkClient: NetworkClient
+class SearchVacanciesRepositoryImpl(
+    private val networkClient: NetworkClient,
 ) : VacanciesRepository {
+
+    private var totalFound: Int = 0
+
+    override val totalFoundCount: Int
+        get() = totalFound
 
     override suspend fun searchVacancies(
         query: String,
         page: Int,
         pageSize: Int,
-        filters: FilterIndustry
+        filters: FilterIndustry,
     ): Result<List<VacancyDetails>> {
-        val response = networkClient.doRequest(
-            VacancySearchRequest(text = query, page = page, perPage = pageSize)
-        )
-        return when (response) {
-            is ResponseSuccess<*> -> {
+        return try {
+            val response = networkClient.doRequest(
+                VacancySearchRequest(
+                    text = query,
+                    page = page,
+                    perPage = pageSize
+                )
+            )
+            if (response is ResponseSuccess<*>) {
                 val data = response.data as VacancySearchResponse
+                totalFound = data.found
                 val vacancies = VacancyMapper.mapToVacancyDetails(data.items)
                 Result.success(vacancies)
+            } else {
+                Result.failure(Exception("Network error"))
             }
-
-            is ResponseError -> Result.failure(response.exception ?: Exception("Неизвестная ошибка"))
+        } catch (e: IOException) {
+            Result.failure(e)
+        } catch (e: HttpException) {
+            Result.failure(e)
+        } catch (e: SerializationException) {
+            Result.failure(e)
         }
     }
 
-    override suspend fun getVacancyDetails(vacancyId: String): Result<VacancyDetails> {
-        val response = networkClient.doRequest(
-            VacancyDetailsRequest(vacancyId)
-        )
-
-        return when (response) {
-            is ResponseSuccess<*> -> {
-                val details = response.data as? VacancyDetails
-                    ?: return Result.failure(Exception("Invalid response type"))
-                Result.success(details)
-            }
-
-            is ResponseError -> {
-                Result.failure(response.exception ?: Exception("Неизвестная ошибка"))
-            }
-        }
-    }
+    override suspend fun getVacancyDetails(vacancyId: String): Result<VacancyDetails> =
+        networkClient.getVacancyDetails(vacancyId)?.let { Result.success(it) }
+            ?: Result.failure(Exception("Не удалось получить данные вакансии"))
 
     override suspend fun getIndustries(): Result<List<VacancyDetails>> =
         Result.failure(Exception("Not implemented"))
