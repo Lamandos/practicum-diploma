@@ -90,9 +90,6 @@ class Mappers(
             } catch (e: IllegalStateException) {
                 Log.e(TAG, ILLEGAL_STATE_ERROR + e.message)
                 null
-            } catch (e: Exception) {
-                Log.e(TAG, "Unknown error deserializing contacts: ${e.message}")
-                null
             }
         }
     }
