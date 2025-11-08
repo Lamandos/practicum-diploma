@@ -2,6 +2,7 @@ package ru.practicum.android.diploma.di
 
 import org.koin.core.module.Module
 import org.koin.dsl.module
+import ru.practicum.android.diploma.data.repositories.AreasRepository
 import ru.practicum.android.diploma.data.repositories.FavoritesRepositoryImpl
 import ru.practicum.android.diploma.data.repositories.SearchVacanciesRepositoryImpl
 import ru.practicum.android.diploma.data.repositories.VacancyRepositoryImpl
@@ -24,4 +25,5 @@ val repositoryModule: Module = module {
     single<VacanciesRepository> {
         SearchVacanciesRepositoryImpl(get())
     }
+    single { AreasRepository(get()) }
 }

@@ -19,6 +19,7 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentChooseworkplaceBinding.bind(view)
+        setupClickListeners()
 
         val countryLayout: TextInputLayout = binding.country
         val countryEditText: TextInputEditText = binding.editCountry
@@ -48,7 +49,11 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
 
         updateIconAndState(regionLayout, regionEditText.text.toString())
     }
-
+    private fun setupClickListeners() {
+        binding.backBtn.setOnClickListener {
+            findNavController().popBackStack()
+        }
+    }
     private fun updateIconAndState(layout: TextInputLayout, text: String) {
         if (text.isEmpty()) {
             layout.endIconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.arrow_right)

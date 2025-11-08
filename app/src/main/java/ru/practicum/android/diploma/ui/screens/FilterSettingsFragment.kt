@@ -19,6 +19,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentFilterSettingsBinding.bind(view)
+        setupClickListeners()
 
         val jobLocationLayout: TextInputLayout = binding.jobLocation
         val jobLocationEditText: TextInputEditText = binding.editJobLocation
@@ -48,7 +49,11 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
         updateIconAndState(industryLayout, industryEditText.text.toString())
     }
-
+    private fun setupClickListeners() {
+        binding.backBtn.setOnClickListener {
+            findNavController().popBackStack()
+        }
+    }
     private fun updateIconAndState(layout: TextInputLayout, text: String) {
         if (text.isEmpty()) {
             layout.endIconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.arrow_right)
