@@ -1,6 +1,6 @@
 package ru.practicum.android.diploma.domain.models.vacancy
 
 data class Country(
-    val id: String,
+    val id: Int,
     val name: String,
 )
