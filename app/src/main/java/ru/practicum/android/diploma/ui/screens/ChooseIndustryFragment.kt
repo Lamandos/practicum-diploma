@@ -55,18 +55,14 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
 
     private fun setupSearchField() {
         binding.searchField.addTextChangedListener(object : android.text.TextWatcher {
-            override fun beforeTextChanged(charSequence: CharSequence?, start: Int, count: Int, after: Int) {
-            }
-
             override fun onTextChanged(charSequence: CharSequence?, start: Int, before: Int, count: Int) {
                 val query = charSequence.toString().trim()
                 filterIndustries(query)
                 binding.clearIcon.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
                 binding.searchIcon.visibility = if (query.isNotEmpty()) View.GONE else View.VISIBLE
             }
-
-            override fun afterTextChanged(editable: android.text.Editable?) {
-            }
+            override fun beforeTextChanged(charSequence: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun afterTextChanged(editable: android.text.Editable?) = Unit
         })
     }
 
