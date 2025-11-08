@@ -30,7 +30,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         private const val BULLET_SYMBOL = "• "
         private const val TITLE_SIZE_SP = 18f
         private val NOT_SPECIFIED_TEXT_RES = R.string.not_specified
-        private const val CONTACTS_LOG_TAG = "VacancyFragment" // Добавьте эту константу
+        private const val CONTACTS_LOG_TAG = "VacancyFragment"
     }
 
     private var _binding: FragmentVacancyBinding? = null
@@ -239,7 +239,9 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         val termsText = extractSection(desc, R.string.Terms, null)
 
         // Проверяем, есть ли структурированные секции
-        val hasStructuredSections = responsibilityText.isNotBlank() || requirementsText.isNotBlank() || termsText.isNotBlank()
+        val hasStructuredSections = responsibilityText.isNotBlank() ||
+            requirementsText.isNotBlank() ||
+            termsText.isNotBlank()
 
         if (hasStructuredSections) {
             // Если есть структурированные секции - показываем их как есть

@@ -20,6 +20,13 @@ class Mappers(
         .create()
 ) {
 
+    companion object {
+        private const val TAG = "Mappers"
+        private const val JSON_SYNTAX_ERROR = "JSON syntax error deserializing contacts: "
+        private const val JSON_PARSE_ERROR = "JSON parse error deserializing contacts: "
+        private const val ILLEGAL_STATE_ERROR = "Illegal state deserializing contacts: "
+    }
+
     fun toVacancyDetails(entity: FavoritesEntity): VacancyDetails {
         val contacts = parseContacts(entity.contacts)
 
@@ -74,16 +81,20 @@ class Mappers(
         return contactsJson?.let { json ->
             try {
                 gson.fromJson(json, Contacts::class.java)
-            } catch (e: com.google.gson.JsonSyntaxException) {
-                Log.e("Mappers", "JSON syntax error deserializing contacts: ${e.message}")
-                null
-            } catch (e: com.google.gson.JsonParseException) {
-                Log.e("Mappers", "JSON parse error deserializing contacts: ${e.message}")
-                null
-            } catch (e: IllegalStateException) {
-                Log.e("Mappers", "Illegal state deserializing contacts: ${e.message}")
+            } catch (e: Exception) {
+                handleContactsDeserializationError(e)
                 null
             }
         }
+    }
+
+    private fun handleContactsDeserializationError(e: Exception) {
+        val errorMessage = when (e) {
+            is com.google.gson.JsonSyntaxException -> JSON_SYNTAX_ERROR + e.message
+            is com.google.gson.JsonParseException -> JSON_PARSE_ERROR + e.message
+            is IllegalStateException -> ILLEGAL_STATE_ERROR + e.message
+            else -> "Unknown error deserializing contacts: ${e.message}"
+        }
+        Log.e(TAG, errorMessage)
     }
 }
