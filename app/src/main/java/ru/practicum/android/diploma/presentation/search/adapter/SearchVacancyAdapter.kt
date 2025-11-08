@@ -56,7 +56,7 @@ class SearchVacancyAdapter(
 
             itemView.setOnClickListener { onItemClick(vacancy) }
         }
-        
+
         private fun formatSalary(salary: Salary?): String {
             salary ?: return "Зарплата не указана"
             val from = salary.from
