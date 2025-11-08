@@ -1,9 +1,12 @@
 package ru.practicum.android.diploma.data.network
 
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import ru.practicum.android.diploma.data.dto.Response
 import ru.practicum.android.diploma.data.dto.ResponseError
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
+import ru.practicum.android.diploma.data.dto.filterdto.FilterAreaDto
 import ru.practicum.android.diploma.data.dto.vacancydetailsdto.VacancyDetailsDto
 import ru.practicum.android.diploma.data.mappers.VacancyMapper
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
@@ -14,7 +17,8 @@ import java.net.UnknownHostException
 private const val TAG = "RetrofitNetworkClient"
 
 class RetrofitNetworkClient(
-    private val apiService: VacancySearchApiService
+    private val apiService: VacancySearchApiService,
+    private val areasService: AreasApiService
 ) : NetworkClient {
 
     override suspend fun doRequest(dto: Any): Response {
@@ -55,6 +59,27 @@ class RetrofitNetworkClient(
         } catch (e: retrofit2.HttpException) {
             Log.e(TAG, "HTTP ошибка для vacancyId: $vacancyId", e)
             null
+        }
+    }
+    override suspend fun getAreas(): Response = withContext(Dispatchers.IO) {
+        try {
+            val result: List<FilterAreaDto> = areasService.getAreas()
+            ResponseSuccess(FilterAreaResponse(result))
+        } catch (e: UnknownHostException) {
+            Log.e(TAG, "Нет интернета при запросе /areas", e)
+            ResponseError(Throwable("Нет подключения к интернету"))
+        } catch (e: SocketTimeoutException) {
+            Log.e(TAG, "Таймаут при запросе /areas", e)
+            ResponseError(Throwable("Превышено время ожидания сервера"))
+        } catch (e: IOException) {
+            Log.e(TAG, "Ошибка сети при запросе /areas", e)
+            ResponseError(Throwable("Ошибка сети: ${e.message}"))
+        } catch (e: retrofit2.HttpException) {
+            Log.e(TAG, "HTTP ошибка при запросе /areas", e)
+            ResponseError(Throwable("Ошибка сервера: ${e.message()}"))
+        } catch (e: Exception) {
+            Log.e(TAG, "Неизвестная ошибка при запросе /areas", e)
+            ResponseError(Throwable("Неизвестная ошибка: ${e.message}"))
         }
     }
 }
