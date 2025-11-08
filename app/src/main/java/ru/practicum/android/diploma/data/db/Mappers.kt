@@ -2,6 +2,7 @@ package ru.practicum.android.diploma.data.db
 
 import android.util.Log
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterArea
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
 import ru.practicum.android.diploma.domain.models.vacancydetails.Address
@@ -13,56 +14,76 @@ import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 import ru.practicum.android.diploma.domain.models.vacancydetails.Schedule
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
-class Mappers(private val gson: Gson = Gson()) {
+class Mappers(
+    private val gson: Gson = GsonBuilder()
+        .registerTypeAdapter(Contacts::class.java, ContactsTypeAdapter())
+        .create()
+) {
 
     fun toVacancyDetails(entity: FavoritesEntity): VacancyDetails {
-        val contacts = entity.contacts?.let { json ->
-            try {
-                val contactsObj = gson.fromJson(json, Contacts::class.java)
-                contactsObj
-            } catch (e: Exception) {
-                Log.e("Mappers", "Error deserializing contacts: ${e.message}")
-                null
-            }
-        }
+        val contacts = parseContacts(entity.contacts)
+
         return VacancyDetails(
             id = entity.id,
             name = entity.name,
             description = entity.description,
-            salary = entity.salary?.let { gson.fromJson(it, Salary::class.java) },
-            address = entity.address?.let { gson.fromJson(it, Address::class.java) },
-            experience = entity.experience?.let { gson.fromJson(it, Experience::class.java) },
-            schedule = entity.schedule?.let { gson.fromJson(it, Schedule::class.java) },
-            employment = entity.employment?.let { gson.fromJson(it, Employment::class.java) },
-            employer = entity.employer?.let { gson.fromJson(it, Employer::class.java) },
+            salary = parseField<Salary>(entity.salary),
+            address = parseField<Address>(entity.address),
+            experience = parseField<Experience>(entity.experience),
+            schedule = parseField<Schedule>(entity.schedule),
+            employment = parseField<Employment>(entity.employment),
+            employer = parseField<Employer>(entity.employer),
             contacts = contacts,
-            area = entity.area?.let { gson.fromJson(it, FilterArea::class.java) },
+            area = parseField<FilterArea>(entity.area),
             skills = entity.skills,
             url = entity.url,
-            industry = entity.industry?.let { gson.fromJson(it, FilterIndustry::class.java) },
+            industry = parseField<FilterIndustry>(entity.industry),
             publishedAt = entity.published,
         )
     }
 
     fun toFavoritesEntity(vacancy: VacancyDetails): FavoritesEntity {
-        val contactsJson = gson.toJson(vacancy.contacts)
-
         return FavoritesEntity(
             id = vacancy.id,
             name = vacancy.name,
             description = vacancy.description,
-            salary = gson.toJson(vacancy.salary),
-            address = gson.toJson(vacancy.address),
-            experience = gson.toJson(vacancy.experience),
-            schedule = gson.toJson(vacancy.schedule),
-            employment = gson.toJson(vacancy.employment),
-            employer = gson.toJson(vacancy.employer),
-            area = gson.toJson(vacancy.area),
+            salary = serializeField(vacancy.salary),
+            address = serializeField(vacancy.address),
+            experience = serializeField(vacancy.experience),
+            schedule = serializeField(vacancy.schedule),
+            employment = serializeField(vacancy.employment),
+            employer = serializeField(vacancy.employer),
+            area = serializeField(vacancy.area),
             skills = vacancy.skills,
             url = vacancy.url,
-            industry = gson.toJson(vacancy.industry),
+            industry = serializeField(vacancy.industry),
             published = vacancy.publishedAt,
-            contacts = contactsJson
+            contacts = gson.toJson(vacancy.contacts)
         )
+    }
+
+    private inline fun <reified T> parseField(json: String?): T? {
+        return json?.let { gson.fromJson(it, T::class.java) }
+    }
+
+    private fun serializeField(obj: Any?): String? {
+        return obj?.let { gson.toJson(it) }
+    }
+
+    private fun parseContacts(contactsJson: String?): Contacts? {
+        return contactsJson?.let { json ->
+            try {
+                gson.fromJson(json, Contacts::class.java)
+            } catch (e: com.google.gson.JsonSyntaxException) {
+                Log.e("Mappers", "JSON syntax error deserializing contacts: ${e.message}")
+                null
+            } catch (e: com.google.gson.JsonParseException) {
+                Log.e("Mappers", "JSON parse error deserializing contacts: ${e.message}")
+                null
+            } catch (e: IllegalStateException) {
+                Log.e("Mappers", "Illegal state deserializing contacts: ${e.message}")
+                null
+            }
+        }
     }
 }

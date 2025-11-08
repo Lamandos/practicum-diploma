@@ -5,6 +5,8 @@ import ru.practicum.android.diploma.domain.models.vacancydetails.Contacts
 import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
 import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 
+private const val TAG = "VacancyDetailsMappers"
+
 fun ExperienceDto.toDomain(): Experience {
     return Experience(
         id = id,
@@ -25,42 +27,44 @@ fun SalaryDto.toDomain(): Salary? {
 }
 
 fun ContactsDto.toDomain(vacancyId: String): Contacts? {
-    Log.d(
-        "VacancyDetailsMappers",
-        "ContactsDto: id='${this.id}', name='${this.name}', email='${this.email}', phones=${this.phones}"
-    )
+    Log.d(TAG, "ContactsDto: id='${this.id}', name='${this.name}', email='${this.email}'")
 
-    this.phones?.forEachIndexed { index, phoneDto ->
-        Log.d(
-            "VacancyDetailsMappers",
-            "PhoneDto $index: formatted='${phoneDto.formatted}', comment='${phoneDto.comment}'"
+    logPhonesDetails()
+
+    val domainPhones = mapPhonesToDomain()
+    val shouldCreateContacts = shouldCreateContacts(domainPhones)
+
+    return if (shouldCreateContacts) {
+        Contacts(
+            id = this.id ?: vacancyId,
+            name = name,
+            email = email,
+            phones = domainPhones
         )
+    } else {
+        null
     }
+}
 
-    return if (name != null || email != null || !phones.isNullOrEmpty()) {
-        val domainPhones = phones?.mapNotNull { phoneDto ->
-            if (!phoneDto.formatted.isNullOrBlank()) {
-                Contacts.Phone(
-                    number = phoneDto.formatted,
-                    comment = phoneDto.comment
-                )
-            } else {
-                null
-            }
-        } ?: emptyList()
+private fun ContactsDto.logPhonesDetails() {
+    this.phones?.forEachIndexed { index, phoneDto ->
+        Log.d(TAG, "PhoneDto $index: formatted='${phoneDto.formatted}', comment='${phoneDto.comment}'")
+    }
+}
 
-        // Показываем контакты только если есть реальные данные
-        if (domainPhones.isNotEmpty() || name != null || email != null) {
-            Contacts(
-                id = this.id ?: vacancyId,
-                name = name,
-                email = email,
-                phones = domainPhones
+private fun ContactsDto.mapPhonesToDomain(): List<Contacts.Phone> {
+    return phones?.mapNotNull { phoneDto ->
+        if (!phoneDto.formatted.isNullOrBlank()) {
+            Contacts.Phone(
+                number = phoneDto.formatted,
+                comment = phoneDto.comment
             )
         } else {
             null
         }
-    } else {
-        null
-    }
+    } ?: emptyList()
+}
+
+private fun ContactsDto.shouldCreateContacts(domainPhones: List<Contacts.Phone>): Boolean {
+    return domainPhones.isNotEmpty() || name != null || email != null
 }

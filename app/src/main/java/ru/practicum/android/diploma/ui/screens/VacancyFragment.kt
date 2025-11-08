@@ -30,6 +30,7 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
         private const val BULLET_SYMBOL = "• "
         private const val TITLE_SIZE_SP = 18f
         private val NOT_SPECIFIED_TEXT_RES = R.string.not_specified
+        private const val CONTACTS_LOG_TAG = "VacancyFragment" // Добавьте эту константу
     }
 
     private var _binding: FragmentVacancyBinding? = null
@@ -149,9 +150,9 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     }
 
     private fun bindContacts(contacts: Contacts?) {
-        Log.d("VacancyFragment", "bindContacts: $contacts")
-        Log.d("VacancyFragment", "bindContacts phones: ${contacts?.phones}")
-        Log.d("VacancyFragment", "bindContacts safePhones: ${contacts?.safePhones}")
+        Log.d(CONTACTS_LOG_TAG, "bindContacts: $contacts")
+        Log.d(CONTACTS_LOG_TAG, "bindContacts phones: ${contacts?.phones}")
+        Log.d(CONTACTS_LOG_TAG, "bindContacts safePhones: ${contacts?.safePhones}")
 
         if (contacts == null) {
             binding.contactsInfo.visibility = View.GONE
@@ -159,43 +160,54 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
             return
         }
 
+        val contactLines = buildContactLines(contacts)
+        displayContactInfo(contactLines)
+    }
+
+    private fun buildContactLines(contacts: Contacts): List<String> {
         val contactLines = mutableListOf<String>()
 
         // Имя контакта
         contacts.name?.takeIf { it.isNotBlank() }?.let { name ->
-            contactLines.add("$name")
+            contactLines.add(name)
         }
 
         // Email
         contacts.email?.takeIf { it.isNotBlank() }?.let { email ->
-            contactLines.add("$email")
+            contactLines.add(email)
         }
 
-        // Телефоны - используем safePhones вместо прямого доступа к phones
+        // Телефоны
         contacts.safePhones.forEach { phone ->
-            val number = phone.number.orEmpty()
-            if (number.isNotBlank()) {
-                val phoneLine = if (!phone.comment.isNullOrBlank()) {
-                    "$number (${phone.comment})"
-                } else {
-                    "$number"
-                }
-                contactLines.add(phoneLine)
-                Log.d("VacancyFragment", "Added phone: $phoneLine")
-            }
+            val phoneLine = buildPhoneLine(phone)
+            phoneLine?.let { contactLines.add(it) }
         }
 
+        return contactLines
+    }
+
+    private fun buildPhoneLine(phone: Contacts.Phone): String? {
+        val number = phone.number.takeIf { it.isNotBlank() } ?: return null
+
+        return if (!phone.comment.isNullOrBlank()) {
+            "$number (${phone.comment})"
+        } else {
+            number
+        }
+    }
+
+    private fun displayContactInfo(contactLines: List<String>) {
         val contactText = contactLines.joinToString("\n\n").takeIf { it.isNotBlank() }
 
         if (contactText.isNullOrBlank()) {
             binding.contactsInfo.visibility = View.GONE
             binding.contactsTitle.visibility = View.GONE
-            Log.d("VacancyFragment", "No contact info to display")
+            Log.d(CONTACTS_LOG_TAG, "No contact info to display")
         } else {
             binding.contactsInfo.visibility = View.VISIBLE
             binding.contactsTitle.visibility = View.VISIBLE
             binding.contactsInfo.text = contactText
-            Log.d("VacancyFragment", "Displaying contacts: $contactText")
+            Log.d(CONTACTS_LOG_TAG, "Displaying contacts: $contactText")
         }
     }
 
