@@ -27,7 +27,7 @@ object DomainMappers {
                 siteUrl = null
             ),
             area = Area(
-                id = this.area?.id ?: "",
+                id = this.area?.id ?: 0,
                 name = this.area?.name ?: "",
                 country = null
             ),

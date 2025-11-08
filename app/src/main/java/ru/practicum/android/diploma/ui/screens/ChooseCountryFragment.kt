@@ -3,8 +3,8 @@ package ru.practicum.android.diploma.ui.screens
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
-import androidx.navigation.fragment.findNavController
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
@@ -50,4 +50,3 @@ class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {
         _binding = null
     }
 }
-

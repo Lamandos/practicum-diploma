@@ -16,7 +16,7 @@ class AreasRepository(private val networkClient: NetworkClient) {
             is ResponseSuccess<*> -> {
                 val result = response.data
                 if (result is FilterAreaResponse) {
-                    result.areas
+                    result.areas.toList()
                 } else {
                     null
                 }
@@ -24,5 +24,13 @@ class AreasRepository(private val networkClient: NetworkClient) {
             is ResponseError -> null
             else -> null
         }
+    }
+    suspend fun getAllRegions(): List<FilterAreaDto>? {
+        val allAreas = getAllAreas() ?: return null
+        val regions = mutableListOf<FilterAreaDto>()
+        allAreas.forEach { country ->
+            regions.addAll(country.areas)
+        }
+        return regions
     }
 }
