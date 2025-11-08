@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.domain.interactors.VacancyInteractor
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import java.io.IOException
 
 class VacancyViewModel(
     private val vacancyInteractor: VacancyInteractor,
@@ -17,6 +18,9 @@ class VacancyViewModel(
     companion object {
         const val ERROR_SERVER = "ERROR_SERVER"
         const val ERROR_VACANCY_NOT_FOUND = "ERROR_VACANCY_NOT_FOUND"
+        const val ERROR_ACCESS = "ERROR_ACCESS"
+        const val ERROR_STATE = "ERROR_STATE"
+        const val ERROR_LOAD_VACANCY = "ERROR_LOAD_VACANCY"
     }
 
     private val _vacancyDetails = MutableLiveData<VacancyDetails?>()
@@ -59,15 +63,14 @@ class VacancyViewModel(
                 } else {
                     _error.value = ERROR_VACANCY_NOT_FOUND
                 }
+            } catch (e: IOException) {
+                handleError(e, ERROR_SERVER)
             } catch (e: SecurityException) {
-                _error.value = ERROR_SERVER
+                handleError(e, ERROR_ACCESS)
             } catch (e: IllegalStateException) {
-                _error.value = ERROR_SERVER
-            } catch (e: Exception) {
-                _error.value = ERROR_SERVER
-            } finally {
-                _isLoading.value = false
+                handleError(e, ERROR_STATE)
             }
+            _isLoading.value = false
         }
     }
 
@@ -78,9 +81,17 @@ class VacancyViewModel(
             try {
                 favoritesInteractor.toggleFavorite(vacancy)
                 _isFavorite.value = favoritesInteractor.isFavorite(vacancy.id)
-            } catch (e: Exception) {
-                _error.value = ERROR_SERVER
+            } catch (e: IOException) {
+                handleError(e, ERROR_LOAD_VACANCY)
+            } catch (e: SecurityException) {
+                handleError(e, ERROR_ACCESS)
+            } catch (e: IllegalStateException) {
+                handleError(e, ERROR_STATE)
             }
         }
+    }
+
+    private fun handleError(exception: Throwable, defaultError: String) {
+        _error.value = defaultError
     }
 }
