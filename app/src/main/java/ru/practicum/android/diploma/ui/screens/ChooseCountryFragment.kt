@@ -3,6 +3,7 @@ package ru.practicum.android.diploma.ui.screens
 import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.launch
@@ -22,8 +23,13 @@ class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentChoosecountryBinding.bind(view)
-
+        setupClickListeners()
         loadCountries()
+    }
+    private fun setupClickListeners() {
+        binding.backBtn.setOnClickListener {
+            findNavController().popBackStack()
+        }
     }
 
     private fun loadCountries() {
@@ -39,9 +45,9 @@ class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {
             }
         }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 }
+
