@@ -1,8 +1,8 @@
 package ru.practicum.android.diploma.data.dto.vacancydetailsdto
 
+import android.util.Log
 import ru.practicum.android.diploma.domain.models.vacancydetails.Contacts
 import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
-import ru.practicum.android.diploma.domain.models.vacancydetails.Phone
 import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 
 fun ExperienceDto.toDomain(): Experience {
@@ -24,21 +24,36 @@ fun SalaryDto.toDomain(): Salary? {
     }
 }
 
-fun ContactsDto.toDomain(id: String): Contacts? {
+fun ContactsDto.toDomain(vacancyId: String): Contacts? {
+    Log.d("VacancyDetailsMappers", "ContactsDto: id='${this.id}', name='${this.name}', email='${this.email}', phones=${this.phones}")
+
+    this.phones?.forEachIndexed { index, phoneDto ->
+        Log.d("VacancyDetailsMappers", "PhoneDto $index: formatted='${phoneDto.formatted}', comment='${phoneDto.comment}'")
+    }
+
     return if (name != null || email != null || !phones.isNullOrEmpty()) {
-        Contacts(
-            id = id,
-            name = name,
-            email = email,
-            phones = phones?.mapNotNull { phoneDto ->
-                phoneDto.number?.let { number ->
-                    Phone(
-                        number = number,
-                        comment = phoneDto.comment
-                    )
-                }
-            }?.takeIf { it.isNotEmpty() } as? List<Contacts.Phone>
-        )
+        val domainPhones = phones?.mapNotNull { phoneDto ->
+            if (!phoneDto.formatted.isNullOrBlank()) {
+                Contacts.Phone(
+                    number = phoneDto.formatted,
+                    comment = phoneDto.comment
+                )
+            } else {
+                null
+            }
+        } ?: emptyList()
+
+        // Показываем контакты только если есть реальные данные
+        if (domainPhones.isNotEmpty() || name != null || email != null) {
+            Contacts(
+                id = this.id ?: vacancyId,
+                name = name,
+                email = email,
+                phones = domainPhones
+            )
+        } else {
+            null
+        }
     } else {
         null
     }

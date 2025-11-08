@@ -8,6 +8,7 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -148,25 +149,53 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
     }
 
     private fun bindContacts(contacts: Contacts?) {
-        val contactText = contacts?.let { c ->
-            val lines = mutableListOf<String>()
-            c.email?.takeIf { it.isNotBlank() }?.let(lines::add)
-            c.phones?.forEach { phone ->
-                val number = phone.number.orEmpty()
-                if (number.isNotBlank()) {
-                    lines.add(
-                        if (!phone.comment.isNullOrBlank()) "$number (${phone.comment})" else number
-                    )
-                }
-            }
-            lines.joinToString("\n").takeIf { it.isNotBlank() }
+        Log.d("VacancyFragment", "bindContacts: $contacts")
+        Log.d("VacancyFragment", "bindContacts phones: ${contacts?.phones}")
+        Log.d("VacancyFragment", "bindContacts safePhones: ${contacts?.safePhones}")
+
+        if (contacts == null) {
+            binding.contactsInfo.visibility = View.GONE
+            binding.contactsTitle.visibility = View.GONE
+            return
         }
+
+        val contactLines = mutableListOf<String>()
+
+        // Имя контакта
+        contacts.name?.takeIf { it.isNotBlank() }?.let { name ->
+            contactLines.add("$name")
+        }
+
+        // Email
+        contacts.email?.takeIf { it.isNotBlank() }?.let { email ->
+            contactLines.add("$email")
+        }
+
+        // Телефоны - используем safePhones вместо прямого доступа к phones
+        contacts.safePhones.forEach { phone ->
+            val number = phone.number.orEmpty()
+            if (number.isNotBlank()) {
+                val phoneLine = if (!phone.comment.isNullOrBlank()) {
+                    "$number (${phone.comment})"
+                } else {
+                    "$number"
+                }
+                contactLines.add(phoneLine)
+                Log.d("VacancyFragment", "Added phone: $phoneLine")
+            }
+        }
+
+        val contactText = contactLines.joinToString("\n\n").takeIf { it.isNotBlank() }
+
         if (contactText.isNullOrBlank()) {
             binding.contactsInfo.visibility = View.GONE
             binding.contactsTitle.visibility = View.GONE
+            Log.d("VacancyFragment", "No contact info to display")
         } else {
             binding.contactsInfo.visibility = View.VISIBLE
+            binding.contactsTitle.visibility = View.VISIBLE
             binding.contactsInfo.text = contactText
+            Log.d("VacancyFragment", "Displaying contacts: $contactText")
         }
     }
 
@@ -186,15 +215,51 @@ class VacancyFragment : Fragment(R.layout.fragment_vacancy) {
 
     private fun bindDescription(details: VacancyDetails, sectionColor: Int) {
         val desc = details.description.orEmpty()
-        if (desc.isBlank()) return
+
+        if (desc.isBlank()) {
+            // Если описания нет вообще, скрываем все секции
+            hideAllDescriptionSections()
+            return
+        }
 
         val responsibilityText = extractSection(desc, R.string.responsibilities, R.string.requirements)
         val requirementsText = extractSection(desc, R.string.requirements, R.string.Terms)
         val termsText = extractSection(desc, R.string.Terms, null)
 
-        bindSection(binding.responsibilitiesTitle, binding.responsibilitiesInfo, responsibilityText, sectionColor)
-        bindSection(binding.requirementsTitle, binding.requirementsInfo, requirementsText, sectionColor)
-        bindSection(binding.termsTitle, binding.termsInfo, termsText, sectionColor)
+        // Проверяем, есть ли структурированные секции
+        val hasStructuredSections = responsibilityText.isNotBlank() || requirementsText.isNotBlank() || termsText.isNotBlank()
+
+        if (hasStructuredSections) {
+            // Если есть структурированные секции - показываем их как есть
+            bindSection(binding.responsibilitiesTitle, binding.responsibilitiesInfo, responsibilityText, sectionColor)
+            bindSection(binding.requirementsTitle, binding.requirementsInfo, requirementsText, sectionColor)
+            bindSection(binding.termsTitle, binding.termsInfo, termsText, sectionColor)
+        } else {
+            // Если нет структурированных секций, показываем все описание в разделе "Обязанности"
+            showFullDescriptionAsResponsibilities(desc, sectionColor)
+        }
+    }
+
+    private fun hideAllDescriptionSections() {
+        binding.responsibilitiesTitle.visibility = View.GONE
+        binding.responsibilitiesInfo.visibility = View.GONE
+        binding.requirementsTitle.visibility = View.GONE
+        binding.requirementsInfo.visibility = View.GONE
+        binding.termsTitle.visibility = View.GONE
+        binding.termsInfo.visibility = View.GONE
+    }
+
+    private fun showFullDescriptionAsResponsibilities(description: String, sectionColor: Int) {
+        // Показываем только секцию "Обязанности" со всем описанием
+        binding.responsibilitiesTitle.visibility = View.VISIBLE
+        binding.responsibilitiesInfo.visibility = View.VISIBLE
+        binding.responsibilitiesInfo.text = addBullets(description, sectionColor)
+
+        // Скрываем остальные секции
+        binding.requirementsTitle.visibility = View.GONE
+        binding.requirementsInfo.visibility = View.GONE
+        binding.termsTitle.visibility = View.GONE
+        binding.termsInfo.visibility = View.GONE
     }
 
     private fun bindSection(titleView: TextView, infoView: TextView, text: String, sectionColor: Int) {

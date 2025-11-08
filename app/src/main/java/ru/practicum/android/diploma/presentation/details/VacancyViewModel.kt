@@ -101,6 +101,7 @@ class VacancyViewModel(
                     }
                 } else {
                     val vacancy = vacancyInteractor.getVacancyDetails(vacancyId)
+                    Log.d("VacancyViewModel", "Loaded from network: ${vacancy?.contacts}")
                     _vacancyDetails.value = vacancy
                     _isFavorite.value = favoritesInteractor.isFavorite(vacancyId)
                 }
@@ -208,8 +209,6 @@ class VacancyViewModel(
     private suspend fun tryDownloadLogo(currentVacancy: VacancyDetails, vacancyId: String): VacancyDetails {
         return try {
             val vacancyWithLogo = vacancyInteractor.getVacancyDetails(vacancyId)
-
-            // Используем when вместо вложенных if для уменьшения сложности
             when {
                 !vacancyWithLogo?.employer?.logo.isNullOrEmpty() -> vacancyWithLogo ?: currentVacancy
                 else -> currentVacancy

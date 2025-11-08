@@ -9,6 +9,7 @@ import ru.practicum.android.diploma.data.dto.vacancydetailsdto.SalaryDto
 import ru.practicum.android.diploma.data.dto.vacancydetailsdto.ScheduleDto
 import ru.practicum.android.diploma.data.dto.vacancydetailsdto.SkillDto
 import ru.practicum.android.diploma.data.dto.vacancydetailsdto.VacancyDetailsDto
+import ru.practicum.android.diploma.data.dto.vacancydetailsdto.toDomain
 import ru.practicum.android.diploma.data.network.VacancyItem
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterArea
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry

@@ -2,6 +2,7 @@ package ru.practicum.android.diploma.di
 
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -16,6 +17,10 @@ private const val BASE_URL_API = "https://practicum-diploma-8bc38133faba.herokua
 val dataModule: Module = module {
 
     single {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY // Логирует полные запросы и ответы
+        }
+
         OkHttpClient.Builder()
             .addInterceptor(Interceptor { chain ->
                 val newRequest = chain.request().newBuilder()
@@ -23,6 +28,7 @@ val dataModule: Module = module {
                     .build()
                 chain.proceed(newRequest)
             })
+            .addInterceptor(loggingInterceptor) // Добавляем логирование
             .build()
     }
 
