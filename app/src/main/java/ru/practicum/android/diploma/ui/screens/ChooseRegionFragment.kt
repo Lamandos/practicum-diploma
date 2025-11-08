@@ -19,7 +19,11 @@ class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
     private val binding get() = _binding!!
     private val repository: AreasRepository by inject()
 
-    private lateinit var adapter: RegionAdapter
+    private val adapter: RegionAdapter by lazy {
+        RegionAdapter(emptyList()) { selectedRegion ->
+            // обработка клика по региону
+        }
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -35,8 +39,6 @@ class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
         }
     }
     private fun setupRecyclerView() {
-        adapter = RegionAdapter(emptyList()) { selectedRegion ->
-        }
         binding.recyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerView.adapter = adapter
     }
