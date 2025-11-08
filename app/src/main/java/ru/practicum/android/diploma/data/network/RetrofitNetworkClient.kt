@@ -77,9 +77,6 @@ class RetrofitNetworkClient(
         } catch (e: retrofit2.HttpException) {
             Log.e(TAG, "HTTP ошибка при запросе /areas", e)
             ResponseError(Throwable("Ошибка сервера: ${e.message()}"))
-        } catch (e: Exception) {
-            Log.e(TAG, "Неизвестная ошибка при запросе /areas", e)
-            ResponseError(Throwable("Неизвестная ошибка: ${e.message}"))
         }
     }
 }

@@ -1,13 +1,11 @@
 package ru.practicum.android.diploma.data.repositories
 
-
 import ru.practicum.android.diploma.data.dto.Response
 import ru.practicum.android.diploma.data.dto.ResponseError
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
 import ru.practicum.android.diploma.data.dto.filterdto.FilterAreaDto
 import ru.practicum.android.diploma.data.network.FilterAreaResponse
 import ru.practicum.android.diploma.data.network.NetworkClient
-
 
 class AreasRepository(private val networkClient: NetworkClient) {
 
@@ -19,7 +17,9 @@ class AreasRepository(private val networkClient: NetworkClient) {
                 val result = response.data
                 if (result is FilterAreaResponse) {
                     result.areas
-                } else null
+                } else {
+                    null
+                }
             }
             is ResponseError -> null
             else -> null

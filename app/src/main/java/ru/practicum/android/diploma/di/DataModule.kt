@@ -45,7 +45,6 @@ val dataModule: Module = module {
             .create(AreasApiService::class.java)
     }
 
-
     single<NetworkClient> {
         RetrofitNetworkClient(get(), get())
     }
