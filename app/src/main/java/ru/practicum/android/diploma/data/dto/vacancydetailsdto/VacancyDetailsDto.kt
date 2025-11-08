@@ -1,16 +1,22 @@
 package ru.practicum.android.diploma.data.dto.vacancydetailsdto
 
-import ru.practicum.android.diploma.data.dto.vacancydto.AreaDto
-import ru.practicum.android.diploma.data.dto.vacancydto.SalaryDto
+import ru.practicum.android.diploma.data.dto.filterdto.FilterAreaDto
+import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
 
 data class VacancyDetailsDto(
     val id: String,
     val name: String,
-    val salary: SalaryDto?,
-    val employer: EmployerDetailsDto,
-    val area: AreaDto,
     val description: String,
-    val keySkills: List<KeySkillDto>,
-    val experience: ExperienceDto?,
-    val employment: EmploymentDto?,
+    val salary: SalaryDto?,
+    val address: AddressDto?,
+    val experience: ExperienceDto,
+    val schedule: ScheduleDto,
+    val employment: EmploymentDto,
+    val contacts: ContactsDto?,
+    val employer: EmployerDto,
+    val area: FilterAreaDto,
+    val publishedAt: String?,
+    val skills: List<String>?,
+    val url: String,
+    val industry: FilterIndustryDto?
 )
