@@ -3,6 +3,7 @@ package ru.practicum.android.diploma.presentation.filter.adapter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CheckBox
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import ru.practicum.android.diploma.R
@@ -13,11 +14,16 @@ class IndustryAdapter(
     private val onClick: (FilterIndustryDto) -> Unit
 ) : RecyclerView.Adapter<IndustryAdapter.IndustryViewHolder>() {
 
-    inner class IndustryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val nameText: TextView = itemView.findViewById(R.id.industry_name)
+    inner class IndustryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
+        private val name: TextView = view.findViewById(R.id.industry_name)
+        private val checkBox: CheckBox = view.findViewById(R.id.check_industry)
+
         fun bind(industry: FilterIndustryDto) {
-            nameText.text = industry.name
-            itemView.setOnClickListener { onClick(industry) }
+            name.text = industry.name
+            itemView.setOnClickListener {
+                checkBox.isChecked = !checkBox.isChecked
+                onClick(industry)
+            }
         }
     }
 
