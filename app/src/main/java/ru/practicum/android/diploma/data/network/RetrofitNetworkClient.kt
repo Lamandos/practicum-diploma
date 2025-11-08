@@ -79,4 +79,12 @@ class RetrofitNetworkClient(
             ResponseError(Throwable("Ошибка сервера: ${e.message()}"))
         }
     }
+    override suspend fun getIndustries(): Response {
+        return try {
+            val result = apiService.getIndustries()
+            ResponseSuccess(result)
+        } catch (e: Exception) {
+            ResponseError(e)
+        }
+    }
 }

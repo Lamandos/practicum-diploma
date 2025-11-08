@@ -21,4 +21,3 @@ fun SalaryDto.toDomain(): Salary? {
         null
     }
 }
-

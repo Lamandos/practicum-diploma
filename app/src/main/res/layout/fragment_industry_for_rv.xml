@@ -12,18 +12,14 @@
 
     <TextView
         android:id="@+id/industry_name"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center"
+        android:gravity="start"
+        android:layout_weight="1"
         style="@style/industry_rv"
         android:text="Тест индустрия"
         android:layout_gravity="center_vertical" />
 
-    <FrameLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1">
-    </FrameLayout>
 
     <com.google.android.material.checkbox.MaterialCheckBox
         android:id="@+id/check_industry"
