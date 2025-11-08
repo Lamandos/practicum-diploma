@@ -4,8 +4,6 @@ package ru.practicum.android.diploma.data.network
 import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.Response
-import okhttp3.ResponseBody
-import okio.Buffer
 import java.nio.charset.StandardCharsets
 
 class LoggingInterceptor : Interceptor {

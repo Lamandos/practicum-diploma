@@ -25,10 +25,16 @@ fun SalaryDto.toDomain(): Salary? {
 }
 
 fun ContactsDto.toDomain(vacancyId: String): Contacts? {
-    Log.d("VacancyDetailsMappers", "ContactsDto: id='${this.id}', name='${this.name}', email='${this.email}', phones=${this.phones}")
+    Log.d(
+        "VacancyDetailsMappers",
+        "ContactsDto: id='${this.id}', name='${this.name}', email='${this.email}', phones=${this.phones}"
+    )
 
     this.phones?.forEachIndexed { index, phoneDto ->
-        Log.d("VacancyDetailsMappers", "PhoneDto $index: formatted='${phoneDto.formatted}', comment='${phoneDto.comment}'")
+        Log.d(
+            "VacancyDetailsMappers",
+            "PhoneDto $index: formatted='${phoneDto.formatted}', comment='${phoneDto.comment}'"
+        )
     }
 
     return if (name != null || email != null || !phones.isNullOrEmpty()) {
