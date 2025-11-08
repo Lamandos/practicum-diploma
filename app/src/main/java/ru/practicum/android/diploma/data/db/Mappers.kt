@@ -4,6 +4,7 @@ import com.google.gson.Gson
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterArea
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
 import ru.practicum.android.diploma.domain.models.vacancydetails.Address
+import ru.practicum.android.diploma.domain.models.vacancydetails.Contacts
 import ru.practicum.android.diploma.domain.models.vacancydetails.Employer
 import ru.practicum.android.diploma.domain.models.vacancydetails.Employment
 import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
@@ -23,12 +24,12 @@ class Mappers(private val gson: Gson = Gson()) {
         schedule = entity.schedule?.let { gson.fromJson(it, Schedule::class.java) },
         employment = entity.employment?.let { gson.fromJson(it, Employment::class.java) },
         employer = entity.employer?.let { gson.fromJson(it, Employer::class.java) },
-        contacts = null,
+        contacts = entity.contacts?.let { gson.fromJson(it, Contacts::class.java) },
         area = entity.area?.let { gson.fromJson(it, FilterArea::class.java) },
         skills = entity.skills,
         url = entity.url,
         industry = entity.industry?.let { gson.fromJson(it, FilterIndustry::class.java) },
-        publishedAt = entity.published
+        publishedAt = entity.published,
     )
 
     fun toFavoritesEntity(vacancy: VacancyDetails): FavoritesEntity = FavoritesEntity(
@@ -45,6 +46,7 @@ class Mappers(private val gson: Gson = Gson()) {
         skills = vacancy.skills,
         url = vacancy.url,
         industry = gson.toJson(vacancy.industry),
-        published = vacancy.publishedAt
+        published = vacancy.publishedAt,
+        contacts = gson.toJson(vacancy.contacts)
     )
 }
