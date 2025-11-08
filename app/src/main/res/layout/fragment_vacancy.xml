@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:id="@+id/vac_header"
@@ -33,7 +34,7 @@
         <FrameLayout
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"/>
+            android:layout_weight="1" />
 
         <ImageView
             android:id="@+id/share_btn"
@@ -46,10 +47,12 @@
 
         <ImageView
             android:id="@+id/favorites_btn"
+            style="@style/vac_btns"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_marginEnd="@dimen/margin_half_8"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/favorite_icon" />
 
     </LinearLayout>
@@ -59,10 +62,10 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="@dimen/margin_def_16"
+        app:layout_constraintTop_toBottomOf="@+id/vac_header"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/vac_header">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -86,6 +89,7 @@
                     android:layout_gravity="center_vertical"
                     android:layout_marginTop="@dimen/margin_half_8"
                     android:fontFamily="@font/ys_display_bold"
+                    android:text="Ardroid-разработчик"
                     android:textSize="32sp" />
 
                 <TextView
@@ -96,6 +100,7 @@
                     android:layout_gravity="center_vertical"
                     android:layout_marginBottom="@dimen/margin_half_8"
                     android:fontFamily="@font/ys_display_medium"
+                    android:text="от 100 000 ₽"
                     android:textSize="@dimen/vac_info_head" />
 
             </LinearLayout>
@@ -136,6 +141,7 @@
                         android:layout_marginTop="@dimen/margin_def_16"
                         android:layout_marginEnd="@dimen/margin_def_16"
                         android:fontFamily="@font/ys_display_medium"
+                        android:text="Еда"
                         android:textColor="@color/yp_black"
                         android:textSize="@dimen/vac_info_head" />
 
@@ -147,6 +153,7 @@
                         android:layout_marginEnd="@dimen/margin_def_16"
                         android:layout_marginBottom="19dp"
                         android:fontFamily="@font/ys_display_regular"
+                        android:text="Москва"
                         android:textColor="@color/yp_black"
                         android:textSize="@dimen/vac_info_text" />
 
@@ -171,6 +178,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/pad_4"
                 android:fontFamily="@font/ys_display_regular"
+                android:text="От 1 года до 3 лет"
                 android:textSize="@dimen/vac_info_text" />
 
             <TextView
@@ -180,6 +188,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/margin_half_8"
                 android:fontFamily="@font/ys_display_regular"
+                android:text="Полная занятость, Удаленная работа"
                 android:textSize="@dimen/vac_info_text" />
 
             <TextView
@@ -208,6 +217,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/ys_display_regular"
+                android:text="Список обязанностей. Точки разделения надо делать в коде."
                 android:textSize="@dimen/vac_info_text" />
 
             <TextView
@@ -226,6 +236,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/ys_display_regular"
+                android:text="Список требований. Точки разделения надо делать в коде."
                 android:textSize="@dimen/vac_info_text" />
 
             <TextView
@@ -244,6 +255,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/ys_display_regular"
+                android:text="Список условий. Точки разделения надо делать в коде."
                 android:textSize="@dimen/vac_info_text" />
 
             <TextView
@@ -263,6 +275,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/margin_def_16"
                 android:fontFamily="@font/ys_display_regular"
+                android:text="Список условий. Точки разделения надо делать в коде."
                 android:textSize="@dimen/vac_info_text" />
 
             <TextView
@@ -284,7 +297,17 @@
                 android:autoLink="email|phone"
                 android:fontFamily="@font/ys_display_regular"
                 android:linksClickable="true"
-                android:textSize="@dimen/vac_info_text" />
+                android:text="Номер телефона и/или почта. Точки разделения надо делать в коде."
+                android:textSize="@dimen/vac_info_text"
+                android:scrollHorizontally="false"
+                android:ellipsize="none"
+                android:singleLine="false"
+                android:inputType="textMultiLine"
+                android:lineSpacingExtra="2dp"
+                android:breakStrategy="simple"
+                android:scrollbars="vertical"
+                android:overScrollMode="always"
+                android:gravity="start|top"/>
 
         </LinearLayout>
 
