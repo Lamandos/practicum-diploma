@@ -12,7 +12,7 @@ class VacancyInteractor(private val repository: VacanciesRepository) {
         query: String,
         page: Int = 1,
         pageSize: Int = 20,
-        filters: FilterIndustry = FilterIndustry("", "")
+        filters: FilterIndustry = FilterIndustry(0, "")
     ): Result<List<VacancyDetails>> =
         repository.searchVacancies(query, page, pageSize, filters)
 }

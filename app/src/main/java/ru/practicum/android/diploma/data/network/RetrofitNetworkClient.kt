@@ -79,4 +79,22 @@ class RetrofitNetworkClient(
             ResponseError(Throwable("Ошибка сервера: ${e.message()}"))
         }
     }
+    override suspend fun getIndustries(): Response {
+        return try {
+            val result = apiService.getIndustries()
+            ResponseSuccess(result)
+        } catch (e: UnknownHostException) {
+            Log.e(TAG, "Нет интернета при запросе /industries", e)
+            ResponseError(Throwable("Нет подключения к интернету", e))
+        } catch (e: SocketTimeoutException) {
+            Log.e(TAG, "Таймаут при запросе /industries", e)
+            ResponseError(Throwable("Превышено время ожидания сервера", e))
+        } catch (e: IOException) {
+            Log.e(TAG, "Ошибка сети при запросе /industries", e)
+            ResponseError(Throwable("Ошибка сети: ${e.message}", e))
+        } catch (e: retrofit2.HttpException) {
+            Log.e(TAG, "HTTP ошибка при запросе /industries", e)
+            ResponseError(Throwable("Ошибка сервера: ${e.message()}", e))
+        }
+    }
 }

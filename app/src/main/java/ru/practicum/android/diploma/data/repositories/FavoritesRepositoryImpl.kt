@@ -34,7 +34,6 @@ class FavoritesRepositoryImpl(
         }
     }
 
-
     override suspend fun addToFavorites(vacancy: VacancyDetails) {
         try {
             val entity = mappers.toFavoritesEntity(vacancy)
