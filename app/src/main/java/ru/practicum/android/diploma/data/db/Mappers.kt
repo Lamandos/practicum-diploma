@@ -81,20 +81,19 @@ class Mappers(
         return contactsJson?.let { json ->
             try {
                 gson.fromJson(json, Contacts::class.java)
+            } catch (e: com.google.gson.JsonSyntaxException) {
+                Log.e(TAG, JSON_SYNTAX_ERROR + e.message)
+                null
+            } catch (e: com.google.gson.JsonParseException) {
+                Log.e(TAG, JSON_PARSE_ERROR + e.message)
+                null
+            } catch (e: IllegalStateException) {
+                Log.e(TAG, ILLEGAL_STATE_ERROR + e.message)
+                null
             } catch (e: Exception) {
-                handleContactsDeserializationError(e)
+                Log.e(TAG, "Unknown error deserializing contacts: ${e.message}")
                 null
             }
         }
-    }
-
-    private fun handleContactsDeserializationError(e: Exception) {
-        val errorMessage = when (e) {
-            is com.google.gson.JsonSyntaxException -> JSON_SYNTAX_ERROR + e.message
-            is com.google.gson.JsonParseException -> JSON_PARSE_ERROR + e.message
-            is IllegalStateException -> ILLEGAL_STATE_ERROR + e.message
-            else -> "Unknown error deserializing contacts: ${e.message}"
-        }
-        Log.e(TAG, errorMessage)
     }
 }
