@@ -1,6 +1,5 @@
 package ru.practicum.android.diploma.presentation.details
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,7 +8,6 @@ import kotlinx.coroutines.launch
 import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.domain.interactors.VacancyInteractor
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
-import java.io.IOException
 
 class VacancyViewModel(
     private val vacancyInteractor: VacancyInteractor,
@@ -61,11 +59,11 @@ class VacancyViewModel(
                 } else {
                     _error.value = ERROR_VACANCY_NOT_FOUND
                 }
-            } catch (e: IOException) {
-                Log.e("VacancyViewModel", "IO error loading vacancy", e)
+            } catch (e: SecurityException) {
+                _error.value = ERROR_SERVER
+            } catch (e: IllegalStateException) {
                 _error.value = ERROR_SERVER
             } catch (e: Exception) {
-                Log.e("VacancyViewModel", "Unexpected error loading vacancy", e)
                 _error.value = ERROR_SERVER
             } finally {
                 _isLoading.value = false
@@ -81,7 +79,6 @@ class VacancyViewModel(
                 favoritesInteractor.toggleFavorite(vacancy)
                 _isFavorite.value = favoritesInteractor.isFavorite(vacancy.id)
             } catch (e: Exception) {
-                Log.e("VacancyViewModel", "Error toggling favorite", e)
                 _error.value = ERROR_SERVER
             }
         }
