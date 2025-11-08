@@ -55,7 +55,7 @@ class SearchViewModel(
 
         viewModelScope.launch {
             try {
-                val result = interactor.searchVacancies(query, currentPage + 1, 20)
+                val result = interactor.searchVacancies(query, currentPage + 1, PAGE_SIZE)
                 if (result.isSuccess) {
                     val vacancies = result.getOrThrow()
                     handleSuccess(vacancies, append = false)
@@ -75,7 +75,7 @@ class SearchViewModel(
 
         viewModelScope.launch {
             try {
-                val result = interactor.searchVacancies(lastQuery, currentPage + 1, 20)
+                val result = interactor.searchVacancies(lastQuery, currentPage + 1, PAGE_SIZE)
                 if (result.isSuccess) {
                     val vacancies = result.getOrThrow()
                     handleSuccess(vacancies, append = true)
@@ -113,5 +113,9 @@ class SearchViewModel(
         isLoadingNextPageInternal = false
         _searchState.value = SearchState.Idle
         _isErrorToastShown.value = false
+    }
+
+    companion object {
+        private const val PAGE_SIZE = 20
     }
 }

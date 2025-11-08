@@ -1,6 +1,8 @@
 package ru.practicum.android.diploma.data.repositories
 
 import android.graphics.Region
+import kotlinx.serialization.SerializationException
+import retrofit2.HttpException
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
 import ru.practicum.android.diploma.data.mappers.VacancyMapper
 import ru.practicum.android.diploma.data.network.NetworkClient
@@ -9,6 +11,7 @@ import ru.practicum.android.diploma.data.network.VacancySearchResponse
 import ru.practicum.android.diploma.domain.api.repositories.VacanciesRepository
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import java.io.IOException
 
 class SearchVacanciesRepositoryImpl(
     private val networkClient: NetworkClient,
@@ -41,7 +44,11 @@ class SearchVacanciesRepositoryImpl(
             } else {
                 Result.failure(Exception("Network error"))
             }
-        } catch (e: Exception) {
+        } catch (e: IOException) {
+            Result.failure(e)
+        } catch (e: HttpException) {
+            Result.failure(e)
+        } catch (e: SerializationException) {
             Result.failure(e)
         }
     }
