@@ -5,14 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import ru.practicum.android.diploma.data.dto.Response
-import ru.practicum.android.diploma.data.dto.ResponseError
-import ru.practicum.android.diploma.data.dto.ResponseSuccess
-import ru.practicum.android.diploma.data.network.NetworkClient
-import ru.practicum.android.diploma.data.network.VacancySearchRequest
-import ru.practicum.android.diploma.data.network.VacancySearchResponse
-import ru.practicum.android.diploma.data.network.toDomain
+import ru.practicum.android.diploma.domain.interactors.SearchVacanciesInteractor
+import ru.practicum.android.diploma.domain.models.mappers.DomainMappers.toVacancy
 import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
+import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 sealed class SearchState {
     object Idle : SearchState()
@@ -23,7 +19,7 @@ sealed class SearchState {
 }
 
 class SearchViewModel(
-    private val client: NetworkClient
+    private val interactor: SearchVacanciesInteractor
 ) : ViewModel() {
 
     private val _searchState = MutableLiveData<SearchState>(SearchState.Idle)
@@ -35,8 +31,8 @@ class SearchViewModel(
     private var currentPage = 0
     private var maxPages = Int.MAX_VALUE
     private var lastQuery: String = ""
-    private var _totalFoundCount: Int = 0
-    val totalFoundCount: Int get() = _totalFoundCount
+    val totalFoundCount: Int
+        get() = interactor.totalFoundCount
     private val _isErrorToastShown = MutableLiveData(false)
     val isErrorToastShown: LiveData<Boolean> get() = _isErrorToastShown
     private val _showLoadingState = MutableLiveData<Boolean>()
@@ -54,13 +50,18 @@ class SearchViewModel(
         maxPages = Int.MAX_VALUE
         isLoadingNextPageInternal = false
         _isErrorToastShown.value = false
-
         isLoading = true
         _searchState.value = SearchState.Loading
+
         viewModelScope.launch {
             try {
-                val response = client.doRequest(VacancySearchRequest(text = query, page = currentPage))
-                handleResponse(response, append = false)
+                val result = interactor.searchVacancies(query, currentPage + 1, 20)
+                if (result.isSuccess) {
+                    val vacancies = result.getOrThrow()
+                    handleSuccess(vacancies, append = false)
+                } else {
+                    _searchState.postValue(SearchState.Error(result.exceptionOrNull()))
+                }
             } finally {
                 isLoading = false
             }
@@ -69,15 +70,21 @@ class SearchViewModel(
 
     fun loadNextPage() {
         if (isLoading || isLoadingNextPageInternal || currentPage >= maxPages) return
-
         isLoadingNextPageInternal = true
         _showLoadingState.postValue(true)
+
         viewModelScope.launch {
             try {
-                val response = client.doRequest(
-                    VacancySearchRequest(text = lastQuery, page = currentPage)
-                )
-                handleResponse(response, append = true)
+                val result = interactor.searchVacancies(lastQuery, currentPage + 1, 20)
+                if (result.isSuccess) {
+                    val vacancies = result.getOrThrow()
+                    handleSuccess(vacancies, append = true)
+                } else {
+                    if (_isErrorToastShown.value == false) {
+                        _errorMessage.postValue("Проверьте подключение к интернету")
+                        _isErrorToastShown.postValue(true)
+                    }
+                }
             } finally {
                 isLoadingNextPageInternal = false
                 _showLoadingState.postValue(false)
@@ -85,55 +92,9 @@ class SearchViewModel(
         }
     }
 
-    fun resetSearch() {
-        currentPage = 0
-        maxPages = Int.MAX_VALUE
-        lastQuery = ""
-        _totalFoundCount = 0
-        isLoadingNextPageInternal = false
-        _searchState.value = SearchState.Idle
-        _isErrorToastShown.value = false
-    }
-
-    private fun handleResponse(response: Response, append: Boolean) {
-        when (response) {
-            is ResponseSuccess<*> -> handleSuccess(response.data as VacancySearchResponse, append)
-            is ResponseError -> {
-                val message = response.exception?.message ?: "Произошла ошибка"
-                if (!append) {
-                    _searchState.postValue(SearchState.Error(response.exception))
-                } else {
-                    if (_isErrorToastShown.value == false) {
-                        _errorMessage.postValue("Проверьте подключение к интернету")
-                        _isErrorToastShown.postValue(true)
-                    }
-                }
-                isLoadingNextPageInternal = false
-            }
-            else -> {
-                if (!append) {
-                    _searchState.postValue(SearchState.Error(Throwable("Unknown error")))
-                } else {
-                    if (_isErrorToastShown.value == false) {
-                        _errorMessage.postValue("Произошла ошибка")
-                        _isErrorToastShown.postValue(true)
-                    }
-                }
-                isLoadingNextPageInternal = false
-            }
-        }
-    }
-
-    private fun handleSuccess(data: VacancySearchResponse, append: Boolean) {
-        val newItems = data.items.map { it.toDomain() }
-
-        if (!append) {
-            _totalFoundCount = data.found
-        }
-
-        currentPage = data.page + 1
-        maxPages = data.pages
-
+    private fun handleSuccess(vacancies: List<VacancyDetails>, append: Boolean) {
+        val newItems = vacancies.map { it.toVacancy() }
+        currentPage++
         if (append) {
             _isErrorToastShown.value = false
             val current = (_searchState.value as? SearchState.Success)?.vacancies ?: emptyList()
@@ -143,8 +104,14 @@ class SearchViewModel(
                 if (newItems.isEmpty()) SearchState.Empty else SearchState.Success(newItems)
             )
         }
+    }
 
+    fun resetSearch() {
+        currentPage = 0
+        maxPages = Int.MAX_VALUE
+        lastQuery = ""
         isLoadingNextPageInternal = false
-        _showLoadingState.postValue(false)
+        _searchState.value = SearchState.Idle
+        _isErrorToastShown.value = false
     }
 }
