@@ -9,7 +9,7 @@ import ru.practicum.android.diploma.data.network.NetworkClient
 import ru.practicum.android.diploma.data.network.VacancySearchRequest
 import ru.practicum.android.diploma.data.network.VacancySearchResponse
 import ru.practicum.android.diploma.domain.api.repositories.VacanciesRepository
-import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
+import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import java.io.IOException
 
@@ -26,16 +26,20 @@ class SearchVacanciesRepositoryImpl(
         query: String,
         page: Int,
         pageSize: Int,
-        filters: FilterIndustry,
+        filters: VacancyFilters? // Меняем на VacancyFilters?
     ): Result<List<VacancyDetails>> {
         return try {
+            // Пока не используем фильтры в запросе, но сохраняем для будущего использования
+            val searchQuery = buildSearchQuery(query, filters)
+
             val response = networkClient.doRequest(
                 VacancySearchRequest(
-                    text = query,
+                    text = searchQuery,
                     page = page,
                     perPage = pageSize
                 )
             )
+
             if (response is ResponseSuccess<*>) {
                 val data = response.data as VacancySearchResponse
                 totalFound = data.found
@@ -51,6 +55,32 @@ class SearchVacanciesRepositoryImpl(
         } catch (e: SerializationException) {
             Result.failure(e)
         }
+    }
+
+    // Вспомогательный метод для построения поискового запроса с фильтрами
+    private fun buildSearchQuery(baseQuery: String, filters: VacancyFilters?): String {
+        var query = baseQuery
+
+        filters?.let {
+            // Добавляем регион/страну
+            if (it.region != null) {
+                query += " ${it.region}"
+            }
+
+            // Добавляем отрасль
+            if (it.industry != null) {
+                query += " ${it.industry.name}"
+            }
+
+            // Добавляем зарплату (если нужно)
+            if (it.salary != null) {
+                query += " зарплата ${it.salary} ${it.currency}"
+            }
+
+            // hideWithoutSalary пока не используем, так как это требует поддержки на сервере
+        }
+
+        return query
     }
 
     override suspend fun getVacancyDetails(vacancyId: String): Result<VacancyDetails> =

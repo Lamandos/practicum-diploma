@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
@@ -25,8 +26,31 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentFilterSettingsBinding.bind(view)
-        setupClickListeners()
 
+        setupClickListeners()
+        setupTextWatchers()
+        updateButtonsVisibility()
+    }
+
+    private fun setupClickListeners() {
+        binding.backBtn.setOnClickListener {
+            returnToSearchWithoutSaving()
+        }
+
+        binding.btnAccept.setOnClickListener {
+            applyFiltersAndReturn()
+        }
+
+        binding.btnDeny.setOnClickListener {
+            clearAllFields()
+        }
+
+        binding.clearIcon.setOnClickListener {
+            binding.editSalary.text?.clear()
+        }
+    }
+
+    private fun setupTextWatchers() {
         val jobLocationLayout: TextInputLayout = binding.jobLocation
         val jobLocationEditText: TextInputEditText = binding.editJobLocation
         val industryLayout: TextInputLayout = binding.industry
@@ -39,10 +63,12 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
         jobLocationEditText.addTextChangedListener {
             updateIconAndState(jobLocationLayout, it?.toString().orEmpty())
+            updateButtonsVisibility()
         }
 
         industryEditText.addTextChangedListener {
             updateIconAndState(industryLayout, it?.toString().orEmpty())
+            updateButtonsVisibility()
         }
 
         jobLocationLayout.setEndIconOnClickListener {
@@ -53,17 +79,75 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             navigateOrClear(industryEditText, industryLayout, "industry")
         }
 
-        updateIconAndState(jobLocationLayout, jobLocationEditText.text.toString())
+        binding.editSalary.addTextChangedListener {
+            binding.clearIcon.visibility = if (it.isNullOrEmpty()) View.GONE else View.VISIBLE
+            updateButtonsVisibility()
+        }
 
+        binding.checkbox.setOnCheckedChangeListener { _, _ ->
+            updateButtonsVisibility()
+        }
+
+        updateIconAndState(jobLocationLayout, jobLocationEditText.text.toString())
         updateIconAndState(industryLayout, industryEditText.text.toString())
 
         setupSalaryField(salaryEditText, salaryLayout)
     }
 
-    private fun setupClickListeners() {
-        binding.backBtn.setOnClickListener {
-            findNavController().popBackStack()
+    private fun updateButtonsVisibility() {
+        val hasFilters = hasAnyFilterApplied()
+
+        if (hasFilters) {
+            binding.btnAccept.visibility = View.VISIBLE
+            binding.btnDeny.visibility = View.VISIBLE
+        } else {
+            binding.btnAccept.visibility = View.GONE
+            binding.btnDeny.visibility = View.GONE
         }
+    }
+
+    private fun hasAnyFilterApplied(): Boolean {
+        return binding.editJobLocation.text?.isNotBlank() == true ||
+            binding.editIndustry.text?.isNotBlank() == true ||
+            binding.editSalary.text?.isNotBlank() == true ||
+            binding.checkbox.isChecked
+    }
+
+    private fun applyFiltersAndReturn() {
+        setFragmentResult(
+            "filter_result",
+            Bundle().apply {
+                putBoolean("filters_applied", true)
+            }
+        )
+        findNavController().navigateUp()
+    }
+
+    private fun clearAllFields() {
+        binding.editJobLocation.text?.clear()
+        updateIconAndState(binding.jobLocation, "")
+
+        binding.editIndustry.text?.clear()
+        updateIconAndState(binding.industry, "")
+
+        binding.editSalary.text?.clear()
+        binding.clearIcon.visibility = View.GONE
+
+        binding.checkbox.isChecked = false
+
+        updateButtonsVisibility()
+
+        Toast.makeText(requireContext(), "Фильтры сброшены", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun returnToSearchWithoutSaving() {
+        setFragmentResult(
+            "filter_result",
+            Bundle().apply {
+                putBoolean("filters_applied", false)
+            }
+        )
+        findNavController().navigateUp()
     }
 
     private fun updateIconAndState(layout: TextInputLayout, text: String) {
@@ -84,12 +168,12 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                 "jobLocation" -> findNavController().navigate(
                     R.id.action_filterSettingsFragment_to_chooseWorkPlaceFragment
                 )
-
                 "industry" -> findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseIndustryFragment)
             }
         } else {
             editText.text?.clear()
             updateIconAndState(layout, "")
+            updateButtonsVisibility()
         }
     }
 
