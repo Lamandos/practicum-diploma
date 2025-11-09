@@ -1,12 +1,15 @@
 package ru.practicum.android.diploma.presentation.filter.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import ru.practicum.android.diploma.data.dto.filterdto.FilterAreaDto
 import ru.practicum.android.diploma.data.repositories.AreasRepository
+import java.io.IOException
 
 class ChooseRegionViewModel(
     private val repository: AreasRepository
@@ -22,13 +25,18 @@ class ChooseRegionViewModel(
 
     fun loadRegions(countryId: Int? = null) {
         viewModelScope.launch {
+            fullRegionList = emptyList()
             val regions = try {
                 if (countryId != null) {
                     repository.getRegionsByCountry(countryId).orEmpty()
                 } else {
                     repository.getAllRegions().orEmpty()
                 }
-            } catch (e: Exception) {
+            } catch (e: IOException) {
+                Log.e("ChooseRegionViewModel", "Network error", e)
+                emptyList()
+            } catch (e: HttpException) {
+                Log.e("ChooseRegionViewModel", "HTTP error", e)
                 emptyList()
             }
 
