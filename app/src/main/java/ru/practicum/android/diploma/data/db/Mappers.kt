@@ -10,6 +10,7 @@ import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
 import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 import ru.practicum.android.diploma.domain.models.vacancydetails.Schedule
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import ru.practicum.android.diploma.domain.models.vacancydetails.Contacts
 
 class Mappers(private val gson: Gson = Gson()) {
 
@@ -23,7 +24,7 @@ class Mappers(private val gson: Gson = Gson()) {
         schedule = entity.schedule?.let { gson.fromJson(it, Schedule::class.java) },
         employment = entity.employment?.let { gson.fromJson(it, Employment::class.java) },
         employer = entity.employer?.let { gson.fromJson(it, Employer::class.java) },
-        contacts = null,
+        contacts = entity.contactsJson?.let { gson.fromJson(it, Contacts::class.java) },
         area = entity.area?.let { gson.fromJson(it, FilterArea::class.java) },
         skills = entity.skills,
         url = entity.url,
@@ -45,6 +46,7 @@ class Mappers(private val gson: Gson = Gson()) {
         skills = vacancy.skills,
         url = vacancy.url,
         industry = gson.toJson(vacancy.industry),
-        published = vacancy.publishedAt
+        published = vacancy.publishedAt,
+        contactsJson = gson.toJson(vacancy.contacts)
     )
 }
