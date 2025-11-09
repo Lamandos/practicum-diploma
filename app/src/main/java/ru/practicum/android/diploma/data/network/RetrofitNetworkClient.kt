@@ -40,12 +40,10 @@ class RetrofitNetworkClient(
                     val result = apiService.searchVacancies(dto.toQueryMap())
                     ResponseSuccess(result)
                 }
-
                 is VacancyDetailsRequest -> {
                     val result = apiService.getVacancyDetails(dto.vacancyId)
                     ResponseSuccess(result)
                 }
-
                 else -> ResponseError(Throwable(ERROR_UNKNOWN_REQUEST))
             }
         } catch (e: IOException) {
@@ -99,7 +97,6 @@ class RetrofitNetworkClient(
                     val responseWrapper = FilterIndustryResponse(apiResponse)
                     ResponseSuccess(responseWrapper)
                 }
-
                 else -> {
                     ResponseError(Throwable("Неизвестный тип запроса"))
                 }
@@ -114,7 +111,6 @@ class RetrofitNetworkClient(
             logAndReturnError("HTTP ошибка при запросе /industries", e, ERROR_SERVER_PREFIX + e.message())
         }
     }
-
 
     private fun logAndReturnError(logMessage: String, exception: Exception, errorMessage: String): ResponseError {
         Log.e(TAG, logMessage, exception)
