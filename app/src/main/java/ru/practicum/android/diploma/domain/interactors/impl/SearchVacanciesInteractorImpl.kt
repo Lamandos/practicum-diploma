@@ -2,7 +2,7 @@ package ru.practicum.android.diploma.domain.interactors.impl
 
 import ru.practicum.android.diploma.domain.api.repositories.VacanciesRepository
 import ru.practicum.android.diploma.domain.interactors.SearchVacanciesInteractor
-import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
+import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 class SearchVacanciesInteractorImpl(
@@ -16,7 +16,7 @@ class SearchVacanciesInteractorImpl(
         query: String,
         page: Int,
         pageSize: Int,
-        filters: FilterIndustry,
+        filters: VacancyFilters? // Меняем на VacancyFilters?
     ): Result<List<VacancyDetails>> {
         return repository.searchVacancies(query, page, pageSize, filters)
     }

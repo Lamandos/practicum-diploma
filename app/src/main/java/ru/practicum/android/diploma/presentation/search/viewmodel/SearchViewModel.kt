@@ -5,7 +5,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import ru.practicum.android.diploma.domain.api.usecases.FilterUseCase
 import ru.practicum.android.diploma.domain.interactors.SearchVacanciesInteractor
+import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 import ru.practicum.android.diploma.domain.models.mappers.DomainMappers.toVacancy
 import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
@@ -19,25 +21,48 @@ sealed class SearchState {
 }
 
 class SearchViewModel(
-    private val interactor: SearchVacanciesInteractor
+    private val interactor: SearchVacanciesInteractor,
+    private val filterUseCase: FilterUseCase
 ) : ViewModel() {
 
     private val _searchState = MutableLiveData<SearchState>(SearchState.Idle)
     val searchState: LiveData<SearchState> get() = _searchState
+
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> get() = _errorMessage
+
+    private val _isErrorToastShown = MutableLiveData(false)
+    val isErrorToastShown: LiveData<Boolean> get() = _isErrorToastShown
+
+    private val _showLoadingState = MutableLiveData<Boolean>()
+    val showLoadingState: LiveData<Boolean> get() = _showLoadingState
+
+    // LiveData для состояния фильтров
+    private val _isFilterApplied = MutableLiveData<Boolean>()
+    val isFilterApplied: LiveData<Boolean> get() = _isFilterApplied
+
     private var isLoading = false
     private var isLoadingNextPageInternal = false
     private var currentPage = 0
     private var maxPages = Int.MAX_VALUE
     private var lastQuery: String = ""
+
     val totalFoundCount: Int
         get() = interactor.totalFoundCount
-    private val _isErrorToastShown = MutableLiveData(false)
-    val isErrorToastShown: LiveData<Boolean> get() = _isErrorToastShown
-    private val _showLoadingState = MutableLiveData<Boolean>()
-    val showLoadingState: LiveData<Boolean> get() = _showLoadingState
-    val isLoadingNextPage: Boolean get() = isLoadingNextPageInternal
+
+    val isLoadingNextPage: Boolean
+        get() = isLoadingNextPageInternal
+
+    init {
+        loadCurrentFilters()
+    }
+
+    private fun loadCurrentFilters() {
+        viewModelScope.launch {
+            val filters = filterUseCase.getCurrentFilters()
+            _isFilterApplied.value = isAnyFilterApplied(filters)
+        }
+    }
 
     fun setLoading() {
         _searchState.value = SearchState.Loading
@@ -55,7 +80,15 @@ class SearchViewModel(
 
         viewModelScope.launch {
             try {
-                val result = interactor.searchVacancies(query, currentPage + 1, PAGE_SIZE)
+                // Получаем текущие фильтры
+                val filters = filterUseCase.getCurrentFilters()
+                val result = interactor.searchVacancies(
+                    query = query,
+                    page = currentPage + 1,
+                    pageSize = PAGE_SIZE,
+                    filters = if (isAnyFilterApplied(filters)) filters else null
+                )
+
                 if (result.isSuccess) {
                     val vacancies = result.getOrThrow()
                     handleSuccess(vacancies, append = false)
@@ -75,7 +108,15 @@ class SearchViewModel(
 
         viewModelScope.launch {
             try {
-                val result = interactor.searchVacancies(lastQuery, currentPage + 1, PAGE_SIZE)
+                // Получаем текущие фильтры для пагинации
+                val filters = filterUseCase.getCurrentFilters()
+                val result = interactor.searchVacancies(
+                    query = lastQuery,
+                    page = currentPage + 1,
+                    pageSize = PAGE_SIZE,
+                    filters = if (isAnyFilterApplied(filters)) filters else null
+                )
+
                 if (result.isSuccess) {
                     val vacancies = result.getOrThrow()
                     handleSuccess(vacancies, append = true)
@@ -104,6 +145,28 @@ class SearchViewModel(
                 if (newItems.isEmpty()) SearchState.Empty else SearchState.Success(newItems)
             )
         }
+    }
+
+    // Метод для принудительного обновления поиска с текущими фильтрами
+    fun refreshSearchWithCurrentFilters() {
+        if (lastQuery.isNotBlank()) {
+            searchVacancies(lastQuery)
+        }
+    }
+
+    // Метод для проверки применения фильтров
+    fun checkFiltersApplied() {
+        viewModelScope.launch {
+            val filters = filterUseCase.getCurrentFilters()
+            _isFilterApplied.value = isAnyFilterApplied(filters)
+        }
+    }
+
+    private fun isAnyFilterApplied(filters: VacancyFilters): Boolean {
+        return filters.region != null ||
+            filters.industry != null ||
+            filters.salary != null ||
+            filters.hideWithoutSalary
     }
 
     fun resetSearch() {

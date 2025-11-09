@@ -21,6 +21,16 @@ class RetrofitNetworkClient(
     private val areasService: AreasApiService
 ) : NetworkClient {
 
+    companion object {
+        private const val ERROR_NO_INTERNET = "Нет подключения к интернету"
+        private const val ERROR_SERVER_TIMEOUT = "Превышено время ожидания сервера"
+        private const val ERROR_NETWORK = "Ошибка сети"
+        private const val ERROR_SERVER = "Ошибка сервера"
+        private const val ERROR_UNKNOWN_REQUEST = "Неизвестный тип запроса"
+        private const val ERROR_NETWORK_PREFIX = "$ERROR_NETWORK: "
+        private const val ERROR_SERVER_PREFIX = "$ERROR_SERVER: "
+    }
+
     override suspend fun doRequest(dto: Any): Response {
         return try {
             when (dto) {
@@ -32,14 +42,14 @@ class RetrofitNetworkClient(
                     val result = apiService.getVacancyDetails(dto.vacancyId)
                     ResponseSuccess(result)
                 }
-                else -> ResponseError(Throwable("Неизвестный тип запроса"))
+                else -> ResponseError(Throwable(ERROR_UNKNOWN_REQUEST))
             }
         } catch (e: IOException) {
             Log.e(TAG, "Ошибка сети", e)
-            ResponseError(Throwable("Ошибка сети: ${e.message}", e))
+            ResponseError(Throwable(ERROR_NETWORK_PREFIX + e.message, e))
         } catch (e: retrofit2.HttpException) {
             Log.e(TAG, "Ошибка HTTP", e)
-            ResponseError(Throwable("Сервер вернул ошибку: ${e.message()}", e))
+            ResponseError(Throwable(ERROR_SERVER_PREFIX + e.message(), e))
         }
     }
 
@@ -61,40 +71,39 @@ class RetrofitNetworkClient(
             null
         }
     }
+
     override suspend fun getAreas(): Response = withContext(Dispatchers.IO) {
         try {
             val result: List<FilterAreaDto> = areasService.getAreas()
             ResponseSuccess(FilterAreaResponse(result))
         } catch (e: UnknownHostException) {
-            Log.e(TAG, "Нет интернета при запросе /areas", e)
-            ResponseError(Throwable("Нет подключения к интернету"))
+            logAndReturnError("Нет интернета при запросе /areas", e, ERROR_NO_INTERNET)
         } catch (e: SocketTimeoutException) {
-            Log.e(TAG, "Таймаут при запросе /areas", e)
-            ResponseError(Throwable("Превышено время ожидания сервера"))
+            logAndReturnError("Таймаут при запросе /areas", e, ERROR_SERVER_TIMEOUT)
         } catch (e: IOException) {
-            Log.e(TAG, "Ошибка сети при запросе /areas", e)
-            ResponseError(Throwable("Ошибка сети: ${e.message}"))
+            logAndReturnError("Ошибка сети при запросе /areas", e, ERROR_NETWORK_PREFIX + e.message)
         } catch (e: retrofit2.HttpException) {
-            Log.e(TAG, "HTTP ошибка при запросе /areas", e)
-            ResponseError(Throwable("Ошибка сервера: ${e.message()}"))
+            logAndReturnError("HTTP ошибка при запросе /areas", e, ERROR_SERVER_PREFIX + e.message())
         }
     }
+
     override suspend fun getIndustries(): Response {
         return try {
             val result = apiService.getIndustries()
             ResponseSuccess(result)
         } catch (e: UnknownHostException) {
-            Log.e(TAG, "Нет интернета при запросе /industries", e)
-            ResponseError(Throwable("Нет подключения к интернету", e))
+            logAndReturnError("Нет интернета при запросе /industries", e, ERROR_NO_INTERNET)
         } catch (e: SocketTimeoutException) {
-            Log.e(TAG, "Таймаут при запросе /industries", e)
-            ResponseError(Throwable("Превышено время ожидания сервера", e))
+            logAndReturnError("Таймаут при запросе /industries", e, ERROR_SERVER_TIMEOUT)
         } catch (e: IOException) {
-            Log.e(TAG, "Ошибка сети при запросе /industries", e)
-            ResponseError(Throwable("Ошибка сети: ${e.message}", e))
+            logAndReturnError("Ошибка сети при запросе /industries", e, ERROR_NETWORK_PREFIX + e.message)
         } catch (e: retrofit2.HttpException) {
-            Log.e(TAG, "HTTP ошибка при запросе /industries", e)
-            ResponseError(Throwable("Ошибка сервера: ${e.message()}", e))
+            logAndReturnError("HTTP ошибка при запросе /industries", e, ERROR_SERVER_PREFIX + e.message())
         }
+    }
+
+    private fun logAndReturnError(logMessage: String, exception: Exception, errorMessage: String): ResponseError {
+        Log.e(TAG, logMessage, exception)
+        return ResponseError(Throwable(errorMessage, exception))
     }
 }
