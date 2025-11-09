@@ -9,17 +9,20 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.data.dto.filterdto.FilterAreaDto
 import ru.practicum.android.diploma.data.repositories.AreasRepository
 import ru.practicum.android.diploma.databinding.FragmentChooseregionBinding
 import ru.practicum.android.diploma.presentation.filter.adapter.RegionAdapter
+import ru.practicum.android.diploma.presentation.filter.viewmodel.ChooseRegionViewModel
 
 class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
 
     private var _binding: FragmentChooseregionBinding? = null
     private val binding get() = _binding!!
     private val repository: AreasRepository by inject()
+    private val viewModel: ChooseRegionViewModel by viewModel()
 
     private val adapter: RegionAdapter by lazy {
         RegionAdapter(emptyList()) { region ->
@@ -27,7 +30,6 @@ class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
         }
     }
 
-    private var fullRegionList: List<FilterAreaDto> = emptyList()
     private var selectedCountryId: Int? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -38,8 +40,10 @@ class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
 
         setupClickListeners()
         setupRecyclerView()
-        loadRegions()
+        observeViewModel()
         setupSearch()
+
+        viewModel.loadRegions(selectedCountryId)
     }
 
     private fun setupClickListeners() {
@@ -55,26 +59,34 @@ class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
 
     private fun setupSearch() {
         binding.searchField.addTextChangedListener { text ->
-            val query = text?.toString().orEmpty().lowercase()
-            val filtered = if (query.isEmpty()) {
-                fullRegionList
-            } else {
-                fullRegionList.filter { it.name.lowercase().contains(query) }
-            }
-            adapter.updateData(filtered)
+            val query = text?.toString().orEmpty()
+            viewModel.filterRegions(query)
         }
     }
 
-    private fun loadRegions() {
-        lifecycleScope.launch {
-            val regions = if (selectedCountryId != null) {
-                repository.getRegionsByCountry(selectedCountryId!!).orEmpty()
-            } else {
-                repository.getAllRegions().orEmpty()
-            }
-
-            fullRegionList = regions
+    private fun observeViewModel() {
+        viewModel.filteredRegions.observe(viewLifecycleOwner) { regions ->
             adapter.updateData(regions)
+
+            when {
+                regions.isEmpty() && binding.searchField.text?.isNotEmpty() == true -> {
+                    binding.recyclerView.visibility = View.GONE
+                    binding.noRegionError.visibility = View.VISIBLE
+                    binding.noRegionListError.visibility = View.GONE
+                }
+
+                regions.isEmpty() -> {
+                    binding.recyclerView.visibility = View.GONE
+                    binding.noRegionError.visibility = View.GONE
+                    binding.noRegionListError.visibility = View.VISIBLE
+                }
+
+                else -> {
+                    binding.recyclerView.visibility = View.VISIBLE
+                    binding.noRegionError.visibility = View.GONE
+                    binding.noRegionListError.visibility = View.GONE
+                }
+            }
         }
     }
 
