@@ -11,6 +11,10 @@ import ru.practicum.android.diploma.presentation.search.viewmodel.SearchViewMode
 
 class SearchUiStateManager {
 
+    companion object {
+        private const val SERVER_ERROR_CODE = 500
+    }
+
     fun handleSearchState(
         state: SearchState,
         binding: FragmentSearchBinding,
@@ -60,44 +64,46 @@ class SearchUiStateManager {
         context: Context
     ) {
         val hasNetwork = isNetworkAvailable(context)
-        val isServerError = (throwable as? retrofit2.HttpException)?.code() == 500
-        updateUI(
-            binding = binding,
+        val isServerError = checkServerError(throwable)
+        val uiConfig = UiConfig(
             vacancies = emptyList(),
             isSearchActive = true,
             isLoading = false,
             isNetworkAvailable = hasNetwork,
             isServerError = isServerError
         )
+        updateVisibilityStates(binding, uiConfig)
         adapter.showLoading(false)
+    }
+
+    private fun checkServerError(throwable: Throwable?): Boolean {
+        return (throwable as? retrofit2.HttpException)?.code() == SERVER_ERROR_CODE
     }
 
     private fun updateUI(
         binding: FragmentSearchBinding,
         vacancies: List<Vacancy>,
         isSearchActive: Boolean,
-        isLoading: Boolean = false,
-        isNetworkAvailable: Boolean = true,
-        isServerError: Boolean = false
+        isLoading: Boolean = false
     ) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        updateVisibilityStates(binding, vacancies, isSearchActive, isLoading, isNetworkAvailable, isServerError)
+        val uiConfig = UiConfig(
+            vacancies = vacancies,
+            isSearchActive = isSearchActive,
+            isLoading = isLoading,
+            isNetworkAvailable = true,
+            isServerError = false
+        )
+        updateVisibilityStates(binding, uiConfig)
     }
 
-    private fun updateVisibilityStates(
-        binding: FragmentSearchBinding,
-        vacancies: List<Vacancy>,
-        isSearchActive: Boolean,
-        isLoading: Boolean,
-        isNetworkAvailable: Boolean,
-        isServerError: Boolean
-    ) {
+    private fun updateVisibilityStates(binding: FragmentSearchBinding, config: UiConfig) {
         when {
-            isLoading -> showLoadingState(binding)
-            !isNetworkAvailable -> showNoNetworkState(binding)
-            isServerError -> showServerErrorState(binding)
-            vacancies.isEmpty() && isSearchActive -> showNoVacanciesState(binding)
-            vacancies.isNotEmpty() -> Unit // handled in handleSuccessState
+            config.isLoading -> showLoadingState(binding)
+            !config.isNetworkAvailable -> showNoNetworkState(binding)
+            config.isServerError -> showServerErrorState(binding)
+            config.vacancies.isEmpty() && config.isSearchActive -> showNoVacanciesState(binding)
+            config.vacancies.isNotEmpty() -> Unit // handled in handleSuccessState
             else -> showInitialState(binding)
         }
     }
@@ -216,6 +222,14 @@ class SearchUiStateManager {
         val capabilities = connectivityManager.getNetworkCapabilities(network)
         return capabilities?.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
     }
+
+    private data class UiConfig(
+        val vacancies: List<Vacancy>,
+        val isSearchActive: Boolean,
+        val isLoading: Boolean,
+        val isNetworkAvailable: Boolean,
+        val isServerError: Boolean
+    )
 
     private data class VisibilityConfig(
         val noNetError: Int,
