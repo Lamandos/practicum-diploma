@@ -48,6 +48,8 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
         updateIconAndState(countryLayout, countryEditText.text.toString())
 
         updateIconAndState(regionLayout, regionEditText.text.toString())
+
+        setupCountry()
     }
     private fun setupClickListeners() {
         binding.backBtn.setOnClickListener {
@@ -77,6 +79,17 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
         } else {
             editText.text?.clear()
             updateIconAndState(layout, "")
+        }
+    }
+
+    private fun setupCountry() {
+        parentFragmentManager.setFragmentResultListener(
+            "country_request",
+            viewLifecycleOwner
+        ) { _, bundle ->
+            val selectedCountry = bundle.getString("country_name")
+            binding.editCountry.setText(selectedCountry)
+            updateIconAndState(binding.country, selectedCountry ?: "")
         }
     }
 
