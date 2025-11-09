@@ -30,11 +30,9 @@ class AreasRepository(private val networkClient: NetworkClient) {
         val result = mutableListOf<FilterAreaDto>()
 
         for (child in root.areas) {
-            // Если у узла нет детей — это конечный регион, добавляем
             if (child.areas.isEmpty()) {
                 result.add(child)
             } else {
-                // Иначе идём глубже
                 result.addAll(collectRegions(child))
             }
         }
@@ -55,7 +53,6 @@ class AreasRepository(private val networkClient: NetworkClient) {
         val allAreas = getAllAreas() ?: return null
         val country = allAreas.firstOrNull { it.id == countryId } ?: return null
 
-        // собираем всех потомков (регионы)
         return collectRegions(country)
     }
 }

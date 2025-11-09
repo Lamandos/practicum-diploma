@@ -44,7 +44,7 @@ class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {
                         "country_request",
                         Bundle().apply {
                             putString("country_name", selected.name)
-                            putInt("country_id", selected.id)       // ← ЭТО НУЖНО ДОБАВИТЬ
+                            putInt("country_id", selected.id)
                         }
                     )
                     findNavController().popBackStack()

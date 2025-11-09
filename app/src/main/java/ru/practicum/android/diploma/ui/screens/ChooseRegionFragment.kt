@@ -56,8 +56,11 @@ class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
     private fun setupSearch() {
         binding.searchField.addTextChangedListener { text ->
             val query = text?.toString().orEmpty().lowercase()
-            val filtered = if (query.isEmpty()) fullRegionList
-            else fullRegionList.filter { it.name.lowercase().contains(query) }
+            val filtered = if (query.isEmpty()) {
+                fullRegionList
+            } else {
+                fullRegionList.filter { it.name.lowercase().contains(query) }
+            }
             adapter.updateData(filtered)
         }
     }
@@ -85,7 +88,6 @@ class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
         )
 
         lifecycleScope.launch {
-            // если страна не выбрана или country_id не был передан
             if (selectedCountryId == null) {
                 val allAreas = repository.getAllAreas().orEmpty()
                 val country = allAreas.firstOrNull { it.areas.any { it.id == region.id } }

@@ -74,14 +74,10 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
         layout: TextInputLayout,
         field: String
     ) {
-        // Если поле заполнено → сначала очищаем
         if (!editText.text.isNullOrEmpty()) {
-
-            // очистка текущего поля
             editText.text?.clear()
             updateIconAndState(layout, "")
 
-            // если очищаем страну → очищаем и регион
             if (field == "country") {
                 binding.editRegion.text?.clear()
                 updateIconAndState(binding.region, "")
@@ -91,7 +87,6 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
             return
         }
 
-        // если поле пустое → навигация
         when (field) {
             "country" -> {
                 findNavController().navigate(
@@ -123,8 +118,6 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
 
             binding.editCountry.setText(name)
             binding.editCountry.tag = id
-
-            // очищаем регион при смене страны
             binding.editRegion.text?.clear()
             updateIconAndState(binding.region, "")
 
