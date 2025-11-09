@@ -1,8 +1,5 @@
 package ru.practicum.android.diploma.ui.screens
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -19,10 +16,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import retrofit2.HttpException
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentSearchBinding
-import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
 import ru.practicum.android.diploma.presentation.search.adapter.SearchVacancyAdapter
 import ru.practicum.android.diploma.presentation.search.viewmodel.SearchState
 import ru.practicum.android.diploma.presentation.search.viewmodel.SearchViewModel
@@ -42,21 +37,50 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
     }
 
+    private val uiStateManager = SearchUiStateManager()
+
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 2000L
-        private const val SERVER_ERROR_CODE = 500
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentSearchBinding.bind(view)
+
         binding.filterBtn.setOnClickListener {
             findNavController().navigate(R.id.action_searchFragment_to_filterSettingsFragment)
         }
+
+        setupFilterButton()
         setupRecyclerView()
         observeViewModel()
         setupSearchField()
         setupClearIcon()
+    }
+
+    private fun setupFilterButton() {
+        parentFragmentManager.setFragmentResultListener("filter_result", viewLifecycleOwner) { requestKey, bundle ->
+            if (requestKey == "filter_result") {
+                val filtersApplied = bundle.getBoolean("filters_applied", false)
+                updateFilterButtonAppearance(filtersApplied)
+
+                if (filtersApplied) {
+                    val currentQuery = binding.searchField.text.toString()
+                    if (currentQuery.isNotBlank()) {
+                        viewModel.refreshSearchWithCurrentFilters()
+                    }
+                    Toast.makeText(requireContext(), "Фильтры применены", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun updateFilterButtonAppearance(isFilterApplied: Boolean) {
+        if (isFilterApplied) {
+            binding.filterBtn.setImageResource(R.drawable.trailing_fill_icon)
+        } else {
+            binding.filterBtn.setImageResource(R.drawable.trailing_icon)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -91,45 +115,7 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     }
 
     private fun handleSearchState(state: SearchState) {
-        when (state) {
-            is SearchState.Idle -> handleIdleState()
-            is SearchState.Loading -> handleLoadingState()
-            is SearchState.Success -> handleSuccessState(state.vacancies)
-            is SearchState.Empty -> handleEmptyState()
-            is SearchState.Error -> handleErrorState(state.throwable)
-        }
-    }
-
-    private fun handleIdleState() {
-        updateUI(emptyList(), isSearchActive = false)
-        adapter.showLoading(false)
-    }
-
-    private fun handleLoadingState() {
-        updateUI(emptyList(), isSearchActive = true, isLoading = true)
-        adapter.showLoading(false)
-    }
-
-    private fun handleSuccessState(vacancies: List<Vacancy>) {
-        updateUI(vacancies, isSearchActive = true)
-    }
-
-    private fun handleEmptyState() {
-        updateUI(emptyList(), isSearchActive = true)
-        adapter.showLoading(false)
-    }
-
-    private fun handleErrorState(throwable: Throwable?) {
-        val hasNetwork = isNetworkAvailable(requireContext())
-        val isServerError = (throwable as? HttpException)?.code() == SERVER_ERROR_CODE
-        updateUI(
-            vacancies = emptyList(),
-            isSearchActive = true,
-            isLoading = false,
-            isNetworkAvailable = hasNetwork,
-            isServerError = isServerError
-        )
-        adapter.showLoading(false)
+        uiStateManager.handleSearchState(state, binding, adapter, viewModel, requireContext())
     }
 
     private fun handleErrorToast(isErrorToastShown: Boolean) {
@@ -199,144 +185,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
             binding.searchIcon.visibility = View.VISIBLE
             viewModel.resetSearch()
         }
-    }
-
-    private fun updateUI(
-        vacancies: List<Vacancy>,
-        isSearchActive: Boolean,
-        isLoading: Boolean = false,
-        isNetworkAvailable: Boolean = true,
-        isServerError: Boolean = false
-    ) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        updateVisibilityStates(vacancies, isSearchActive, isLoading, isNetworkAvailable, isServerError)
-    }
-
-    private fun updateVisibilityStates(
-        vacancies: List<Vacancy>,
-        isSearchActive: Boolean,
-        isLoading: Boolean,
-        isNetworkAvailable: Boolean,
-        isServerError: Boolean
-    ) {
-        when {
-            isLoading -> showLoadingState()
-            !isNetworkAvailable -> showNoNetworkState()
-            isServerError -> showServerErrorState()
-            vacancies.isEmpty() && isSearchActive -> showNoVacanciesState()
-            vacancies.isNotEmpty() -> showVacanciesState(vacancies)
-            else -> showInitialState()
-        }
-    }
-
-    private fun showLoadingState() {
-        setViewsVisibility(
-            VisibilityConfig(
-                noNetError = View.GONE,
-                serverError = View.GONE,
-                noVacError = View.GONE,
-                searchStartPic = View.GONE,
-                recyclerView = View.GONE,
-                msgText = View.GONE
-            )
-        )
-    }
-
-    private fun showNoNetworkState() {
-        setViewsVisibility(
-            VisibilityConfig(
-                noNetError = View.VISIBLE,
-                serverError = View.GONE,
-                noVacError = View.GONE,
-                searchStartPic = View.GONE,
-                recyclerView = View.GONE,
-                msgText = View.GONE
-            )
-        )
-    }
-
-    private fun showServerErrorState() {
-        setViewsVisibility(
-            VisibilityConfig(
-                noNetError = View.GONE,
-                serverError = View.VISIBLE,
-                noVacError = View.GONE,
-                searchStartPic = View.GONE,
-                recyclerView = View.GONE,
-                msgText = View.GONE
-            )
-        )
-    }
-
-    private fun showNoVacanciesState() {
-        setViewsVisibility(
-            VisibilityConfig(
-                noNetError = View.GONE,
-                serverError = View.GONE,
-                noVacError = View.VISIBLE,
-                searchStartPic = View.GONE,
-                recyclerView = View.GONE,
-                msgText = View.VISIBLE
-            )
-        )
-        binding.msgText.text = getString(R.string.no_vac_msg)
-    }
-
-    private fun showVacanciesState(vacancies: List<Vacancy>) {
-        setViewsVisibility(
-            VisibilityConfig(
-                noNetError = View.GONE,
-                serverError = View.GONE,
-                noVacError = View.GONE,
-                searchStartPic = View.GONE,
-                recyclerView = View.VISIBLE,
-                msgText = View.VISIBLE
-            )
-        )
-        binding.msgText.text = resources.getQuantityString(
-            R.plurals.found_vac_msg,
-            viewModel.totalFoundCount,
-            viewModel.totalFoundCount
-        )
-        adapter.setItems(vacancies)
-    }
-
-    private fun showInitialState() {
-        setViewsVisibility(
-            VisibilityConfig(
-                noNetError = View.GONE,
-                serverError = View.GONE,
-                noVacError = View.GONE,
-                searchStartPic = View.VISIBLE,
-                recyclerView = View.GONE,
-                msgText = View.GONE
-            )
-        )
-    }
-
-    private fun setViewsVisibility(config: VisibilityConfig) {
-        binding.noNetError.visibility = config.noNetError
-        binding.serverError.visibility = config.serverError
-        binding.noVacError.visibility = config.noVacError
-        binding.searchStartPic.visibility = config.searchStartPic
-        binding.recyclerView.visibility = config.recyclerView
-        binding.msgText.visibility = config.msgText
-    }
-
-    private data class VisibilityConfig(
-        val noNetError: Int,
-        val serverError: Int,
-        val noVacError: Int,
-        val searchStartPic: Int,
-        val recyclerView: Int,
-        val msgText: Int
-    )
-
-    fun isNetworkAvailable(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork
-        val capabilities = connectivityManager.getNetworkCapabilities(network)
-        return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
     }
 
     private fun closeKeyboard(view: View) {
