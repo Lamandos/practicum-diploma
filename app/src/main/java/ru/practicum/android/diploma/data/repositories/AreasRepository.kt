@@ -50,9 +50,11 @@ class AreasRepository(private val networkClient: NetworkClient) {
     }
 
     suspend fun getRegionsByCountry(countryId: Int): List<FilterAreaDto>? {
-        val allAreas = getAllAreas() ?: return null
-        val country = allAreas.firstOrNull { it.id == countryId } ?: return null
+        val allAreas = getAllAreas()
+        val regions = allAreas
+            ?.firstOrNull { it.id == countryId }
+            ?.let { collectRegions(it) }
 
-        return collectRegions(country)
+        return regions
     }
 }
