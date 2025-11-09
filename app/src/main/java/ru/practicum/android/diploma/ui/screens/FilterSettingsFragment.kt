@@ -42,11 +42,11 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         }
 
         binding.btnDeny.setOnClickListener {
-            clearAllFields() // Только очищаем, не возвращаемся
+            clearAllFields()
         }
 
         binding.clearIcon.setOnClickListener {
-            binding.editText.text?.clear()
+            binding.editSalary.text?.clear()
         }
     }
 
@@ -79,7 +79,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             navigateOrClear(industryEditText, industryLayout, "industry")
         }
 
-        binding.editText.addTextChangedListener {
+        binding.editSalary.addTextChangedListener {
             binding.clearIcon.visibility = if (it.isNullOrEmpty()) View.GONE else View.VISIBLE
             updateButtonsVisibility()
         }
@@ -89,7 +89,6 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         }
 
         updateIconAndState(jobLocationLayout, jobLocationEditText.text.toString())
-
         updateIconAndState(industryLayout, industryEditText.text.toString())
 
         setupSalaryField(salaryEditText, salaryLayout)
@@ -104,32 +103,17 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         } else {
             binding.btnAccept.visibility = View.GONE
             binding.btnDeny.visibility = View.GONE
-
-    private fun setupClickListeners() {
-        binding.backBtn.setOnClickListener {
-            findNavController().popBackStack()
-
-    private fun updateButtonsVisibility() {
-        val hasFilters = hasAnyFilterApplied()
-
-        if (hasFilters) {
-            binding.btnAccept.visibility = View.VISIBLE
-            binding.btnDeny.visibility = View.VISIBLE
-        } else {
-            binding.btnAccept.visibility = View.GONE
-            binding.btnDeny.visibility = View.GONE
         }
     }
 
     private fun hasAnyFilterApplied(): Boolean {
         return binding.editJobLocation.text?.isNotBlank() == true ||
             binding.editIndustry.text?.isNotBlank() == true ||
-            binding.editText.text?.isNotBlank() == true ||
+            binding.editSalary.text?.isNotBlank() == true ||
             binding.checkbox.isChecked
     }
 
     private fun applyFiltersAndReturn() {
-        // Устанавливаем filters_applied = true и возвращаемся
         setFragmentResult(
             "filter_result",
             Bundle().apply {
@@ -140,26 +124,23 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     }
 
     private fun clearAllFields() {
-        // Только очищаем поля, НЕ возвращаемся
         binding.editJobLocation.text?.clear()
         updateIconAndState(binding.jobLocation, "")
 
         binding.editIndustry.text?.clear()
         updateIconAndState(binding.industry, "")
 
-        binding.editText.text?.clear()
+        binding.editSalary.text?.clear()
         binding.clearIcon.visibility = View.GONE
 
         binding.checkbox.isChecked = false
 
         updateButtonsVisibility()
 
-        // Можно показать сообщение о сбросе
         Toast.makeText(requireContext(), "Фильтры сброшены", Toast.LENGTH_SHORT).show()
     }
 
     private fun returnToSearchWithoutSaving() {
-        // Возвращаемся без применения фильтров
         setFragmentResult(
             "filter_result",
             Bundle().apply {
@@ -167,44 +148,6 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             }
         )
         findNavController().navigateUp()
-    }
-
-
-    private fun hasAnyFilterApplied(): Boolean {
-        return binding.editJobLocation.text?.isNotBlank() == true ||
-            binding.editIndustry.text?.isNotBlank() == true ||
-            binding.editText.text?.isNotBlank() == true ||
-            binding.checkbox.isChecked
-    }
-
-    private fun applyFiltersAndReturn() {
-        // Устанавливаем filters_applied = true и возвращаемся
-        setFragmentResult(
-            "filter_result",
-            Bundle().apply {
-                putBoolean("filters_applied", true)
-            }
-        )
-        findNavController().navigateUp()
-    }
-
-    private fun clearAllFields() {
-        // Только очищаем поля, НЕ возвращаемся
-        binding.editJobLocation.text?.clear()
-        updateIconAndState(binding.jobLocation, "")
-
-        binding.editIndustry.text?.clear()
-        updateIconAndState(binding.industry, "")
-
-        binding.editText.text?.clear()
-        binding.clearIcon.visibility = View.GONE
-
-        binding.checkbox.isChecked = false
-
-        updateButtonsVisibility()
-
-        // Можно показать сообщение о сбросе
-        Toast.makeText(requireContext(), "Фильтры сброшены", Toast.LENGTH_SHORT).show()
     }
 
     private fun updateIconAndState(layout: TextInputLayout, text: String) {
