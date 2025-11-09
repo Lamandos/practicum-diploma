@@ -7,6 +7,7 @@ import ru.practicum.android.diploma.data.dto.Response
 import ru.practicum.android.diploma.data.dto.ResponseError
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
 import ru.practicum.android.diploma.data.dto.filterdto.FilterAreaDto
+import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
 import ru.practicum.android.diploma.data.dto.vacancydetailsdto.VacancyDetailsDto
 import ru.practicum.android.diploma.data.mappers.VacancyMapper
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
@@ -18,7 +19,8 @@ private const val TAG = "RetrofitNetworkClient"
 
 class RetrofitNetworkClient(
     private val apiService: VacancySearchApiService,
-    private val areasService: AreasApiService
+    private val areasService: AreasApiService,
+    private val industriesApiService: IndustriesApiService
 ) : NetworkClient {
 
     override suspend fun doRequest(dto: Any): Response {
@@ -79,10 +81,18 @@ class RetrofitNetworkClient(
             ResponseError(Throwable("Ошибка сервера: ${e.message()}"))
         }
     }
-    override suspend fun getIndustries(): Response {
+    override suspend fun getIndustries(dto: Any): Response {
         return try {
-            val result = apiService.getIndustries()
-            ResponseSuccess(result)
+            when (dto) {
+                is FilterIndustryRequest -> {
+                    val apiResponse: List<FilterIndustryDto> = industriesApiService.getIndustries()
+                    val responseWrapper = FilterIndustryResponse(apiResponse)
+                    ResponseSuccess(responseWrapper)
+                }
+                else -> {
+                    ResponseError(Throwable("Неизвестный тип запроса"))
+                }
+            }
         } catch (e: UnknownHostException) {
             Log.e(TAG, "Нет интернета при запросе /industries", e)
             ResponseError(Throwable("Нет подключения к интернету", e))
