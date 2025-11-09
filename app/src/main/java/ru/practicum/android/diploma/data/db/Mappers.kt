@@ -4,13 +4,13 @@ import com.google.gson.Gson
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterArea
 import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
 import ru.practicum.android.diploma.domain.models.vacancydetails.Address
+import ru.practicum.android.diploma.domain.models.vacancydetails.Contacts
 import ru.practicum.android.diploma.domain.models.vacancydetails.Employer
 import ru.practicum.android.diploma.domain.models.vacancydetails.Employment
 import ru.practicum.android.diploma.domain.models.vacancydetails.Experience
 import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 import ru.practicum.android.diploma.domain.models.vacancydetails.Schedule
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
-import ru.practicum.android.diploma.domain.models.vacancydetails.Contacts
 
 class Mappers(private val gson: Gson = Gson()) {
 
