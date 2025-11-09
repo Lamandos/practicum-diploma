@@ -25,12 +25,37 @@ class AreasRepository(private val networkClient: NetworkClient) {
             else -> null
         }
     }
+
+    private fun collectRegions(root: FilterAreaDto): List<FilterAreaDto> {
+        val result = mutableListOf<FilterAreaDto>()
+
+        for (child in root.areas) {
+            // Если у узла нет детей — это конечный регион, добавляем
+            if (child.areas.isEmpty()) {
+                result.add(child)
+            } else {
+                // Иначе идём глубже
+                result.addAll(collectRegions(child))
+            }
+        }
+        return result
+    }
     suspend fun getAllRegions(): List<FilterAreaDto>? {
         val allAreas = getAllAreas() ?: return null
         val regions = mutableListOf<FilterAreaDto>()
+
         allAreas.forEach { country ->
-            regions.addAll(country.areas)
+            regions.addAll(collectRegions(country))
         }
+
         return regions
+    }
+
+    suspend fun getRegionsByCountry(countryId: Int): List<FilterAreaDto>? {
+        val allAreas = getAllAreas() ?: return null
+        val country = allAreas.firstOrNull { it.id == countryId } ?: return null
+
+        // собираем всех потомков (регионы)
+        return collectRegions(country)
     }
 }
