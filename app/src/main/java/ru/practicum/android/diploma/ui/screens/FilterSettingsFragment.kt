@@ -1,7 +1,13 @@
 package ru.practicum.android.diploma.ui.screens
 
 import android.os.Bundle
+import android.text.Editable
+import android.text.InputFilter
+import android.text.TextWatcher
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
@@ -25,6 +31,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         val jobLocationEditText: TextInputEditText = binding.editJobLocation
         val industryLayout: TextInputLayout = binding.industry
         val industryEditText: TextInputEditText = binding.editIndustry
+        val salaryLayout: TextInputLayout = binding.salaryField
+        val salaryEditText: TextInputEditText = binding.editSalary
 
         jobLocationLayout.endIconMode = TextInputLayout.END_ICON_CUSTOM
         industryLayout.endIconMode = TextInputLayout.END_ICON_CUSTOM
@@ -48,12 +56,16 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         updateIconAndState(jobLocationLayout, jobLocationEditText.text.toString())
 
         updateIconAndState(industryLayout, industryEditText.text.toString())
+
+        setupSalaryField(salaryEditText, salaryLayout)
     }
+
     private fun setupClickListeners() {
         binding.backBtn.setOnClickListener {
             findNavController().popBackStack()
         }
     }
+
     private fun updateIconAndState(layout: TextInputLayout, text: String) {
         if (text.isEmpty()) {
             layout.endIconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.arrow_right)
@@ -72,12 +84,86 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                 "jobLocation" -> findNavController().navigate(
                     R.id.action_filterSettingsFragment_to_chooseWorkPlaceFragment
                 )
+
                 "industry" -> findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseIndustryFragment)
             }
         } else {
             editText.text?.clear()
             updateIconAndState(layout, "")
         }
+    }
+
+    private fun setupSalaryField(editText: TextInputEditText, layout: TextInputLayout) {
+        setupSalaryInputFilter(editText)
+        setupSalaryTextWatcher(editText)
+        setupSalaryFocusBehavior(editText)
+        setupSalaryEditorDoneAction(editText, layout)
+        setupSalaryClearIcon(editText)
+    }
+
+    private fun setupSalaryInputFilter(editText: TextInputEditText) {
+        editText.filters = arrayOf(InputFilter { source, _, _, _, _, _ ->
+            if (source.matches(Regex("[0-9]+"))) source else ""
+        })
+    }
+
+    private fun setupSalaryTextWatcher(editText: TextInputEditText) {
+        editText.addTextChangedListener(
+            object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    binding.clearIcon.visibility =
+                        if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+                    if (s.toString() == "0") {
+                        binding.clearIcon.visibility = View.GONE
+                        Toast.makeText(requireContext(), "Некорректное значение", Toast.LENGTH_LONG).show()
+                    }
+                }
+
+                override fun afterTextChanged(s: Editable?) = Unit
+            }
+        )
+    }
+
+    private fun setupSalaryFocusBehavior(editText: TextInputEditText) {
+        editText.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus && !editText.text.isNullOrEmpty()) {
+                binding.clearIcon.visibility = View.VISIBLE
+            }
+        }
+    }
+
+    private fun setupSalaryEditorDoneAction(editText: TextInputEditText, layout: TextInputLayout) {
+        editText.setOnEditorActionListener { v, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                binding.clearIcon.visibility = View.GONE
+                closeKeyboard(editText)
+
+                editText.clearFocus()
+                layout.clearFocus()
+
+                binding.root.isFocusable = true
+                binding.root.isFocusableInTouchMode = true
+                binding.root.requestFocus()
+
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    private fun setupSalaryClearIcon(editText: TextInputEditText) {
+        binding.clearIcon.setOnClickListener {
+            editText.text?.clear()
+        }
+    }
+
+    private fun closeKeyboard(view: View) {
+        val imm = requireContext().getSystemService(InputMethodManager::class.java)
+        imm?.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
     override fun onDestroyView() {
