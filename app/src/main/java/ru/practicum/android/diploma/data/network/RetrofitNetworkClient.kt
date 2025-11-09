@@ -40,10 +40,12 @@ class RetrofitNetworkClient(
                     val result = apiService.searchVacancies(dto.toQueryMap())
                     ResponseSuccess(result)
                 }
+
                 is VacancyDetailsRequest -> {
                     val result = apiService.getVacancyDetails(dto.vacancyId)
                     ResponseSuccess(result)
                 }
+
                 else -> ResponseError(Throwable(ERROR_UNKNOWN_REQUEST))
             }
         } catch (e: IOException) {
@@ -89,9 +91,6 @@ class RetrofitNetworkClient(
         }
     }
 
-    // ВЫБЕРИТЕ ОДИН ИЗ ВАРИАНТОВ:
-
-    // Вариант 1: С параметром (из develop)
     override suspend fun getIndustries(dto: Any): Response {
         return try {
             when (dto) {
@@ -100,6 +99,7 @@ class RetrofitNetworkClient(
                     val responseWrapper = FilterIndustryResponse(apiResponse)
                     ResponseSuccess(responseWrapper)
                 }
+
                 else -> {
                     ResponseError(Throwable("Неизвестный тип запроса"))
                 }
