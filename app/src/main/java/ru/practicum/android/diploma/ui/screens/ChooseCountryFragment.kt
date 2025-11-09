@@ -42,7 +42,10 @@ class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {
                 adapter = CountryAdapter(countries) { selected ->
                     parentFragmentManager.setFragmentResult(
                         "country_request",
-                        Bundle().apply { putString("country_name", selected.name) }
+                        Bundle().apply {
+                            putString("country_name", selected.name)
+                            putInt("country_id", selected.id)
+                        }
                     )
                     findNavController().popBackStack()
                 }
