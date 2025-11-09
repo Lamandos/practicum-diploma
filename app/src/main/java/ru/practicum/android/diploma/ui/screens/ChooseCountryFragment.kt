@@ -40,7 +40,11 @@ class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {
             binding.recyclerView.apply {
                 layoutManager = LinearLayoutManager(requireContext())
                 adapter = CountryAdapter(countries) { selected ->
-                    // обработка клика по стране
+                    parentFragmentManager.setFragmentResult(
+                        "country_request",
+                        Bundle().apply { putString("country_name", selected.name) }
+                    )
+                    findNavController().popBackStack()
                 }
             }
         }
