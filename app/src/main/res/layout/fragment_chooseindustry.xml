@@ -93,6 +93,7 @@
         android:textColor="@color/white"
         android:layout_marginBottom="@dimen/margin_24"
         app:cornerRadius="12dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@+id/bottom_space"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
