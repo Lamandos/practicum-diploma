@@ -15,6 +15,9 @@ import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
 import ru.practicum.android.diploma.data.repositories.IndustriesRepository
 import ru.practicum.android.diploma.databinding.FragmentChooseindustryBinding
 import ru.practicum.android.diploma.presentation.filter.adapter.IndustryAdapter
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
 
@@ -89,9 +92,16 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
             try {
                 allIndustries = repository.getAllIndustries() ?: emptyList()
                 adapter.updateData(allIndustries)
+            } catch (e: UnknownHostException) {
+                showError("Нет подключения к интернету")
+            } catch (e: SocketTimeoutException) {
+                showError("Превышено время ожидания сервера")
+            } catch (e: IOException) {
+                showError("Ошибка сети")
             } catch (e: Exception) {
-                // Обработка ошибок
-                showError("Не удалось загрузить список отраслей")
+                // Логируем неожиданные ошибки
+                android.util.Log.e("ChooseIndustryFragment", "Unexpected error", e)
+                showError("Произошла непредвиденная ошибка")
             } finally {
                 binding.progressBar.visibility = View.GONE
             }
