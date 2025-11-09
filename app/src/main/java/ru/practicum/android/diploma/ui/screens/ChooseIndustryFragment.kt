@@ -1,6 +1,7 @@
 package ru.practicum.android.diploma.ui.screens
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
@@ -33,6 +34,10 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
 
     private var allIndustries: List<FilterIndustryDto> = emptyList()
     private var selectedIndustry: FilterIndustryDto? = null
+
+    companion object {
+        private const val TAG = "ChooseIndustryFragment"
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -93,15 +98,14 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
                 allIndustries = repository.getAllIndustries() ?: emptyList()
                 adapter.updateData(allIndustries)
             } catch (e: UnknownHostException) {
+                Log.e(TAG, "No internet connection", e)
                 showError("Нет подключения к интернету")
             } catch (e: SocketTimeoutException) {
+                Log.e(TAG, "Server timeout", e)
                 showError("Превышено время ожидания сервера")
             } catch (e: IOException) {
+                Log.e(TAG, "Network error", e)
                 showError("Ошибка сети")
-            } catch (e: Exception) {
-                // Логируем неожиданные ошибки
-                android.util.Log.e("ChooseIndustryFragment", "Unexpected error", e)
-                showError("Произошла непредвиденная ошибка")
             } finally {
                 binding.progressBar.visibility = View.GONE
             }
