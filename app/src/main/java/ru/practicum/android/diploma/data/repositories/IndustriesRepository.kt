@@ -1,21 +1,18 @@
 package ru.practicum.android.diploma.data.repositories
 
-import ru.practicum.android.diploma.data.dto.ResponseError
-import ru.practicum.android.diploma.data.dto.ResponseSuccess
 import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
-import ru.practicum.android.diploma.data.network.FilterIndustryRequest
-import ru.practicum.android.diploma.data.network.FilterIndustryResponse
 import ru.practicum.android.diploma.data.network.NetworkClient
 
-class IndustriesRepository(private val networkClient: NetworkClient) {
+class IndustriesRepository constructor(
+    private val networkClient: NetworkClient
+) {
 
     suspend fun getAllIndustries(): List<FilterIndustryDto>? {
-        return when (val response = networkClient.getIndustries(FilterIndustryRequest())) {
-            is ResponseSuccess<*> -> {
-                (response.data as? FilterIndustryResponse)?.industries
-            }
-            is ResponseError -> null
-            else -> null
+        val response = networkClient.getIndustries(Unit) // Используем Unit как запрос
+        return if (response is ru.practicum.android.diploma.data.dto.ResponseSuccess<*>) {
+            (response.data as? List<FilterIndustryDto>)
+        } else {
+            null
         }
     }
 }

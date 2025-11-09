@@ -14,4 +14,8 @@ class FilterRepositoryImpl : FilterRepository {
     override suspend fun saveFilters(filters: VacancyFilters) {
         currentFilters = filters
     }
+
+    fun setSelectedIndustry(industry: ru.practicum.android.diploma.domain.models.filtermodels.Industry?) {
+        currentFilters = currentFilters.copy(industry = industry)
+    }
 }

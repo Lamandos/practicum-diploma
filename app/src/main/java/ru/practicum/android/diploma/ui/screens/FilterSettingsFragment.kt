@@ -12,10 +12,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
+import androidx.fragment.app.setFragmentResultListener
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import ru.practicum.android.diploma.R
+import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
 import ru.practicum.android.diploma.databinding.FragmentFilterSettingsBinding
 
 class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
@@ -23,13 +25,27 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private var _binding: FragmentFilterSettingsBinding? = null
     private val binding get() = _binding!!
 
+    private var selectedIndustry: FilterIndustryDto? = null
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentFilterSettingsBinding.bind(view)
 
+        setupFragmentResultListeners()
         setupClickListeners()
         setupTextWatchers()
         updateButtonsVisibility()
+    }
+
+    private fun setupFragmentResultListeners() {
+        setFragmentResultListener("industry_result") { _, bundle ->
+            bundle.getParcelable<FilterIndustryDto>("selected_industry")?.let { industry ->
+                selectedIndustry = industry
+                binding.editIndustry.setText(industry.name)
+                updateIconAndState(binding.industry, industry.name)
+                updateButtonsVisibility()
+            }
+        }
     }
 
     private fun setupClickListeners() {
@@ -114,10 +130,12 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     }
 
     private fun applyFiltersAndReturn() {
+        // Передаем только выбранную отрасль, а не весь VacancyFilters
         setFragmentResult(
             "filter_result",
             Bundle().apply {
                 putBoolean("filters_applied", true)
+                putParcelable("selected_industry", selectedIndustry)
             }
         )
         findNavController().navigateUp()
@@ -129,6 +147,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
         binding.editIndustry.text?.clear()
         updateIconAndState(binding.industry, "")
+        selectedIndustry = null
 
         binding.editSalary.text?.clear()
         binding.clearIcon.visibility = View.GONE
@@ -173,6 +192,9 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         } else {
             editText.text?.clear()
             updateIconAndState(layout, "")
+            if (field == "industry") {
+                selectedIndustry = null
+            }
             updateButtonsVisibility()
         }
     }

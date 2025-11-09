@@ -14,14 +14,19 @@ class IndustryAdapter(
     private val onClick: (FilterIndustryDto) -> Unit
 ) : RecyclerView.Adapter<IndustryAdapter.IndustryViewHolder>() {
 
+    private var selectedItem: FilterIndustryDto? = null
+
     inner class IndustryViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         private val name: TextView = view.findViewById(R.id.industry_name)
         private val checkBox: CheckBox = view.findViewById(R.id.check_industry)
 
         fun bind(industry: FilterIndustryDto) {
             name.text = industry.name
+            checkBox.isChecked = selectedItem?.id == industry.id
+
             itemView.setOnClickListener {
-                checkBox.isChecked = !checkBox.isChecked
+                selectedItem = industry
+                notifyDataSetChanged()
                 onClick(industry)
             }
         }

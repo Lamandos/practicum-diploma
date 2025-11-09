@@ -2,7 +2,9 @@ package ru.practicum.android.diploma.ui.screens
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -22,11 +24,12 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
 
     private val adapter: IndustryAdapter by lazy {
         IndustryAdapter(emptyList()) { selectedIndustry ->
-            // обработка выбора индустрии
+            onIndustrySelected(selectedIndustry)
         }
     }
 
     private var allIndustries: List<FilterIndustryDto> = emptyList()
+    private var selectedIndustry: FilterIndustryDto? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -36,6 +39,7 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
         setupClickListeners()
         setupSearchField()
         loadIndustries()
+        updateButtonVisibility()
     }
 
     private fun setupRecyclerView() {
@@ -50,6 +54,10 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
 
         binding.clearIcon.setOnClickListener {
             binding.searchField.text?.clear()
+        }
+
+        binding.btnAccept.setOnClickListener {
+            saveSelectedIndustryAndReturn()
         }
     }
 
@@ -76,10 +84,43 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
     }
 
     private fun loadIndustries() {
+        binding.progressBar.visibility = View.VISIBLE
         lifecycleScope.launch {
-            allIndustries = repository.getAllIndustries().orEmpty()
-            adapter.updateData(allIndustries)
+            try {
+                allIndustries = repository.getAllIndustries() ?: emptyList()
+                adapter.updateData(allIndustries)
+            } catch (e: Exception) {
+                // Обработка ошибок
+                showError("Не удалось загрузить список отраслей")
+            } finally {
+                binding.progressBar.visibility = View.GONE
+            }
         }
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun onIndustrySelected(industry: FilterIndustryDto) {
+        selectedIndustry = industry
+        updateButtonVisibility()
+    }
+
+    private fun updateButtonVisibility() {
+        binding.btnAccept.visibility = if (selectedIndustry != null) View.VISIBLE else View.GONE
+    }
+
+    private fun saveSelectedIndustryAndReturn() {
+        selectedIndustry?.let { industry ->
+            setFragmentResult(
+                "industry_result",
+                Bundle().apply {
+                    putParcelable("selected_industry", industry)
+                }
+            )
+        }
+        findNavController().popBackStack()
     }
 
     override fun onDestroyView() {

@@ -92,10 +92,9 @@ class RetrofitNetworkClient(
     override suspend fun getIndustries(dto: Any): Response {
         return try {
             when (dto) {
-                is FilterIndustryRequest -> {
+                is FilterIndustryRequest, is Unit -> {
                     val apiResponse: List<FilterIndustryDto> = industriesApiService.getIndustries()
-                    val responseWrapper = FilterIndustryResponse(apiResponse)
-                    ResponseSuccess(responseWrapper)
+                    ResponseSuccess(apiResponse)
                 }
                 else -> {
                     ResponseError(Throwable("Неизвестный тип запроса"))
