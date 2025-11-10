@@ -166,7 +166,7 @@ class SearchViewModel(
         return filters.region != null ||
             filters.industry != null ||
             filters.salary != null ||
-            filters.hideWithoutSalary
+            filters.hideWithoutSalary == true
     }
 
     fun resetSearch() {

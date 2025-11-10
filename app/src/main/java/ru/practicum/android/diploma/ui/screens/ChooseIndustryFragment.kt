@@ -27,7 +27,6 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
         }
     }
 
-    private var allIndustries: List<FilterIndustryUI> = emptyList()
     private var selectedIndustry: FilterIndustryUI? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -75,7 +74,6 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
 
     private fun observeViewModel() {
         viewModel.industriesState.observe(viewLifecycleOwner) { industries ->
-            allIndustries = industries
             adapter.updateData(industries)
         }
 

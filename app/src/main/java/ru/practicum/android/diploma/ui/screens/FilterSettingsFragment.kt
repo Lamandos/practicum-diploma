@@ -27,6 +27,7 @@ import ru.practicum.android.diploma.domain.models.filtermodels.Region
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 import ru.practicum.android.diploma.domain.models.vacancy.Country
 import ru.practicum.android.diploma.presentation.filter.viewmodel.FilterViewModel
+import ru.practicum.android.diploma.ui.model.FilterIndustryUI
 
 class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
@@ -35,7 +36,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
     private val viewModel: FilterViewModel by viewModel()
 
-    private var selectedIndustry: FilterIndustryDto? = null
+    private var selectedIndustry: FilterIndustryUI? = null
     private var selectedCountry: Country? = null
     private var selectedRegion: Region? = null
 
@@ -66,7 +67,11 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         // Обновляем отрасль
         filters.industry?.let { industry ->
             binding.editIndustry.setText(industry.name)
-            selectedIndustry = FilterIndustryDto(industry.id.toIntOrNull() ?: 0, industry.name)
+            // КОНВЕРТИРУЕМ Industry в FilterIndustryUI
+            selectedIndustry = FilterIndustryUI(
+                id = industry.id.toIntOrNull() ?: 0,
+                name = industry.name
+            )
             updateIconAndState(binding.industry, industry.name)
         }
 
@@ -75,11 +80,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             binding.editSalary.setText(salary.toString())
         }
 
-        // Обновляем чекбокс "Только с зарплатой"
-        binding.checkbox.isChecked = filters.hideWithoutSalary
-
+        // Обновляем регион
         filters.region?.let { region ->
-
             selectedRegion = if (region.name.isNotEmpty()) region else null
             selectedCountry = region.country
 
@@ -97,12 +99,15 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             updateIconAndState(binding.jobLocation, locationText)
         }
 
+        // Обновляем чекбокс - ВАЖНОЕ ИСПРАВЛЕНИЕ
+        binding.checkbox.isChecked = filters.hideWithoutSalary ?: false
+
         updateButtonsVisibility()
     }
 
     private fun setupFragmentResultListeners() {
         setFragmentResultListener("industry_result") { _, bundle ->
-            bundle.getParcelable<FilterIndustryDto>("selected_industry")?.let { industry ->
+            bundle.getParcelable<FilterIndustryUI>("selected_industry")?.let { industry ->
                 selectedIndustry = industry
                 binding.editIndustry.setText(industry.name)
                 updateIconAndState(binding.industry, industry.name)
@@ -226,10 +231,10 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     }
 
     private fun createFiltersFromUI(): VacancyFilters {
-        val industry = selectedIndustry?.let { industryDto ->
+        val industry = selectedIndustry?.let { industryUI ->
             Industry(
-                id = industryDto.id.toString(),
-                name = industryDto.name,
+                id = industryUI.id.toString(),
+                name = industryUI.name,
                 parentId = null
             )
         }
@@ -241,7 +246,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             selectedRegion ?: selectedCountry?.let { country ->
                 Region(
                     id = country.id,
-                    name = "", // ← только страна
+                    name = "",
                     country = country
                 )
             }
@@ -278,6 +283,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     }
 
     private fun returnToSearchWithoutSaving() {
+        val currentFilters = createFiltersFromUI()
+        viewModel.updateFilters(currentFilters)
         setFragmentResult(
             "filter_result",
             Bundle().apply {

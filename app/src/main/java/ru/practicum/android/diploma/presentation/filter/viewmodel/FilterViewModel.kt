@@ -24,9 +24,9 @@ class FilterViewModel(
 
     fun loadCurrentFilters() {
         viewModelScope.launch {
-            val currentFilters = filterInteractor.getFilters()
-            _filtersState.value = currentFilters
-            _isFilterApplied.value = isAnyFilterApplied(currentFilters)
+            val filters = filterInteractor.getFilters()
+            _filtersState.value = filters
+            _isFilterApplied.value = filters.isAnyFilterApplied()
         }
     }
 
@@ -34,7 +34,7 @@ class FilterViewModel(
         viewModelScope.launch {
             filterInteractor.saveFilters(newFilters)
             _filtersState.value = newFilters
-            _isFilterApplied.value = isAnyFilterApplied(newFilters)
+            _isFilterApplied.value = newFilters.isAnyFilterApplied()
         }
     }
 
@@ -45,12 +45,5 @@ class FilterViewModel(
             _filtersState.value = emptyFilters
             _isFilterApplied.value = false
         }
-    }
-
-    private fun isAnyFilterApplied(filters: VacancyFilters): Boolean {
-        return filters.region != null ||
-            filters.industry != null ||
-            filters.salary != null ||
-            filters.hideWithoutSalary
     }
 }
