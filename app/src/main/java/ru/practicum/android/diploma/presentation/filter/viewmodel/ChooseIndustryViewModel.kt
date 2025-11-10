@@ -24,6 +24,9 @@ class ChooseIndustryViewModel(
     private val _isError = MutableLiveData<Boolean>()
     val isError: LiveData<Boolean> = _isError
 
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
+
     private var allIndustries: List<FilterIndustryDto> = emptyList()
 
     init {
@@ -33,6 +36,7 @@ class ChooseIndustryViewModel(
     fun loadIndustries() {
         _isLoading.value = true
         _isError.value = false
+        _errorMessage.value = null
 
         viewModelScope.launch {
             try {
@@ -43,16 +47,16 @@ class ChooseIndustryViewModel(
                     _isError.value = false
                 } else {
                     _isError.value = true
+                    _errorMessage.value = "Не удалось загрузить список отраслей"
                 }
             } catch (e: IOException) {
-                _isError.value = true
+                handleNetworkError("Ошибка сети при загрузке отраслей", e)
             } catch (e: SocketTimeoutException) {
-                _isError.value = true
+                handleNetworkError("Превышено время ожидания сервера", e)
             } catch (e: UnknownHostException) {
-                _isError.value = true
-            } catch (e: Exception) {
-                e.printStackTrace()
-                _isError.value = true
+                handleNetworkError("Нет подключения к интернету", e)
+            } catch (e: IllegalStateException) {
+                handleNetworkError("Ошибка состояния приложения", e)
             } finally {
                 _isLoading.value = false
             }
@@ -67,8 +71,14 @@ class ChooseIndustryViewModel(
                 try {
                     val filteredIndustries = industryInteractor.searchIndustries(query)
                     _industriesState.value = filteredIndustries ?: emptyList()
-                } catch (e: Exception) {
+                } catch (e: IOException) {
+                    // При ошибке сети при поиске показываем пустой список
                     _industriesState.value = emptyList()
+                    e.printStackTrace() // Логируем для отладки
+                } catch (e: IllegalStateException) {
+                    // При ошибке состояния при поиске показываем пустой список
+                    _industriesState.value = emptyList()
+                    e.printStackTrace() // Логируем для отладки
                 }
             }
         }
@@ -76,5 +86,11 @@ class ChooseIndustryViewModel(
 
     fun resetSearch() {
         _industriesState.value = allIndustries
+    }
+
+    private fun handleNetworkError(message: String, exception: Exception) {
+        _isError.value = true
+        _errorMessage.value = message
+        exception.printStackTrace() // Логируем для отладки
     }
 }
