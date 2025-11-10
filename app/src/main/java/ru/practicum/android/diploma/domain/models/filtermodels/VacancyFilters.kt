@@ -11,6 +11,6 @@ data class VacancyFilters(
         return region != null ||
             industry != null ||
             salary != null ||
-            hideWithoutSalary == true // Учитываем чекбокс
+            hideWithoutSalary == true
     }
 }
