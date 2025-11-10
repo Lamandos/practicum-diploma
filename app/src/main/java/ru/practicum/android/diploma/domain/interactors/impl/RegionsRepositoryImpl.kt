@@ -11,17 +11,18 @@ class RegionsRepositoryImpl(
 
     override suspend fun getRegionsByCountry(countryId: Int): List<Region> {
         val allAreas = areasRepository.getAllAreas()
-        if (allAreas == null) {
-            return emptyList()
+        val regions: List<Region> = if (allAreas != null) {
+            val countryDto = allAreas.firstOrNull { it.id == countryId }
+            if (countryDto != null) {
+                val country = Country(id = countryDto.id, name = countryDto.name)
+                collectRegions(countryDto, country)
+            } else {
+                emptyList()
+            }
+        } else {
+            emptyList()
         }
-
-        val countryDto = allAreas.firstOrNull { it.id == countryId }
-        if (countryDto == null) {
-            return emptyList()
-        }
-
-        val country = Country(id = countryDto.id, name = countryDto.name)
-        return collectRegions(countryDto, country)
+        return regions
     }
 
     override suspend fun getAllRegions(): List<Region> {

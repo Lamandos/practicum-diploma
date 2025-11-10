@@ -5,8 +5,5 @@ data class VacancyFilters(
     val industry: String? = null,
     val salary: Int? = null,
     val hideWithoutSalary: Boolean = false
-) {
-    fun isAnyFilterApplied(): Boolean {
-        return region != null || industry != null || salary != null || hideWithoutSalary
-    }
-}
+)
+
