@@ -2,139 +2,118 @@ package ru.practicum.android.diploma.ui.screens
 
 import android.os.Bundle
 import android.view.View
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
-import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentChooseworkplaceBinding
+import ru.practicum.android.diploma.domain.models.filtermodels.Region
+import ru.practicum.android.diploma.domain.models.vacancy.Country
+import ru.practicum.android.diploma.presentation.filter.viewmodel.ChooseWorkPlaceViewModel
 
 class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
 
     private var _binding: FragmentChooseworkplaceBinding? = null
     private val binding get() = _binding!!
 
+    private val viewModel: ChooseWorkPlaceViewModel by viewModel()
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentChooseworkplaceBinding.bind(view)
+
+        binding.country.endIconMode = TextInputLayout.END_ICON_CUSTOM
+        binding.region.endIconMode = TextInputLayout.END_ICON_CUSTOM
+
         setupClickListeners()
+        setupTextFields()
+        observeViewModel()
 
-        val countryLayout: TextInputLayout = binding.country
-        val countryEditText: TextInputEditText = binding.editCountry
-        val regionLayout: TextInputLayout = binding.region
-        val regionEditText: TextInputEditText = binding.editRegion
+        updateIconAndState(binding.country, binding.editCountry.text?.toString().orEmpty())
+        updateIconAndState(binding.region, binding.editRegion.text?.toString().orEmpty())
 
-        countryLayout.endIconMode = TextInputLayout.END_ICON_CUSTOM
-        regionLayout.endIconMode = TextInputLayout.END_ICON_CUSTOM
-
-        countryEditText.addTextChangedListener {
-            updateIconAndState(countryLayout, it?.toString().orEmpty())
-        }
-
-        regionEditText.addTextChangedListener {
-            updateIconAndState(regionLayout, it?.toString().orEmpty())
-        }
-
-        countryLayout.setEndIconOnClickListener {
-            navigateOrClear(countryEditText, countryLayout, "country")
-        }
-
-        regionLayout.setEndIconOnClickListener {
-            navigateOrClear(regionEditText, regionLayout, "region")
-        }
-
-        updateIconAndState(countryLayout, countryEditText.text.toString())
-
-        updateIconAndState(regionLayout, regionEditText.text.toString())
-
-        setupCountryListener()
-        setupRegionListener()
+        viewModel.loadCountries()
     }
+
     private fun setupClickListeners() {
-        binding.backBtn.setOnClickListener {
-            findNavController().popBackStack()
+        binding.backBtn.setOnClickListener { findNavController().popBackStack() }
+        binding.country.setEndIconOnClickListener {
+            val selected = viewModel.selectedCountry.value
+            if (selected == null) {
+                findNavController().navigate(R.id.action_chooseWorkPlaceFragment_to_chooseCountryFragment)
+            } else {
+                binding.editCountry.text?.clear()
+                viewModel.selectCountry(null)
+                binding.editRegion.text?.clear()
+                viewModel.selectRegion(null)
+                updateIconAndState(binding.country, "")
+                updateIconAndState(binding.region, "")
+            }
+        }
+
+        binding.region.setEndIconOnClickListener {
+            val selected = viewModel.selectedRegion.value
+            if (selected == null) {
+                val country = viewModel.selectedCountry.value
+                val bundle = Bundle().apply {
+                    country?.let { putParcelable("country", it) }
+                }
+                findNavController().navigate(R.id.action_chooseWorkPlaceFragment_to_chooseRegionFragment, bundle)
+            } else {
+                binding.editRegion.text?.clear()
+                viewModel.selectRegion(null)
+                updateIconAndState(binding.region, "")
+            }
         }
     }
+
+    private fun setupTextFields() {
+        binding.editCountry.addTextChangedListener {
+            updateIconAndState(binding.country, it?.toString().orEmpty())
+        }
+        binding.editRegion.addTextChangedListener {
+            updateIconAndState(binding.region, it?.toString().orEmpty())
+        }
+    }
+
     private fun updateIconAndState(layout: TextInputLayout, text: String) {
         if (text.isEmpty()) {
             layout.endIconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.arrow_right)
-            layout.isSelected = false
-            layout.isActivated = false
         } else {
             layout.endIconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.clear_icon)
-            layout.isSelected = true
-            layout.isActivated = true
         }
+        layout.isActivated = text.isNotEmpty()
+        layout.isSelected = text.isNotEmpty()
     }
 
-    private fun navigateOrClear(
-        editText: TextInputEditText,
-        layout: TextInputLayout,
-        field: String
-    ) {
-        if (!editText.text.isNullOrEmpty()) {
-            editText.text?.clear()
-            updateIconAndState(layout, "")
-
-            if (field == "country") {
-                binding.editRegion.text?.clear()
-                updateIconAndState(binding.region, "")
-                binding.editCountry.tag = null
-            }
-
-            return
-        }
-
-        when (field) {
-            "country" -> {
-                findNavController().navigate(
-                    R.id.action_chooseWorkPlaceFragment_to_chooseCountryFragment
-                )
-            }
-
-            "region" -> {
-                val countryId = binding.editCountry.tag as? Int ?: -1
-                val bundle = Bundle().apply {
-                    putInt("country_id", countryId)
-                }
-                findNavController().navigate(
-                    R.id.action_chooseWorkPlaceFragment_to_chooseRegionFragment,
-                    bundle
-                )
-            }
-        }
-    }
-
-    private fun setupCountryListener() {
-        parentFragmentManager.setFragmentResultListener(
-            "country_request",
-            viewLifecycleOwner
-        ) { _, bundle ->
-
-            val name = bundle.getString("country_name")
-            val id = bundle.getInt("country_id")
-
-            binding.editCountry.setText(name)
-            binding.editCountry.tag = id
+    private fun observeViewModel() {
+        parentFragmentManager.setFragmentResultListener("country_request", viewLifecycleOwner) { _, bundle ->
+            val country = bundle.getParcelable<Country>("country") ?: return@setFragmentResultListener
+            viewModel.selectCountry(country)
+            binding.editCountry.setText(country.name)
+            binding.editCountry.tag = country
             binding.editRegion.text?.clear()
+            viewModel.selectRegion(null)
             updateIconAndState(binding.region, "")
-
-            updateIconAndState(binding.country, name.orEmpty())
+            updateIconAndState(binding.country, country.name)
         }
-    }
 
-    private fun setupRegionListener() {
-        parentFragmentManager.setFragmentResultListener(
-            "region_request",
-            viewLifecycleOwner
-        ) { _, bundle ->
+        parentFragmentManager.setFragmentResultListener("region_request", viewLifecycleOwner) { _, bundle ->
+            val region = bundle.getParcelable<Region>("region") ?: return@setFragmentResultListener
 
-            val name = bundle.getString("region_name")
+            if (viewModel.selectedCountry.value == null && region.country != null) {
+                viewModel.selectCountry(region.country)
+                binding.editCountry.setText(region.country.name)
+                binding.editCountry.tag = region.country
+                updateIconAndState(binding.country, region.country.name)
+            }
 
-            binding.editRegion.setText(name)
-            updateIconAndState(binding.region, name.orEmpty())
+            viewModel.selectRegion(region)
+            binding.editRegion.setText(region.name)
+            updateIconAndState(binding.region, region.name)
         }
     }
 
@@ -143,3 +122,4 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
         _binding = null
     }
 }
+

@@ -4,51 +4,44 @@ import android.os.Bundle
 import android.view.View
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.R
-import ru.practicum.android.diploma.data.dto.filterdto.FilterAreaDto
-import ru.practicum.android.diploma.data.repositories.AreasRepository
 import ru.practicum.android.diploma.databinding.FragmentChooseregionBinding
+import ru.practicum.android.diploma.domain.models.filtermodels.Region
+import ru.practicum.android.diploma.domain.models.vacancy.Country
 import ru.practicum.android.diploma.presentation.filter.adapter.RegionAdapter
 import ru.practicum.android.diploma.presentation.filter.viewmodel.ChooseRegionViewModel
+import ru.practicum.android.diploma.presentation.filter.viewmodel.RegionError
 
 class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
 
     private var _binding: FragmentChooseregionBinding? = null
     private val binding get() = _binding!!
-    private val repository: AreasRepository by inject()
-    private val viewModel: ChooseRegionViewModel by viewModel()
 
+    private val viewModel: ChooseRegionViewModel by viewModel()
     private val adapter: RegionAdapter by lazy {
-        RegionAdapter(emptyList()) { region ->
-            onRegionSelected(region)
-        }
+        RegionAdapter(emptyList()) { region -> onRegionSelected(region) }
     }
 
-    private var selectedCountryId: Int? = null
+    private var selectedCountry: Country? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentChooseregionBinding.bind(view)
 
-        selectedCountryId = arguments?.getInt("country_id")?.takeIf { it != -1 }
+        selectedCountry = arguments?.getParcelable("country")
 
-        setupClickListeners()
         setupRecyclerView()
         observeViewModel()
+        setupClickListeners()
         setupSearch()
 
-        viewModel.loadRegions(selectedCountryId)
-    }
-
-    private fun setupClickListeners() {
-        binding.backBtn.setOnClickListener {
-            findNavController().popBackStack()
+        if (selectedCountry != null) {
+            viewModel.loadRegions(selectedCountry!!)
+        } else {
+            viewModel.loadAllRegions()
         }
     }
 
@@ -57,64 +50,58 @@ class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
         binding.recyclerView.adapter = adapter
     }
 
+    private fun observeViewModel() {
+        viewModel.filteredRegions.observe(viewLifecycleOwner) { regions ->
+            adapter.updateData(regions)
+            binding.noRegionError.visibility = View.GONE
+            binding.noRegionListError.visibility = View.GONE
+        }
+
+        viewModel.error.observe(viewLifecycleOwner) { error ->
+            binding.noRegionError.visibility = View.GONE
+            binding.noRegionListError.visibility = View.GONE
+
+            when (error) {
+                RegionError.NO_RESULTS -> binding.noRegionError.visibility = View.VISIBLE
+                RegionError.LOAD_FAILED -> binding.noRegionListError.visibility = View.VISIBLE
+                null -> {  }
+            }
+        }
+    }
+
     private fun setupSearch() {
         binding.searchField.addTextChangedListener { text ->
             val query = text?.toString().orEmpty()
             viewModel.filterRegions(query)
-        }
-    }
 
-    private fun observeViewModel() {
-        viewModel.filteredRegions.observe(viewLifecycleOwner) { regions ->
-            adapter.updateData(regions)
-
-            when {
-                regions.isEmpty() && binding.searchField.text?.isNotEmpty() == true -> {
-                    binding.recyclerView.visibility = View.GONE
-                    binding.noRegionError.visibility = View.VISIBLE
-                    binding.noRegionListError.visibility = View.GONE
-                }
-
-                regions.isEmpty() -> {
-                    binding.recyclerView.visibility = View.GONE
-                    binding.noRegionError.visibility = View.GONE
-                    binding.noRegionListError.visibility = View.VISIBLE
-                }
-
-                else -> {
-                    binding.recyclerView.visibility = View.VISIBLE
-                    binding.noRegionError.visibility = View.GONE
-                    binding.noRegionListError.visibility = View.GONE
-                }
+            if (query.isNotEmpty()) {
+                binding.clearIcon.visibility = View.VISIBLE
+                binding.searchIcon.visibility = View.GONE
+            } else {
+                binding.clearIcon.visibility = View.GONE
+                binding.searchIcon.visibility = View.VISIBLE
             }
         }
+
+        binding.clearIcon.setOnClickListener {
+            binding.searchField.text.clear()
+            binding.searchField.clearFocus()
+            viewModel.filterRegions("")
+            binding.clearIcon.visibility = View.GONE
+            binding.searchIcon.visibility = View.VISIBLE
+        }
     }
 
-    private fun onRegionSelected(region: FilterAreaDto) {
+    private fun setupClickListeners() {
+        binding.backBtn.setOnClickListener { findNavController().popBackStack() }
+    }
+
+    private fun onRegionSelected(region: Region) {
         parentFragmentManager.setFragmentResult(
             "region_request",
-            Bundle().apply {
-                putString("region_name", region.name)
-                putInt("region_id", region.id)
-            }
+            Bundle().apply { putParcelable("region", region) }
         )
-
-        lifecycleScope.launch {
-            if (selectedCountryId == null) {
-                val allAreas = repository.getAllAreas().orEmpty()
-                val country = allAreas.firstOrNull { it.areas.any { it.id == region.id } }
-                country?.let {
-                    parentFragmentManager.setFragmentResult(
-                        "country_request",
-                        Bundle().apply {
-                            putString("country_name", it.name)
-                            putInt("country_id", it.id)
-                        }
-                    )
-                }
-            }
-            findNavController().popBackStack()
-        }
+        findNavController().popBackStack()
     }
 
     override fun onDestroyView() {
