@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [FavoritesEntity::class],
-    version = 4,
+    version = 6,
     exportSchema = false
 )
 @TypeConverters(ListConverter::class)

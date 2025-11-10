@@ -13,7 +13,10 @@ import ru.practicum.android.diploma.presentation.search.viewmodel.SearchViewMode
 
 val viewModelModule: Module = module {
     viewModel {
-        SearchViewModel(get(), get())
+        SearchViewModel(
+            interactor = get(),
+            filterInteractor = get()
+        )
     }
 
     viewModel {
@@ -27,11 +30,13 @@ val viewModelModule: Module = module {
             favoritesInteractor = get(),
         )
     }
+
     viewModel {
         FilterViewModel(
-            filterUseCase = get()
+            filterInteractor = get()
         )
     }
+
     viewModel {
         ChooseCountryViewModel(get())
     }
@@ -40,5 +45,8 @@ val viewModelModule: Module = module {
     }
     viewModel {
         ChooseWorkPlaceViewModel(get(), get())
+
+    viewModel {
+        ChooseIndustryViewModel(industryInteractor = get())
     }
 }
