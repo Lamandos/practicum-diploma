@@ -23,7 +23,7 @@ class FilterPreferences(context: Context) {
     fun getFilters(): VacancyFilters {
         val filtersJson = sharedPreferences.getString(KEY_FILTERS, null)
         return if (filtersJson != null) {
-            gson.fromJson(filtersJson, VacancyFilters::class.java)
+            gson.fromJson(filtersJson, VacancyFilters::class.java) ?: VacancyFilters()
         } else {
             VacancyFilters()
         }

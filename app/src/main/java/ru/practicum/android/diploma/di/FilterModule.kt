@@ -18,7 +18,7 @@ val filterModule: Module = module {
     }
 
     single<FilterInteractor> {
-        FilterInteractorImpl(filterRepository = get())
+        FilterInteractorImpl(filterPreferences = get())
     }
 
     factory { FilterViewModel(filterInteractor = get()) }

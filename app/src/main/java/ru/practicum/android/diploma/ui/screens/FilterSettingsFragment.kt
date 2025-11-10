@@ -20,7 +20,6 @@ import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.R
-import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
 import ru.practicum.android.diploma.databinding.FragmentFilterSettingsBinding
 import ru.practicum.android.diploma.domain.models.filtermodels.Industry
 import ru.practicum.android.diploma.domain.models.filtermodels.Region
@@ -40,15 +39,26 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private var selectedCountry: Country? = null
     private var selectedRegion: Region? = null
 
+    // Флаг для отслеживания состояния View
+    private var isViewCreated = false
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentFilterSettingsBinding.bind(view)
+        isViewCreated = true
 
         setupFragmentResultListeners()
         setupClickListeners()
         setupTextWatchers()
         observeViewModel()
         loadSavedFilters()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        isViewCreated = false
+        binding.editSalary.removeCallbacks(salarySaveRunnable)
+        _binding = null
     }
 
     private fun observeViewModel() {
@@ -67,7 +77,6 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         // Обновляем отрасль
         filters.industry?.let { industry ->
             binding.editIndustry.setText(industry.name)
-            // КОНВЕРТИРУЕМ Industry в FilterIndustryUI
             selectedIndustry = FilterIndustryUI(
                 id = industry.id.toIntOrNull() ?: 0,
                 name = industry.name
@@ -80,7 +89,9 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             binding.editSalary.setText(salary.toString())
         }
 
-        // Обновляем регион
+        // Обновляем чекбокс "Только с зарплатой"
+        binding.checkbox.isChecked = filters.hideWithoutSalary ?: false
+
         filters.region?.let { region ->
             selectedRegion = if (region.name.isNotEmpty()) region else null
             selectedCountry = region.country
@@ -99,9 +110,6 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             updateIconAndState(binding.jobLocation, locationText)
         }
 
-        // Обновляем чекбокс - ВАЖНОЕ ИСПРАВЛЕНИЕ
-        binding.checkbox.isChecked = filters.hideWithoutSalary ?: false
-
         updateButtonsVisibility()
     }
 
@@ -112,6 +120,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                 binding.editIndustry.setText(industry.name)
                 updateIconAndState(binding.industry, industry.name)
                 updateButtonsVisibility()
+                saveFiltersAutomatically() // Автосохранение при выборе отрасли
             }
         }
 
@@ -131,14 +140,15 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
             binding.editJobLocation.setText(text)
             updateIconAndState(binding.jobLocation, text)
-
             updateButtonsVisibility()
+            saveFiltersAutomatically() // Автосохранение при выборе места работы
         }
     }
 
     private fun setupClickListeners() {
         binding.backBtn.setOnClickListener {
-            returnToSearchWithoutSaving()
+            // Фильтры уже сохранены автоматически, просто выходим
+            findNavController().navigateUp()
         }
 
         binding.btnAccept.setOnClickListener {
@@ -151,6 +161,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
         binding.clearIcon.setOnClickListener {
             binding.editSalary.text?.clear()
+            saveFiltersAutomatically() // Сохраняем при очистке зарплаты
         }
     }
 
@@ -183,19 +194,42 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             navigateOrClear(industryEditText, industryLayout, "industry")
         }
 
-        binding.editSalary.addTextChangedListener {
-            binding.clearIcon.visibility = if (it.isNullOrEmpty()) View.GONE else View.VISIBLE
+        binding.editSalary.addTextChangedListener { text ->
+            binding.clearIcon.visibility = if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
             updateButtonsVisibility()
+
+            // Автосохранение при изменении зарплаты (с задержкой чтобы не спамить)
+            if (isViewCreated) {
+                binding.editSalary.removeCallbacks(salarySaveRunnable)
+                binding.editSalary.postDelayed(salarySaveRunnable, 500)
+            }
         }
 
-        binding.checkbox.setOnCheckedChangeListener { _, _ ->
+        binding.checkbox.setOnCheckedChangeListener { _, isChecked ->
             updateButtonsVisibility()
+            saveFiltersAutomatically() // Автосохранение при изменении чекбокса
         }
 
         updateIconAndState(jobLocationLayout, jobLocationEditText.text.toString())
         updateIconAndState(industryLayout, industryEditText.text.toString())
 
         setupSalaryField(salaryEditText, salaryLayout)
+    }
+
+    // Runnable для отложенного сохранения зарплаты
+    private val salarySaveRunnable = Runnable {
+        if (isViewCreated) {
+            saveFiltersAutomatically()
+        }
+    }
+
+    private fun saveFiltersAutomatically() {
+        if (!isViewCreated) return
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            val filters = createFiltersFromUI()
+            viewModel.updateFilters(filters)
+        }
     }
 
     private fun updateButtonsVisibility() {
@@ -218,9 +252,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     }
 
     private fun applyFiltersAndReturn() {
-        val filters = createFiltersFromUI()
-        viewModel.updateFilters(filters)
-
+        // Фильтры уже сохранены автоматически, просто выходим с флагом применения
         setFragmentResult(
             "filter_result",
             Bundle().apply {
@@ -242,14 +274,14 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         val salary = binding.editSalary.text?.toString()?.toIntOrNull()
         val hideWithoutSalary = binding.checkbox.isChecked
 
-        val regionToSave =
-            selectedRegion ?: selectedCountry?.let { country ->
-                Region(
-                    id = country.id,
-                    name = "",
-                    country = country
-                )
-            }
+        val regionToSave = selectedRegion ?: selectedCountry?.let { country ->
+            Region(
+                id = country.id,
+                name = "", // ← только страна
+                country = country
+            )
+        }
+
         return VacancyFilters(
             region = regionToSave,
             industry = industry,
@@ -282,18 +314,6 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         Toast.makeText(requireContext(), "Фильтры сброшены", Toast.LENGTH_SHORT).show()
     }
 
-    private fun returnToSearchWithoutSaving() {
-        val currentFilters = createFiltersFromUI()
-        viewModel.updateFilters(currentFilters)
-        setFragmentResult(
-            "filter_result",
-            Bundle().apply {
-                putBoolean("filters_applied", false)
-            }
-        )
-        findNavController().navigateUp()
-    }
-
     private fun updateIconAndState(layout: TextInputLayout, text: String) {
         if (text.isEmpty()) {
             layout.endIconDrawable = ContextCompat.getDrawable(requireContext(), R.drawable.arrow_right)
@@ -310,15 +330,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         if (editText.text.isNullOrEmpty()) {
             when (field) {
                 "jobLocation" -> {
-                    if (editText.text.isNullOrEmpty()) {
-                        findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseWorkPlaceFragment)
-                    } else {
-                        editText.text?.clear()
-                        updateIconAndState(layout, "")
-                        updateButtonsVisibility()
-                    }
+                    findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseWorkPlaceFragment)
                 }
-
                 "industry" -> findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseIndustryFragment)
             }
         } else {
@@ -326,8 +339,13 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             updateIconAndState(layout, "")
             when (field) {
                 "industry" -> selectedIndustry = null
+                "jobLocation" -> {
+                    selectedCountry = null
+                    selectedRegion = null
+                }
             }
             updateButtonsVisibility()
+            saveFiltersAutomatically() // Сохраняем при очистке поля
         }
     }
 
@@ -386,6 +404,9 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                 binding.root.isFocusableInTouchMode = true
                 binding.root.requestFocus()
 
+                // Сохраняем при завершении ввода зарплаты
+                saveFiltersAutomatically()
+
                 true
             } else {
                 false
@@ -396,16 +417,12 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private fun setupSalaryClearIcon(editText: TextInputEditText) {
         binding.clearIcon.setOnClickListener {
             editText.text?.clear()
+            saveFiltersAutomatically() // Сохраняем при очистке зарплаты
         }
     }
 
     private fun closeKeyboard(view: View) {
         val imm = requireContext().getSystemService(InputMethodManager::class.java)
         imm?.hideSoftInputFromWindow(view.windowToken, 0)
-    }
-
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
     }
 }
