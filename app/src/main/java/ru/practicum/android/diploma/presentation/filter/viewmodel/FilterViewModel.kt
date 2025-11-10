@@ -22,7 +22,7 @@ class FilterViewModel(
         loadCurrentFilters()
     }
 
-    private fun loadCurrentFilters() {
+    fun loadCurrentFilters() {
         viewModelScope.launch {
             val currentFilters = filterUseCase.getCurrentFilters()
             _filtersState.value = currentFilters

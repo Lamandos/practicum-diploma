@@ -13,17 +13,25 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
 import ru.practicum.android.diploma.databinding.FragmentFilterSettingsBinding
+import ru.practicum.android.diploma.domain.models.filtermodels.Industry
+import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
+import ru.practicum.android.diploma.presentation.filter.viewmodel.FilterViewModel
 
 class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
     private var _binding: FragmentFilterSettingsBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: FilterViewModel by viewModel()
 
     private var selectedIndustry: FilterIndustryDto? = null
 
@@ -34,6 +42,38 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         setupFragmentResultListeners()
         setupClickListeners()
         setupTextWatchers()
+        observeViewModel()
+        loadSavedFilters()
+    }
+
+    private fun observeViewModel() {
+        viewModel.filtersState.observe(viewLifecycleOwner) { filters ->
+            updateUIWithFilters(filters)
+        }
+    }
+
+    private fun loadSavedFilters() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.loadCurrentFilters()
+        }
+    }
+
+    private fun updateUIWithFilters(filters: VacancyFilters) {
+        // Обновляем отрасль
+        filters.industry?.let { industry ->
+            binding.editIndustry.setText(industry.name)
+            selectedIndustry = FilterIndustryDto(industry.id.toIntOrNull() ?: 0, industry.name)
+            updateIconAndState(binding.industry, industry.name)
+        }
+
+        // Обновляем зарплату
+        filters.salary?.let { salary ->
+            binding.editSalary.setText(salary.toString())
+        }
+
+        // Обновляем чекбокс "Только с зарплатой"
+        binding.checkbox.isChecked = filters.hideWithoutSalary
+
         updateButtonsVisibility()
     }
 
@@ -130,15 +170,37 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     }
 
     private fun applyFiltersAndReturn() {
-        // Передаем только выбранную отрасль, а не весь VacancyFilters
+        val filters = createFiltersFromUI()
+        viewModel.updateFilters(filters)
+
         setFragmentResult(
             "filter_result",
             Bundle().apply {
                 putBoolean("filters_applied", true)
-                putParcelable("selected_industry", selectedIndustry)
             }
         )
         findNavController().navigateUp()
+    }
+
+    private fun createFiltersFromUI(): VacancyFilters {
+        val industry = selectedIndustry?.let { industryDto ->
+            Industry(
+                id = industryDto.id.toString(),
+                name = industryDto.name,
+                parentId = null
+            )
+        }
+
+        val salary = binding.editSalary.text?.toString()?.toIntOrNull()
+        val hideWithoutSalary = binding.checkbox.isChecked
+
+        return VacancyFilters(
+            region = null, // Пока не используем регион
+            industry = industry,
+            salary = salary,
+            hideWithoutSalary = hideWithoutSalary,
+            currency = "RUB"
+        )
     }
 
     private fun clearAllFields() {
@@ -155,6 +217,9 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         binding.checkbox.isChecked = false
 
         updateButtonsVisibility()
+
+        // Очищаем фильтры в ViewModel
+        viewModel.clearFilters()
 
         Toast.makeText(requireContext(), "Фильтры сброшены", Toast.LENGTH_SHORT).show()
     }
@@ -192,8 +257,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         } else {
             editText.text?.clear()
             updateIconAndState(layout, "")
-            if (field == "industry") {
-                selectedIndustry = null
+            when (field) {
+                "industry" -> selectedIndustry = null
             }
             updateButtonsVisibility()
         }
