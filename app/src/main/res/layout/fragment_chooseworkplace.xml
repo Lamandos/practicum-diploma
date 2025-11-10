@@ -99,6 +99,7 @@
         android:insetBottom="0dp"
         android:text="@string/Choose"
         android:textColor="@color/white"
+        android:visibility="gone"
         app:cornerRadius="12dp"
         app:layout_constraintBottom_toTopOf="@+id/bottom_space"
         app:layout_constraintEnd_toEndOf="parent"

@@ -6,4 +6,3 @@ data class VacancyFilters(
     val salary: Int? = null,
     val hideWithoutSalary: Boolean = false
 )
-
