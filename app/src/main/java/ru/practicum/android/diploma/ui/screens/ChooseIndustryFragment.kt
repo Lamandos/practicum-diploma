@@ -1,30 +1,25 @@
 package ru.practicum.android.diploma.ui.screens
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
-import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.R
-import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
 import ru.practicum.android.diploma.databinding.FragmentChooseindustryBinding
-import ru.practicum.android.diploma.domain.api.repositories.IndustryRepository
 import ru.practicum.android.diploma.presentation.filter.adapter.IndustryAdapter
-import java.io.IOException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
+import ru.practicum.android.diploma.presentation.filter.viewmodel.ChooseIndustryViewModel
+import ru.practicum.android.diploma.ui.model.FilterIndustryUI
 
 class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
 
     private var _binding: FragmentChooseindustryBinding? = null
     private val binding get() = _binding!!
-    private val repository: IndustryRepository by inject()
+
+    private val viewModel: ChooseIndustryViewModel by viewModel()
 
     private val adapter: IndustryAdapter by lazy {
         IndustryAdapter(emptyList()) { selectedIndustry ->
@@ -32,12 +27,8 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
         }
     }
 
-    private var allIndustries: List<FilterIndustryDto> = emptyList()
-    private var selectedIndustry: FilterIndustryDto? = null
-
-    companion object {
-        private const val TAG = "ChooseIndustryFragment"
-    }
+    private var allIndustries: List<FilterIndustryUI> = emptyList()
+    private var selectedIndustry: FilterIndustryUI? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -46,7 +37,7 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
         setupRecyclerView()
         setupClickListeners()
         setupSearchField()
-        loadIndustries()
+        observeViewModel()
         updateButtonVisibility()
     }
 
@@ -73,7 +64,7 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
         binding.searchField.addTextChangedListener(object : android.text.TextWatcher {
             override fun onTextChanged(charSequence: CharSequence?, start: Int, before: Int, count: Int) {
                 val query = charSequence.toString().trim()
-                filterIndustries(query)
+                viewModel.searchIndustries(query)
                 binding.clearIcon.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
                 binding.searchIcon.visibility = if (query.isNotEmpty()) View.GONE else View.VISIBLE
             }
@@ -82,32 +73,19 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
         })
     }
 
-    private fun filterIndustries(query: String) {
-        val filtered = if (query.isEmpty()) {
-            allIndustries
-        } else {
-            allIndustries.filter { it.name.contains(query, ignoreCase = true) }
+    private fun observeViewModel() {
+        viewModel.industriesState.observe(viewLifecycleOwner) { industries ->
+            allIndustries = industries
+            adapter.updateData(industries)
         }
-        adapter.updateData(filtered)
-    }
 
-    private fun loadIndustries() {
-        binding.progressBar.visibility = View.VISIBLE
-        lifecycleScope.launch {
-            try {
-                allIndustries = repository.getAllIndustries() ?: emptyList()
-                adapter.updateData(allIndustries)
-            } catch (e: UnknownHostException) {
-                Log.e(TAG, "No internet connection", e)
-                showError("Нет подключения к интернету")
-            } catch (e: SocketTimeoutException) {
-                Log.e(TAG, "Server timeout", e)
-                showError("Превышено время ожидания сервера")
-            } catch (e: IOException) {
-                Log.e(TAG, "Network error", e)
-                showError("Ошибка сети")
-            } finally {
-                binding.progressBar.visibility = View.GONE
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        }
+
+        viewModel.isError.observe(viewLifecycleOwner) { isError ->
+            if (isError) {
+                showError(viewModel.errorMessage.value ?: "Произошла ошибка")
             }
         }
     }
@@ -116,7 +94,7 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
-    private fun onIndustrySelected(industry: FilterIndustryDto) {
+    private fun onIndustrySelected(industry: FilterIndustryUI) {
         selectedIndustry = industry
         updateButtonVisibility()
     }

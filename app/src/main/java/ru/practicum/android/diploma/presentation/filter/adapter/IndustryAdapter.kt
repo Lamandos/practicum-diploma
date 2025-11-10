@@ -7,14 +7,14 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.checkbox.MaterialCheckBox
 import ru.practicum.android.diploma.R
-import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
+import ru.practicum.android.diploma.ui.model.FilterIndustryUI
 
 class IndustryAdapter(
-    private var industries: List<FilterIndustryDto>,
-    private val onIndustryClick: (FilterIndustryDto) -> Unit
+    private var industries: List<FilterIndustryUI>,
+    private val onIndustryClick: (FilterIndustryUI) -> Unit
 ) : RecyclerView.Adapter<IndustryAdapter.IndustryViewHolder>() {
 
-    private var selectedIndustry: FilterIndustryDto? = null
+    private var selectedIndustry: FilterIndustryUI? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): IndustryViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.fragment_industry_for_rv, parent, false)
@@ -27,7 +27,7 @@ class IndustryAdapter(
 
     override fun getItemCount(): Int = industries.size
 
-    fun updateData(newIndustries: List<FilterIndustryDto>) {
+    fun updateData(newIndustries: List<FilterIndustryUI>) {
         industries = newIndustries
         notifyDataSetChanged()
     }
@@ -36,26 +36,23 @@ class IndustryAdapter(
         private val industryName: TextView = itemView.findViewById(R.id.industry_name)
         private val checkBox: MaterialCheckBox = itemView.findViewById(R.id.check_industry)
 
-        fun bind(industry: FilterIndustryDto) {
+        fun bind(industry: FilterIndustryUI) {
             industryName.text = industry.name
             checkBox.isChecked = selectedIndustry?.id == industry.id
 
-            // Обработчик клика на весь item
             itemView.setOnClickListener {
                 selectIndustry(industry)
             }
 
-            // Обработчик клика на checkbox
             checkBox.setOnClickListener {
                 selectIndustry(industry)
             }
         }
 
-        private fun selectIndustry(industry: FilterIndustryDto) {
+        private fun selectIndustry(industry: FilterIndustryUI) {
             val previousSelected = selectedIndustry
             selectedIndustry = industry
 
-            // Уведомляем об изменении предыдущего выбранного элемента
             previousSelected?.let { oldIndustry ->
                 val oldPosition = industries.indexOfFirst { it.id == oldIndustry.id }
                 if (oldPosition != -1) {
@@ -63,7 +60,6 @@ class IndustryAdapter(
                 }
             }
 
-            // Уведомляем об изменении нового выбранного элемента
             val newPosition = industries.indexOfFirst { it.id == industry.id }
             if (newPosition != -1) {
                 notifyItemChanged(newPosition)
@@ -73,14 +69,12 @@ class IndustryAdapter(
         }
     }
 
-    // Метод для сброса выбора
     fun clearSelection() {
         selectedIndustry = null
         notifyDataSetChanged()
     }
 
-    // Метод для установки выбранной отрасли
-    fun setSelectedIndustry(industry: FilterIndustryDto?) {
+    fun setSelectedIndustry(industry: FilterIndustryUI?) {
         selectedIndustry = industry
         notifyDataSetChanged()
     }

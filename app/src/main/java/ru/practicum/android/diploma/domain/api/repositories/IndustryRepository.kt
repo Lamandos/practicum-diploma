@@ -1,7 +1,7 @@
 package ru.practicum.android.diploma.domain.api.repositories
 
-import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
+import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
 
 interface IndustryRepository {
-    suspend fun getAllIndustries(): List<FilterIndustryDto>?
+    suspend fun getAllIndustries(): List<FilterIndustry>?
 }
