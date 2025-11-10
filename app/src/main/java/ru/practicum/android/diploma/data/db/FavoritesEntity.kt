@@ -33,5 +33,7 @@ data class FavoritesEntity(
     @ColumnInfo(name = "industry")
     val industry: String?,
     @ColumnInfo(name = "published")
-    val published: String?
+    val published: String?,
+    @ColumnInfo(name = "contacts")
+    val contactsJson: String?
 )
