@@ -91,31 +91,33 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
 
     private fun observeViewModel() {
         parentFragmentManager.setFragmentResultListener("country_request", viewLifecycleOwner) { _, bundle ->
-            val country = bundle.getParcelable<Country>("country") ?: return@setFragmentResultListener
-            viewModel.selectCountry(country)
-            binding.editCountry.setText(country.name)
-            binding.editCountry.tag = country
-            binding.editRegion.text?.clear()
-            viewModel.selectRegion(null)
-            updateIconAndState(binding.region, "")
-            updateIconAndState(binding.country, country.name)
+            bundle.getParcelable<Country>("country")?.let { country ->
+                viewModel.selectCountry(country)
+                binding.editCountry.setText(country.name)
+                binding.editCountry.tag = country
+                binding.editRegion.text?.clear()
+                viewModel.selectRegion(null)
+                updateIconAndState(binding.region, "")
+                updateIconAndState(binding.country, country.name)
+            }
         }
 
         parentFragmentManager.setFragmentResultListener("region_request", viewLifecycleOwner) { _, bundle ->
-            val region = bundle.getParcelable<Region>("region") ?: return@setFragmentResultListener
+            bundle.getParcelable<Region>("region")?.let { region ->
+                if (viewModel.selectedCountry.value == null && region.country != null) {
+                    viewModel.selectCountry(region.country)
+                    binding.editCountry.setText(region.country.name)
+                    binding.editCountry.tag = region.country
+                    updateIconAndState(binding.country, region.country.name)
+                }
 
-            if (viewModel.selectedCountry.value == null && region.country != null) {
-                viewModel.selectCountry(region.country)
-                binding.editCountry.setText(region.country.name)
-                binding.editCountry.tag = region.country
-                updateIconAndState(binding.country, region.country.name)
+                viewModel.selectRegion(region)
+                binding.editRegion.setText(region.name)
+                updateIconAndState(binding.region, region.name)
             }
-
-            viewModel.selectRegion(region)
-            binding.editRegion.setText(region.name)
-            updateIconAndState(binding.region, region.name)
         }
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

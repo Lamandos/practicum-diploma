@@ -64,7 +64,7 @@ class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
             when (error) {
                 RegionError.NO_RESULTS -> binding.noRegionError.visibility = View.VISIBLE
                 RegionError.LOAD_FAILED -> binding.noRegionListError.visibility = View.VISIBLE
-                null -> {  }
+                null -> {}
             }
         }
     }

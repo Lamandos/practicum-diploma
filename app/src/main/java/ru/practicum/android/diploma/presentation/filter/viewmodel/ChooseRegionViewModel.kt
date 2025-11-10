@@ -31,13 +31,19 @@ class ChooseRegionViewModel(
 
     fun loadRegions(country: Country) {
         viewModelScope.launch {
-            try {
-                val regions = regionsInteractor.getRegions(country)
+            runCatching {
+                regionsInteractor.getRegions(country)
+            }.onSuccess { regions ->
                 fullRegionList = regions
                 _allRegions.value = regions
                 _filteredRegions.value = regions
-                _error.value = if (regions.isEmpty()) RegionError.LOAD_FAILED else null
-            } catch (e: Exception) {
+                _error.value = if (regions.isEmpty()) {
+                    RegionError.LOAD_FAILED
+                } else {
+                    null
+                }
+            }.onFailure { e ->
+                // Ловим конкретные ошибки, если возможно, иначе можно оставить как LOAD_FAILED
                 _error.value = RegionError.LOAD_FAILED
             }
         }
@@ -45,23 +51,36 @@ class ChooseRegionViewModel(
 
     fun loadAllRegions() {
         viewModelScope.launch {
-            try {
-                val regions = regionsInteractor.getAllRegions()
+            runCatching {
+                regionsInteractor.getAllRegions()
+            }.onSuccess { regions ->
                 fullRegionList = regions
                 _allRegions.value = regions
                 _filteredRegions.value = regions
-                _error.value = if (regions.isEmpty()) RegionError.LOAD_FAILED else null
-            } catch (e: Exception) {
+                _error.value = if (regions.isEmpty()) {
+                    RegionError.LOAD_FAILED
+                } else {
+                    null
+                }
+            }.onFailure { e ->
                 _error.value = RegionError.LOAD_FAILED
             }
         }
     }
 
     fun filterRegions(query: String) {
-        val filtered = if (query.isBlank()) fullRegionList
-        else fullRegionList.filter { it.name.contains(query, ignoreCase = true) }
+        val filtered = if (query.isBlank()) {
+            fullRegionList
+        } else {
+            fullRegionList.filter { it.name.contains(query, ignoreCase = true) }
+        }
 
         _filteredRegions.value = filtered
-        _error.value = if (filtered.isEmpty()) RegionError.NO_RESULTS else null
+        _error.value = if (filtered.isEmpty()) {
+            RegionError.NO_RESULTS
+        } else {
+            null
+        }
     }
 }
+

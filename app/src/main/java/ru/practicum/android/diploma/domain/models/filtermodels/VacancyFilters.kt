@@ -7,5 +7,9 @@ data class VacancyFilters(
     val industry: Industry? = null,
     val salary: Int? = null,
     val hideWithoutSalary: Boolean = false,
-    val currency: String = "RUB",
+    val currency: String = "RUB"
 )
+
+fun VacancyFilters.isAnyFilterApplied(): Boolean {
+    return region != null || industry != null || salary != null || hideWithoutSalary
+}

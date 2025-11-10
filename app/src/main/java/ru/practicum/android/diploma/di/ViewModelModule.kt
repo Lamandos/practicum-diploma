@@ -39,6 +39,6 @@ val viewModelModule: Module = module {
         ChooseRegionViewModel(get())
     }
     viewModel {
-        ChooseWorkPlaceViewModel(get(),get())
+        ChooseWorkPlaceViewModel(get(), get())
     }
 }

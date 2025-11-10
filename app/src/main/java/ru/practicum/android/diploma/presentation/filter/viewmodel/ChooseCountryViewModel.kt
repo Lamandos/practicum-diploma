@@ -20,14 +20,11 @@ class ChooseCountryViewModel(
 
     fun loadCountries() {
         viewModelScope.launch {
-            try {
-                val result = countriesInteractor.getCountries()
-                _countries.value = result
-                _error.value = result.isEmpty()
-            } catch (e: Exception) {
-                _countries.value = emptyList()
-                _error.value = true
-            }
+            val result = runCatching { countriesInteractor.getCountries() }
+                .getOrElse { emptyList() }
+
+            _countries.value = result
+            _error.value = result.isEmpty()
         }
     }
 }
