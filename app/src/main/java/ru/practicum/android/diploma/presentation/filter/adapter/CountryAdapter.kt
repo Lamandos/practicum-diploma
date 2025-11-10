@@ -6,15 +6,19 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import ru.practicum.android.diploma.R
-import ru.practicum.android.diploma.data.dto.filterdto.FilterAreaDto
+import ru.practicum.android.diploma.domain.models.vacancy.Country
 
 class CountryAdapter(
-    private val countries: List<FilterAreaDto>,
-    private val onItemClick: (FilterAreaDto) -> Unit
+    private var countries: List<Country>,
+    private val onItemClick: (Country) -> Unit
 ) : RecyclerView.Adapter<CountryAdapter.CountryViewHolder>() {
 
     inner class CountryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val nameText: TextView = itemView.findViewById(R.id.country_name)
+        private val nameText: TextView = itemView.findViewById(R.id.country_name)
+        fun bind(country: Country) {
+            nameText.text = country.name
+            itemView.setOnClickListener { onItemClick(country) }
+        }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CountryViewHolder {
@@ -24,10 +28,13 @@ class CountryAdapter(
     }
 
     override fun onBindViewHolder(holder: CountryViewHolder, position: Int) {
-        val country = countries[position]
-        holder.nameText.text = country.name
-        holder.itemView.setOnClickListener { onItemClick(country) }
+        holder.bind(countries[position])
     }
 
     override fun getItemCount(): Int = countries.size
+
+    fun updateData(newCountries: List<Country>) {
+        countries = newCountries
+        notifyDataSetChanged()
+    }
 }

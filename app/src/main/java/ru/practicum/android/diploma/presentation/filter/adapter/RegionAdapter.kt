@@ -6,16 +6,16 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import ru.practicum.android.diploma.R
-import ru.practicum.android.diploma.data.dto.filterdto.FilterAreaDto
+import ru.practicum.android.diploma.domain.models.filtermodels.Region
 
 class RegionAdapter(
-    private var regions: List<FilterAreaDto>,
-    private val onClick: (FilterAreaDto) -> Unit
+    private var regions: List<Region>,
+    private val onClick: (Region) -> Unit
 ) : RecyclerView.Adapter<RegionAdapter.RegionViewHolder>() {
 
     inner class RegionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val nameText: TextView = itemView.findViewById(R.id.region_name)
-        fun bind(region: FilterAreaDto) {
+        fun bind(region: Region) {
             nameText.text = region.name
             itemView.setOnClickListener { onClick(region) }
         }
@@ -33,7 +33,7 @@ class RegionAdapter(
 
     override fun getItemCount(): Int = regions.size
 
-    fun updateData(newRegions: List<FilterAreaDto>) {
+    fun updateData(newRegions: List<Region>) {
         regions = newRegions
         notifyDataSetChanged()
     }
