@@ -43,8 +43,11 @@ class ChooseWorkPlaceViewModel(
     }
 
     fun filterRegions(query: String) {
-        val filtered = if (query.isBlank()) fullRegionList
-        else fullRegionList.filter { it.name.contains(query, ignoreCase = true) }
+        val filtered = if (query.isBlank()) {
+            fullRegionList
+        } else {
+            fullRegionList.filter { it.name.contains(query, ignoreCase = true) }
+        }
         _filteredRegions.value = filtered
     }
 
