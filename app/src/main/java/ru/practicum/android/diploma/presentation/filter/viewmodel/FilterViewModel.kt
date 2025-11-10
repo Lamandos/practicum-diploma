@@ -5,11 +5,11 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import ru.practicum.android.diploma.domain.api.usecases.FilterUseCase
+import ru.practicum.android.diploma.domain.api.usecases.FilterInteractor
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 
 class FilterViewModel(
-    private val filterUseCase: FilterUseCase
+    private val filterInteractor: FilterInteractor
 ) : ViewModel() {
 
     private val _filtersState = MutableLiveData<VacancyFilters>()
@@ -24,7 +24,7 @@ class FilterViewModel(
 
     fun loadCurrentFilters() {
         viewModelScope.launch {
-            val currentFilters = filterUseCase.getCurrentFilters()
+            val currentFilters = filterInteractor.getFilters()
             _filtersState.value = currentFilters
             _isFilterApplied.value = isAnyFilterApplied(currentFilters)
         }
@@ -32,7 +32,7 @@ class FilterViewModel(
 
     fun updateFilters(newFilters: VacancyFilters) {
         viewModelScope.launch {
-            filterUseCase.saveFilters(newFilters)
+            filterInteractor.saveFilters(newFilters)
             _filtersState.value = newFilters
             _isFilterApplied.value = isAnyFilterApplied(newFilters)
         }
@@ -41,7 +41,7 @@ class FilterViewModel(
     fun clearFilters() {
         viewModelScope.launch {
             val emptyFilters = VacancyFilters()
-            filterUseCase.saveFilters(emptyFilters)
+            filterInteractor.saveFilters(emptyFilters)
             _filtersState.value = emptyFilters
             _isFilterApplied.value = false
         }
