@@ -47,4 +47,37 @@ class FilterViewModel(
             _isFilterApplied.value = false
         }
     }
+
+    // Методы для обновления отдельных полей
+    fun updateRegion(region: ru.practicum.android.diploma.domain.models.filtermodels.Region?) {
+        viewModelScope.launch {
+            val currentFilters = filterInteractor.getFilters()
+            val updatedFilters = currentFilters.copy(region = region)
+            updateFilters(updatedFilters)
+        }
+    }
+
+    fun updateIndustry(industry: ru.practicum.android.diploma.domain.models.filtermodels.Industry?) {
+        viewModelScope.launch {
+            val currentFilters = filterInteractor.getFilters()
+            val updatedFilters = currentFilters.copy(industry = industry)
+            updateFilters(updatedFilters)
+        }
+    }
+
+    fun updateSalary(salary: Int?) {
+        viewModelScope.launch {
+            val currentFilters = filterInteractor.getFilters()
+            val updatedFilters = currentFilters.copy(salary = salary)
+            updateFilters(updatedFilters)
+        }
+    }
+
+    fun updateHideWithoutSalary(hide: Boolean?) {
+        viewModelScope.launch {
+            val currentFilters = filterInteractor.getFilters()
+            val updatedFilters = currentFilters.copy(hideWithoutSalary = hide)
+            updateFilters(updatedFilters)
+        }
+    }
 }

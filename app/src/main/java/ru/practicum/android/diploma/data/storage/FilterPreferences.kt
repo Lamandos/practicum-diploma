@@ -3,6 +3,7 @@ package ru.practicum.android.diploma.data.storage
 import android.content.Context
 import android.content.SharedPreferences
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 
 class FilterPreferences(context: Context) {
@@ -23,7 +24,8 @@ class FilterPreferences(context: Context) {
     fun getFilters(): VacancyFilters {
         val filtersJson = sharedPreferences.getString(KEY_FILTERS, null)
         return if (filtersJson != null) {
-            gson.fromJson(filtersJson, VacancyFilters::class.java) ?: VacancyFilters()
+            val type = object : TypeToken<VacancyFilters>() {}.type
+            gson.fromJson<VacancyFilters>(filtersJson, type) ?: VacancyFilters()
         } else {
             VacancyFilters()
         }
