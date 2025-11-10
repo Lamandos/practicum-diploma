@@ -7,6 +7,9 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
 import ru.practicum.android.diploma.domain.interactors.IndustryInteractor
+import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class ChooseIndustryViewModel(
     private val industryInteractor: IndustryInteractor
@@ -41,7 +44,14 @@ class ChooseIndustryViewModel(
                 } else {
                     _isError.value = true
                 }
+            } catch (e: IOException) {
+                _isError.value = true
+            } catch (e: SocketTimeoutException) {
+                _isError.value = true
+            } catch (e: UnknownHostException) {
+                _isError.value = true
             } catch (e: Exception) {
+                e.printStackTrace()
                 _isError.value = true
             } finally {
                 _isLoading.value = false
@@ -54,8 +64,12 @@ class ChooseIndustryViewModel(
             _industriesState.value = allIndustries
         } else {
             viewModelScope.launch {
-                val filteredIndustries = industryInteractor.searchIndustries(query)
-                _industriesState.value = filteredIndustries ?: emptyList()
+                try {
+                    val filteredIndustries = industryInteractor.searchIndustries(query)
+                    _industriesState.value = filteredIndustries ?: emptyList()
+                } catch (e: Exception) {
+                    _industriesState.value = emptyList()
+                }
             }
         }
     }
