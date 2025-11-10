@@ -10,6 +10,7 @@ import ru.practicum.android.diploma.data.network.VacancySearchResponse
 import ru.practicum.android.diploma.domain.api.repositories.VacanciesRepository
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import java.io.IOException
 
 class SearchVacanciesRepositoryImpl(
     private val networkClient: NetworkClient,
@@ -20,6 +21,13 @@ class SearchVacanciesRepositoryImpl(
     override val totalFoundCount: Int
         get() = totalFound
 
+    companion object {
+        private const val TAG = "SearchRepository"
+        private const val ERROR_INVALID_RESPONSE = "Invalid response data type"
+        private const val ERROR_NETWORK = "Network error"
+        private const val ERROR_VACANCY_DETAILS = "Не удалось получить данные вакансии"
+    }
+
     override suspend fun searchVacancies(
         query: String,
         page: Int,
@@ -27,7 +35,7 @@ class SearchVacanciesRepositoryImpl(
         filters: VacancyFilters?
     ): Result<List<VacancyDetails>> {
         return try {
-            Log.d("SearchRepository", "Search started: query='$query', page=$page, filters=$filters")
+            Log.d(TAG, "Search started: query='$query', page=$page, filters=$filters")
 
             val searchRequest = VacancySearchRequest(
                 text = query,
@@ -47,7 +55,8 @@ class SearchVacanciesRepositoryImpl(
                     if (data != null) {
                         totalFound = data.found
 
-                        Log.d("SearchRepository",
+                        Log.d(
+                            TAG,
                             "Search successful: found=${data.found}, pages=${data.pages}, " +
                                 "currentPage=${data.page}, items=${data.items.size}"
                         )
@@ -55,17 +64,20 @@ class SearchVacanciesRepositoryImpl(
                         val vacancies = VacancyMapper.mapToVacancyDetails(data.items)
                         Result.success(vacancies)
                     } else {
-                        Log.e("SearchRepository", "Invalid response data type")
-                        Result.failure(Exception("Invalid response data type"))
+                        Log.e(TAG, ERROR_INVALID_RESPONSE)
+                        Result.failure(Exception(ERROR_INVALID_RESPONSE))
                     }
                 }
                 else -> {
-                    Log.e("SearchRepository", "Network error: $response")
-                    Result.failure(Exception("Network error: $response"))
+                    Log.e(TAG, "$ERROR_NETWORK: $response")
+                    Result.failure(Exception("$ERROR_NETWORK: $response"))
                 }
             }
+        } catch (e: IOException) {
+            Log.e(TAG, "Search IO error: ${e.message}", e)
+            Result.failure(e)
         } catch (e: Exception) {
-            Log.e("SearchRepository", "Search error: ${e.message}", e)
+            Log.e(TAG, "Search error: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -73,7 +85,7 @@ class SearchVacanciesRepositoryImpl(
     override suspend fun getVacancyDetails(vacancyId: String): Result<VacancyDetails> {
         return networkClient.getVacancyDetails(vacancyId)?.let {
             Result.success(it)
-        } ?: Result.failure(Exception("Не удалось получить данные вакансии"))
+        } ?: Result.failure(Exception(ERROR_VACANCY_DETAILS))
     }
 
     override suspend fun getIndustries(): Result<List<VacancyDetails>> =

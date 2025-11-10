@@ -42,6 +42,18 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     // Флаг для отслеживания состояния View
     private var isViewCreated = false
 
+    companion object {
+        private const val SALARY_SAVE_DELAY_MS = 500L
+        private const val FILTER_RESULT_KEY = "filter_result"
+        private const val INDUSTRY_RESULT_KEY = "industry_result"
+        private const val WORKPLACE_RESULT_KEY = "workplace_result"
+        private const val FILTERS_APPLIED_KEY = "filters_applied"
+        private const val SELECTED_INDUSTRY_KEY = "selected_industry"
+        private const val JOB_LOCATION_FIELD = "jobLocation"
+        private const val INDUSTRY_FIELD = "industry"
+        private const val CURRENCY_RUB = "RUB"
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentFilterSettingsBinding.bind(view)
@@ -114,8 +126,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     }
 
     private fun setupFragmentResultListeners() {
-        setFragmentResultListener("industry_result") { _, bundle ->
-            bundle.getParcelable<FilterIndustryUI>("selected_industry")?.let { industry ->
+        setFragmentResultListener(INDUSTRY_RESULT_KEY) { _, bundle ->
+            bundle.getParcelable<FilterIndustryUI>(SELECTED_INDUSTRY_KEY)?.let { industry ->
                 selectedIndustry = industry
                 binding.editIndustry.setText(industry.name)
                 updateIconAndState(binding.industry, industry.name)
@@ -124,7 +136,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             }
         }
 
-        setFragmentResultListener("workplace_result") { _, bundle ->
+        setFragmentResultListener(WORKPLACE_RESULT_KEY) { _, bundle ->
             selectedCountry = bundle.getParcelable("country")
             selectedRegion = bundle.getParcelable("region")
 
@@ -187,11 +199,11 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         }
 
         jobLocationLayout.setEndIconOnClickListener {
-            navigateOrClear(jobLocationEditText, jobLocationLayout, "jobLocation")
+            navigateOrClear(jobLocationEditText, jobLocationLayout, JOB_LOCATION_FIELD)
         }
 
         industryLayout.setEndIconOnClickListener {
-            navigateOrClear(industryEditText, industryLayout, "industry")
+            navigateOrClear(industryEditText, industryLayout, INDUSTRY_FIELD)
         }
 
         binding.editSalary.addTextChangedListener { text ->
@@ -201,7 +213,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             // Автосохранение при изменении зарплаты (с задержкой чтобы не спамить)
             if (isViewCreated) {
                 binding.editSalary.removeCallbacks(salarySaveRunnable)
-                binding.editSalary.postDelayed(salarySaveRunnable, 500)
+                binding.editSalary.postDelayed(salarySaveRunnable, SALARY_SAVE_DELAY_MS)
             }
         }
 
@@ -254,9 +266,9 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private fun applyFiltersAndReturn() {
         // Фильтры уже сохранены автоматически, просто выходим с флагом применения
         setFragmentResult(
-            "filter_result",
+            FILTER_RESULT_KEY,
             Bundle().apply {
-                putBoolean("filters_applied", true)
+                putBoolean(FILTERS_APPLIED_KEY, true)
             }
         )
         findNavController().navigateUp()
@@ -287,7 +299,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             industry = industry,
             salary = salary,
             hideWithoutSalary = hideWithoutSalary,
-            currency = "RUB"
+            currency = CURRENCY_RUB
         )
     }
 
@@ -329,17 +341,17 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private fun navigateOrClear(editText: TextInputEditText, layout: TextInputLayout, field: String) {
         if (editText.text.isNullOrEmpty()) {
             when (field) {
-                "jobLocation" -> {
+                JOB_LOCATION_FIELD -> {
                     findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseWorkPlaceFragment)
                 }
-                "industry" -> findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseIndustryFragment)
+                INDUSTRY_FIELD -> findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseIndustryFragment)
             }
         } else {
             editText.text?.clear()
             updateIconAndState(layout, "")
             when (field) {
-                "industry" -> selectedIndustry = null
-                "jobLocation" -> {
+                INDUSTRY_FIELD -> selectedIndustry = null
+                JOB_LOCATION_FIELD -> {
                     selectedCountry = null
                     selectedRegion = null
                 }
