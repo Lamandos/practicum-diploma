@@ -11,7 +11,7 @@ class FilterRepositoryImpl(
 ) : FilterRepository {
 
     override suspend fun getFilters(): VacancyFilters = withContext(Dispatchers.IO) {
-        return@withContext filterPreferences.getFilters()
+        filterPreferences.getFilters()
     }
 
     override suspend fun saveFilters(filters: VacancyFilters) = withContext(Dispatchers.IO) {

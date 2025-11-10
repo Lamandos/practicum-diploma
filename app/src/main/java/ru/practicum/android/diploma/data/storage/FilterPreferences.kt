@@ -1,4 +1,3 @@
-// FilterPreferences.kt
 package ru.practicum.android.diploma.data.storage
 
 import android.content.Context
@@ -26,7 +25,7 @@ class FilterPreferences(context: Context) {
         return if (filtersJson != null) {
             gson.fromJson(filtersJson, VacancyFilters::class.java)
         } else {
-            VacancyFilters() // Возвращаем фильтры по умолчанию
+            VacancyFilters()
         }
     }
 
