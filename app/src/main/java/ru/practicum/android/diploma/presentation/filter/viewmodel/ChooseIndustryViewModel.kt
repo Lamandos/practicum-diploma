@@ -5,8 +5,10 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
-import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
 import ru.practicum.android.diploma.domain.interactors.IndustryInteractor
+import ru.practicum.android.diploma.domain.models.filtermodels.FilterIndustry
+import ru.practicum.android.diploma.presentation.mappers.IndustryUiMapper
+import ru.practicum.android.diploma.ui.model.FilterIndustryUI
 import java.io.IOException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
@@ -15,8 +17,8 @@ class ChooseIndustryViewModel(
     private val industryInteractor: IndustryInteractor
 ) : ViewModel() {
 
-    private val _industriesState = MutableLiveData<List<FilterIndustryDto>>()
-    val industriesState: LiveData<List<FilterIndustryDto>> = _industriesState
+    private val _industriesState = MutableLiveData<List<FilterIndustryUI>>()
+    val industriesState: LiveData<List<FilterIndustryUI>> = _industriesState
 
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
@@ -27,7 +29,7 @@ class ChooseIndustryViewModel(
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
-    private var allIndustries: List<FilterIndustryDto> = emptyList()
+    private var allIndustriesDomain: List<FilterIndustry> = emptyList()
 
     init {
         loadIndustries()
@@ -42,8 +44,8 @@ class ChooseIndustryViewModel(
             try {
                 val industries = industryInteractor.getAllIndustries()
                 if (industries != null) {
-                    allIndustries = industries
-                    _industriesState.value = industries
+                    allIndustriesDomain = industries
+                    _industriesState.value = IndustryUiMapper.mapDomainListToUi(industries)
                     _isError.value = false
                 } else {
                     _isError.value = true
@@ -65,32 +67,30 @@ class ChooseIndustryViewModel(
 
     fun searchIndustries(query: String) {
         if (query.isBlank()) {
-            _industriesState.value = allIndustries
+            _industriesState.value = IndustryUiMapper.mapDomainListToUi(allIndustriesDomain)
         } else {
             viewModelScope.launch {
                 try {
                     val filteredIndustries = industryInteractor.searchIndustries(query)
-                    _industriesState.value = filteredIndustries ?: emptyList()
+                    _industriesState.value = IndustryUiMapper.mapDomainListToUi(filteredIndustries ?: emptyList())
                 } catch (e: IOException) {
-                    // При ошибке сети при поиске показываем пустой список
                     _industriesState.value = emptyList()
-                    e.printStackTrace() // Логируем для отладки
+                    e.printStackTrace()
                 } catch (e: IllegalStateException) {
-                    // При ошибке состояния при поиске показываем пустой список
                     _industriesState.value = emptyList()
-                    e.printStackTrace() // Логируем для отладки
+                    e.printStackTrace()
                 }
             }
         }
     }
 
     fun resetSearch() {
-        _industriesState.value = allIndustries
+        _industriesState.value = IndustryUiMapper.mapDomainListToUi(allIndustriesDomain)
     }
 
     private fun handleNetworkError(message: String, exception: Exception) {
         _isError.value = true
         _errorMessage.value = message
-        exception.printStackTrace() // Логируем для отладки
+        exception.printStackTrace()
     }
 }
