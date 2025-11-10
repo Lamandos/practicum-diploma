@@ -7,6 +7,7 @@ import org.koin.core.context.startKoin
 import ru.practicum.android.diploma.di.dataModule
 import ru.practicum.android.diploma.di.databaseModule
 import ru.practicum.android.diploma.di.filterModule
+import ru.practicum.android.diploma.di.industryModule
 import ru.practicum.android.diploma.di.interactorModule
 import ru.practicum.android.diploma.di.repositoryModule
 import ru.practicum.android.diploma.di.viewModelModule
@@ -25,6 +26,7 @@ class App : Application() {
                 interactorModule,
                 repositoryModule,
                 filterModule,
+                industryModule,
                 viewModelModule
             )
         }

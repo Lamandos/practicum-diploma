@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
+import ru.practicum.android.diploma.domain.api.usecases.FilterInteractor
 import ru.practicum.android.diploma.domain.api.usecases.FilterUseCase
 import ru.practicum.android.diploma.domain.interactors.SearchVacanciesInteractor
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
@@ -22,7 +23,7 @@ sealed class SearchState {
 
 class SearchViewModel(
     private val interactor: SearchVacanciesInteractor,
-    private val filterUseCase: FilterUseCase
+    private val filterInteractor: FilterInteractor
 ) : ViewModel() {
 
     private val _searchState = MutableLiveData<SearchState>(SearchState.Idle)
@@ -59,7 +60,7 @@ class SearchViewModel(
 
     private fun loadCurrentFilters() {
         viewModelScope.launch {
-            val filters = filterUseCase.getCurrentFilters()
+            val filters = filterInteractor.getFilters()
             _isFilterApplied.value = isAnyFilterApplied(filters)
         }
     }
@@ -81,7 +82,7 @@ class SearchViewModel(
         viewModelScope.launch {
             try {
                 // Получаем текущие фильтры
-                val filters = filterUseCase.getCurrentFilters()
+                val filters = filterInteractor.getFilters()
                 val result = interactor.searchVacancies(
                     query = query,
                     page = currentPage + 1,
@@ -109,7 +110,7 @@ class SearchViewModel(
         viewModelScope.launch {
             try {
                 // Получаем текущие фильтры для пагинации
-                val filters = filterUseCase.getCurrentFilters()
+                val filters = filterInteractor.getFilters()
                 val result = interactor.searchVacancies(
                     query = lastQuery,
                     page = currentPage + 1,
@@ -157,7 +158,7 @@ class SearchViewModel(
     // Метод для проверки применения фильтров
     fun checkFiltersApplied() {
         viewModelScope.launch {
-            val filters = filterUseCase.getCurrentFilters()
+            val filters = filterInteractor.getFilters()
             _isFilterApplied.value = isAnyFilterApplied(filters)
         }
     }
