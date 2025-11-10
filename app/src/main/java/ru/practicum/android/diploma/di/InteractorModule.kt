@@ -3,9 +3,11 @@ package ru.practicum.android.diploma.di
 import org.koin.core.module.Module
 import org.koin.dsl.module
 import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
+import ru.practicum.android.diploma.domain.interactors.IndustryInteractor
 import ru.practicum.android.diploma.domain.interactors.SearchVacanciesInteractor
 import ru.practicum.android.diploma.domain.interactors.VacancyInteractor
 import ru.practicum.android.diploma.domain.interactors.impl.FavoritesInteractorImpl
+import ru.practicum.android.diploma.domain.interactors.impl.IndustryInteractorImpl
 import ru.practicum.android.diploma.domain.interactors.impl.SearchVacanciesInteractorImpl
 import ru.practicum.android.diploma.domain.interactors.impl.VacancyInteractorImpl
 
@@ -23,5 +25,8 @@ val interactorModule: Module = module {
         VacancyInteractorImpl(
             vacancyRepository = get()
         )
+    }
+    factory<IndustryInteractor> {
+        IndustryInteractorImpl(industriesRepository = get())
     }
 }

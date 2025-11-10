@@ -13,8 +13,8 @@ import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
-import ru.practicum.android.diploma.data.repositories.IndustriesRepository
 import ru.practicum.android.diploma.databinding.FragmentChooseindustryBinding
+import ru.practicum.android.diploma.domain.api.repositories.IndustryRepository
 import ru.practicum.android.diploma.presentation.filter.adapter.IndustryAdapter
 import java.io.IOException
 import java.net.SocketTimeoutException
@@ -24,7 +24,7 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
 
     private var _binding: FragmentChooseindustryBinding? = null
     private val binding get() = _binding!!
-    private val repository: IndustriesRepository by inject()
+    private val repository: IndustryRepository by inject()
 
     private val adapter: IndustryAdapter by lazy {
         IndustryAdapter(emptyList()) { selectedIndustry ->
