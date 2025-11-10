@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import ru.practicum.android.diploma.domain.api.usecases.FilterInteractor
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
+import ru.practicum.android.diploma.domain.models.filtermodels.isAnyFilterApplied
 
 class FilterViewModel(
     private val filterInteractor: FilterInteractor
