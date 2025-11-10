@@ -11,6 +11,8 @@ import ru.practicum.android.diploma.domain.api.repositories.VacanciesRepository
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class SearchVacanciesRepositoryImpl(
     private val networkClient: NetworkClient,
@@ -73,11 +75,17 @@ class SearchVacanciesRepositoryImpl(
                     Result.failure(Exception("$ERROR_NETWORK: $response"))
                 }
             }
+        } catch (e: SocketTimeoutException) {
+            Log.e(TAG, "Search timeout error: ${e.message}", e)
+            Result.failure(e)
+        } catch (e: UnknownHostException) {
+            Log.e(TAG, "Search network error: ${e.message}", e)
+            Result.failure(e)
         } catch (e: IOException) {
             Log.e(TAG, "Search IO error: ${e.message}", e)
             Result.failure(e)
-        } catch (e: Exception) {
-            Log.e(TAG, "Search error: ${e.message}", e)
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "Search state error: ${e.message}", e)
             Result.failure(e)
         }
     }
