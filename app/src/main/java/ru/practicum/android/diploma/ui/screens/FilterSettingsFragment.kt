@@ -23,7 +23,9 @@ import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
 import ru.practicum.android.diploma.databinding.FragmentFilterSettingsBinding
 import ru.practicum.android.diploma.domain.models.filtermodels.Industry
+import ru.practicum.android.diploma.domain.models.filtermodels.Region
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
+import ru.practicum.android.diploma.domain.models.vacancy.Country
 import ru.practicum.android.diploma.presentation.filter.viewmodel.FilterViewModel
 
 class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
@@ -34,6 +36,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private val viewModel: FilterViewModel by viewModel()
 
     private var selectedIndustry: FilterIndustryDto? = null
+    private var selectedCountry: Country? = null
+    private var selectedRegion: Region? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -74,6 +78,25 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         // Обновляем чекбокс "Только с зарплатой"
         binding.checkbox.isChecked = filters.hideWithoutSalary
 
+        filters.region?.let { region ->
+
+            selectedRegion = if (region.name.isNotEmpty()) region else null
+            selectedCountry = region.country
+
+            val locationText = when {
+                region.country != null && region.name.isNotBlank() ->
+                    "${region.country.name}, ${region.name}"
+
+                region.country != null ->
+                    region.country.name
+
+                else -> region.name
+            }
+
+            binding.editJobLocation.setText(locationText)
+            updateIconAndState(binding.jobLocation, locationText)
+        }
+
         updateButtonsVisibility()
     }
 
@@ -85,6 +108,26 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                 updateIconAndState(binding.industry, industry.name)
                 updateButtonsVisibility()
             }
+        }
+
+        setFragmentResultListener("workplace_result") { _, bundle ->
+            selectedCountry = bundle.getParcelable("country")
+            selectedRegion = bundle.getParcelable("region")
+
+            val text = when {
+                selectedRegion != null && selectedCountry != null ->
+                    "${selectedCountry!!.name}, ${selectedRegion!!.name}"
+
+                selectedCountry != null ->
+                    selectedCountry!!.name
+
+                else -> ""
+            }
+
+            binding.editJobLocation.setText(text)
+            updateIconAndState(binding.jobLocation, text)
+
+            updateButtonsVisibility()
         }
     }
 
@@ -194,8 +237,16 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         val salary = binding.editSalary.text?.toString()?.toIntOrNull()
         val hideWithoutSalary = binding.checkbox.isChecked
 
+        val regionToSave =
+            selectedRegion ?: selectedCountry?.let { country ->
+                Region(
+                    id = country.id,
+                    name = "", // ← только страна
+                    country = country
+                )
+            }
         return VacancyFilters(
-            region = null, // Пока не используем регион
+            region = regionToSave,
             industry = industry,
             salary = salary,
             hideWithoutSalary = hideWithoutSalary,
@@ -205,6 +256,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
     private fun clearAllFields() {
         binding.editJobLocation.text?.clear()
+        selectedCountry = null
+        selectedRegion = null
         updateIconAndState(binding.jobLocation, "")
 
         binding.editIndustry.text?.clear()
@@ -249,9 +302,16 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private fun navigateOrClear(editText: TextInputEditText, layout: TextInputLayout, field: String) {
         if (editText.text.isNullOrEmpty()) {
             when (field) {
-                "jobLocation" -> findNavController().navigate(
-                    R.id.action_filterSettingsFragment_to_chooseWorkPlaceFragment
-                )
+                "jobLocation" -> {
+                    if (editText.text.isNullOrEmpty()) {
+                        findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseWorkPlaceFragment)
+                    } else {
+                        editText.text?.clear()
+                        updateIconAndState(layout, "")
+                        updateButtonsVisibility()
+                    }
+                }
+
                 "industry" -> findNavController().navigate(R.id.action_filterSettingsFragment_to_chooseIndustryFragment)
             }
         } else {

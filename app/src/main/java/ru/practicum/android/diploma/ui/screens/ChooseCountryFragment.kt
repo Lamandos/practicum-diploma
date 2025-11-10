@@ -5,11 +5,11 @@ import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentChoosecountryBinding
-import ru.practicum.android.diploma.presentation.filter.adapter.CountryAdapter
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.domain.models.vacancy.Country
+import ru.practicum.android.diploma.presentation.filter.adapter.CountryAdapter
 import ru.practicum.android.diploma.presentation.filter.viewmodel.ChooseCountryViewModel
 
 class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {

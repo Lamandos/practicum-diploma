@@ -1,7 +1,5 @@
 package ru.practicum.android.diploma.domain.models.filtermodels
 
-import android.graphics.Region
-
 data class VacancyFilters(
     val region: Region? = null,
     val industry: Industry? = null,

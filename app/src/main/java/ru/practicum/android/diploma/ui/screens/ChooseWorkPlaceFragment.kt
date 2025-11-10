@@ -2,12 +2,12 @@ package ru.practicum.android.diploma.ui.screens
 
 import android.os.Bundle
 import android.view.View
-import org.koin.androidx.viewmodel.ext.android.viewModel
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.textfield.TextInputLayout
+import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentChooseworkplaceBinding
 import ru.practicum.android.diploma.domain.models.filtermodels.Region
@@ -68,6 +68,15 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
                 updateIconAndState(binding.region, "")
             }
         }
+        binding.btnAccept.setOnClickListener {
+            val result = Bundle().apply {
+                viewModel.selectedCountry.value?.let { putParcelable("country", it) }
+                viewModel.selectedRegion.value?.let { putParcelable("region", it) }
+            }
+
+            parentFragmentManager.setFragmentResult("workplace_result", result)
+            findNavController().popBackStack()
+        }
     }
 
     private fun setupTextFields() {
@@ -116,12 +125,22 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
                 updateIconAndState(binding.region, region.name)
             }
         }
+
+        viewModel.selectedCountry.observe(viewLifecycleOwner) { updateAcceptButtonVisibility() }
+        viewModel.selectedRegion.observe(viewLifecycleOwner) { updateAcceptButtonVisibility() }
     }
 
+    private fun updateAcceptButtonVisibility() {
+        binding.btnAccept.visibility =
+            if (viewModel.selectedCountry.value != null || viewModel.selectedRegion.value != null) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
+    }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 }
-
