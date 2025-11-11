@@ -56,6 +56,8 @@ class VacancyAdapter(
                 // Если нет интернета или логотипа - показываем placeholder
                 logoImageView.setImageResource(R.drawable.placeholder)
             }
+            nameCity.setOnClickListener { onItemClick(vacancy) }
+            itemView.setOnClickListener { onItemClick(vacancy) }
         }
 
         private fun formatSalaryForDetails(
