@@ -18,12 +18,14 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentFilterSettingsBinding
 import ru.practicum.android.diploma.domain.models.filtermodels.Industry
 import ru.practicum.android.diploma.domain.models.filtermodels.Region
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
+import ru.practicum.android.diploma.domain.models.filtermodels.isAnyFilterApplied
 import ru.practicum.android.diploma.domain.models.vacancy.Country
 import ru.practicum.android.diploma.presentation.filter.viewmodel.FilterViewModel
 import ru.practicum.android.diploma.ui.model.FilterIndustryUI
@@ -34,17 +36,17 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private val binding get() = _binding!!
 
     private val viewModel: FilterViewModel by viewModel()
+    private val filterPreferences: ru.practicum.android.diploma.data.storage.FilterPreferences by inject()
 
     private var selectedIndustry: FilterIndustryUI? = null
     private var selectedCountry: Country? = null
     private var selectedRegion: Region? = null
 
     private var isViewCreated = false
-    private var isSalaryInputActive = false
-    private var salarySavePending = false
+    private var hasUnsavedChanges = false
+    private var isFilterApplied = false
 
     companion object {
-        private const val SALARY_SAVE_DELAY_MS = 1500L
         private const val FILTER_RESULT_KEY = "filter_result"
         private const val INDUSTRY_RESULT_KEY = "industry_result"
         private const val WORKPLACE_RESULT_KEY = "workplace_result"
@@ -60,23 +62,61 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         _binding = FragmentFilterSettingsBinding.bind(view)
         isViewCreated = true
 
+        loadDraftFilters() // Загружаем черновики при создании
         setupFragmentResultListeners()
         setupClickListeners()
         setupTextWatchers()
         observeViewModel()
-        loadSavedFilters()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         isViewCreated = false
-        binding.editSalary.removeCallbacks(salarySaveRunnable)
         _binding = null
+    }
+
+    private fun updateUIWithDraftFilters(filters: VacancyFilters) {
+        // Обновляем отрасль из черновиков
+        filters.industry?.let { industry ->
+            binding.editIndustry.setText(industry.name)
+            selectedIndustry = FilterIndustryUI(
+                id = industry.id.toIntOrNull() ?: 0,
+                name = industry.name
+            )
+            updateIconAndState(binding.industry, industry.name)
+        }
+
+        // Обновляем зарплату из черновиков
+        filters.salary?.let { salary ->
+            binding.editSalary.setText(salary.toString())
+        }
+
+        // Обновляем чекбокс из черновиков
+        binding.checkbox.isChecked = filters.hideWithoutSalary ?: false
+
+        // Обновляем регион из черновиков
+        filters.region?.let { region ->
+            selectedRegion = if (region.name.isNotEmpty()) region else null
+            selectedCountry = region.country
+
+            val locationText = when {
+                region.country != null && region.name.isNotBlank() ->
+                    "${region.country.name}, ${region.name}"
+                region.country != null -> region.country.name
+                else -> region.name
+            }
+
+            binding.editJobLocation.setText(locationText)
+            updateIconAndState(binding.jobLocation, locationText)
+        }
+
+        updateButtonsVisibility()
     }
 
     private fun observeViewModel() {
         viewModel.filtersState.observe(viewLifecycleOwner) { filters ->
-            if (!isSalaryInputActive || !salarySavePending) {
+            // Используем только для начальной загрузки, если нет черновиков
+            if (!hasUnsavedChanges) {
                 updateUIWithFilters(filters)
             }
         }
@@ -99,24 +139,13 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                 )
                 updateIconAndState(binding.industry, industry.name)
             }
-        } ?: run {
-            if (binding.editIndustry.text?.isNotBlank() == true) {
-                binding.editIndustry.text?.clear()
-                updateIconAndState(binding.industry, "")
-            }
         }
 
-        // Обновляем зарплату только если не активен ввод и нет ожидающего сохранения
-        if (!isSalaryInputActive && !salarySavePending) {
-            filters.salary?.let { salary ->
-                val currentSalary = binding.editSalary.text?.toString()?.toIntOrNull()
-                if (currentSalary != salary) {
-                    binding.editSalary.setText(salary.toString())
-                }
-            } ?: run {
-                if (binding.editSalary.text?.isNotBlank() == true) {
-                    binding.editSalary.text?.clear()
-                }
+        // Обновляем зарплату
+        filters.salary?.let { salary ->
+            val currentSalary = binding.editSalary.text?.toString()?.toIntOrNull()
+            if (currentSalary != salary) {
+                binding.editSalary.setText(salary.toString())
             }
         }
 
@@ -143,11 +172,6 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                 binding.editJobLocation.setText(locationText)
                 updateIconAndState(binding.jobLocation, locationText)
             }
-        } ?: run {
-            if (binding.editJobLocation.text?.isNotBlank() == true) {
-                binding.editJobLocation.text?.clear()
-                updateIconAndState(binding.jobLocation, "")
-            }
         }
 
         updateButtonsVisibility()
@@ -160,7 +184,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                 binding.editIndustry.setText(industry.name)
                 updateIconAndState(binding.industry, industry.name)
                 updateButtonsVisibility()
-                saveFiltersAutomatically()
+                saveDraftFilters() // Сохраняем в черновики
             }
         }
 
@@ -178,7 +202,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             binding.editJobLocation.setText(text)
             updateIconAndState(binding.jobLocation, text)
             updateButtonsVisibility()
-            saveFiltersAutomatically()
+            saveDraftFilters() // Сохраняем в черновики
         }
     }
 
@@ -197,9 +221,10 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
         binding.clearIcon.setOnClickListener {
             binding.editSalary.text?.clear()
-            saveFiltersAutomatically()
+            saveDraftFilters()
         }
     }
+
 
     private fun setupTextWatchers() {
         val jobLocationLayout: TextInputLayout = binding.jobLocation
@@ -213,11 +238,13 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         jobLocationEditText.addTextChangedListener {
             updateIconAndState(jobLocationLayout, it?.toString().orEmpty())
             updateButtonsVisibility()
+            saveDraftFilters() // ДОБАВЛЯЕМ сохранение черновиков
         }
 
         industryEditText.addTextChangedListener {
             updateIconAndState(industryLayout, it?.toString().orEmpty())
             updateButtonsVisibility()
+            saveDraftFilters() // ДОБАВЛЯЕМ сохранение черновиков
         }
 
         jobLocationLayout.setEndIconOnClickListener {
@@ -230,7 +257,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
         binding.checkbox.setOnCheckedChangeListener { _, isChecked ->
             updateButtonsVisibility()
-            saveFiltersAutomatically()
+            saveDraftFilters() // Сохраняем в черновики
+            updateFilterAppliedState()
         }
 
         updateIconAndState(jobLocationLayout, jobLocationEditText.text.toString())
@@ -238,22 +266,91 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
         setupSalaryField(binding.editSalary, binding.salaryField)
     }
+    private fun updateFilterAppliedState() {
+        val hasFilters = hasAnyFilterApplied()
+        isFilterApplied = hasFilters
+    }
+    private fun setupSalaryField(editText: TextInputEditText, layout: TextInputLayout) {
+        setupSalaryInputFilter(editText)
+        setupSalaryTextWatcher(editText)
+        setupSalaryFocusBehavior(editText)
+        setupSalaryEditorDoneAction(editText, layout)
+        setupSalaryClearIcon(editText)
+    }
 
-    // Runnable для отложенного сохранения зарплаты
-    private val salarySaveRunnable = Runnable {
-        if (isViewCreated) {
-            isSalaryInputActive = false
-            salarySavePending = false
-            saveFiltersAutomatically()
+    private fun setupSalaryInputFilter(editText: TextInputEditText) {
+        editText.filters = arrayOf(InputFilter { source, _, _, _, _, _ ->
+            if (source.matches(Regex("[0-9]+"))) source else ""
+        })
+    }
+
+    private fun setupSalaryTextWatcher(editText: TextInputEditText) {
+        editText.addTextChangedListener(
+            object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) = Unit
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                    binding.clearIcon.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+                    if (s.toString() == "0") {
+                        binding.clearIcon.visibility = View.GONE
+                        Toast.makeText(
+                            requireContext(),
+                            "Некорректное значение",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    updateButtonsVisibility()
+                    saveDraftFilters() // Сохраняем в черновики
+                }
+            }
+        )
+    }
+
+    private fun setupSalaryFocusBehavior(editText: TextInputEditText) {
+        editText.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                if (!editText.text.isNullOrEmpty()) {
+                    binding.clearIcon.visibility = View.VISIBLE
+                }
+            }
         }
     }
 
-    private fun saveFiltersAutomatically() {
-        if (!isViewCreated) return
+    private fun setupSalaryEditorDoneAction(
+        editText: TextInputEditText,
+        layout: TextInputLayout
+    ) {
+        editText.setOnEditorActionListener { v, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                binding.clearIcon.visibility = View.GONE
+                closeKeyboard(editText)
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            val filters = createFiltersFromUI()
-            viewModel.updateFilters(filters)
+                editText.clearFocus()
+                layout.clearFocus()
+
+                binding.root.isFocusable = true
+                binding.root.isFocusableInTouchMode = true
+                binding.root.requestFocus()
+                true
+            } else {
+                false
+            }
+        }
+    }
+
+    private fun setupSalaryClearIcon(editText: TextInputEditText) {
+        binding.clearIcon.setOnClickListener {
+            editText.text?.clear()
+            saveDraftFilters() // Сохраняем в черновики
         }
     }
 
@@ -261,6 +358,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         val hasFilters = hasAnyFilterApplied()
         binding.btnAccept.visibility = if (hasFilters) View.VISIBLE else View.GONE
         binding.btnDeny.visibility = if (hasFilters) View.VISIBLE else View.GONE
+        // ОБНОВЛЯЕМ состояние фильтра
+        updateFilterAppliedState()
     }
 
     private fun hasAnyFilterApplied(): Boolean {
@@ -271,6 +370,12 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     }
 
     private fun applyFiltersAndReturn() {
+        // Применяем черновики в основные фильтры
+        filterPreferences.applyDraftFilters()
+
+        // УСТАНАВЛИВАЕМ состояние примененных фильтров
+        isFilterApplied = true
+
         setFragmentResult(
             FILTER_RESULT_KEY,
             Bundle().apply {
@@ -292,12 +397,14 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         val salary = binding.editSalary.text?.toString()?.toIntOrNull()
         val hideWithoutSalary = binding.checkbox.isChecked
 
-        val regionToSave = selectedRegion ?: selectedCountry?.let { country ->
-            Region(
-                id = country.id,
+        val regionToSave = when {
+            selectedRegion != null -> selectedRegion
+            selectedCountry != null -> Region(
+                id = selectedCountry!!.id,
                 name = "",
-                country = country
+                country = selectedCountry
             )
+            else -> null
         }
 
         return VacancyFilters(
@@ -307,6 +414,36 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             hideWithoutSalary = hideWithoutSalary,
             currency = CURRENCY_RUB
         )
+    }
+    private fun saveDraftFilters() {
+        if (!isViewCreated) return
+
+        hasUnsavedChanges = true
+        val draftFilters = createFiltersFromUI()
+
+        // Для отладки
+        android.util.Log.d("FilterDraft", "Saving draft filters: $draftFilters")
+        android.util.Log.d("FilterDraft", "Selected country: $selectedCountry")
+        android.util.Log.d("FilterDraft", "Selected region: $selectedRegion")
+
+        filterPreferences.saveDraftFilters(draftFilters)
+    }
+
+    private fun loadDraftFilters() {
+        val draftFilters = filterPreferences.getDraftFilters()
+
+        // Для отладки
+        android.util.Log.d("FilterDraft", "Loading draft filters: $draftFilters")
+        android.util.Log.d("FilterDraft", "Checkbox state in draft: ${draftFilters.hideWithoutSalary}")
+
+        if (draftFilters.isAnyFilterApplied()) {
+            // Если есть черновики, используем их для отображения
+            updateUIWithDraftFilters(draftFilters)
+            hasUnsavedChanges = true // ДОБАВЛЯЕМ эту строку
+        } else {
+            // Если черновиков нет, загружаем обычные фильтры
+            loadSavedFilters()
+        }
     }
 
     private fun clearAllFields() {
@@ -326,7 +463,16 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
         updateButtonsVisibility()
 
+        // Очищаем и черновики и основные фильтры
+        filterPreferences.clearDraftFilters()
         viewModel.clearFilters()
+
+        setFragmentResult(
+            FILTER_RESULT_KEY,
+            Bundle().apply {
+                putBoolean(FILTERS_APPLIED_KEY, true)
+            }
+        )
 
         Toast.makeText(requireContext(), "Фильтры сброшены", Toast.LENGTH_SHORT).show()
     }
@@ -369,120 +515,18 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             editText.text?.clear()
             updateIconAndState(layout, "")
             when (field) {
-                INDUSTRY_FIELD -> selectedIndustry = null
+                INDUSTRY_FIELD -> {
+                    selectedIndustry = null
+                    saveDraftFilters() // Сохраняем в черновики
+                }
                 JOB_LOCATION_FIELD -> {
+                    // Полностью очищаем данные о месте работы
                     selectedCountry = null
                     selectedRegion = null
+                    saveDraftFilters() // Сохраняем в черновики
                 }
             }
             updateButtonsVisibility()
-            saveFiltersAutomatically()
-        }
-    }
-
-    private fun setupSalaryField(editText: TextInputEditText, layout: TextInputLayout) {
-        setupSalaryInputFilter(editText)
-        setupSalaryTextWatcher(editText)
-        setupSalaryFocusBehavior(editText)
-        setupSalaryEditorDoneAction(editText, layout)
-        setupSalaryClearIcon(editText)
-    }
-
-    private fun setupSalaryInputFilter(editText: TextInputEditText) {
-        editText.filters = arrayOf(InputFilter { source, _, _, _, _, _ ->
-            if (source.matches(Regex("[0-9]+"))) source else ""
-        })
-    }
-
-    private fun setupSalaryTextWatcher(editText: TextInputEditText) {
-        editText.addTextChangedListener(
-            object : TextWatcher {
-                override fun beforeTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
-                ) = Unit
-
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    binding.clearIcon.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
-
-                    if (s.toString() == "0") {
-                        binding.clearIcon.visibility = View.GONE
-                        Toast.makeText(
-                            requireContext(),
-                            "Некорректное значение",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-
-                override fun afterTextChanged(s: Editable?) {
-                    updateButtonsVisibility()
-
-                    // Устанавливаем флаги и запускаем отложенное сохранение
-                    isSalaryInputActive = true
-                    salarySavePending = true
-
-                    if (isViewCreated) {
-                        editText.removeCallbacks(salarySaveRunnable)
-                        editText.postDelayed(salarySaveRunnable, SALARY_SAVE_DELAY_MS)
-                    }
-                }
-            }
-        )
-    }
-
-    private fun setupSalaryFocusBehavior(editText: TextInputEditText) {
-        editText.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                isSalaryInputActive = true
-                if (!editText.text.isNullOrEmpty()) {
-                    binding.clearIcon.visibility = View.VISIBLE
-                }
-            } else {
-                // При потере фокуса сразу сохраняем
-                isSalaryInputActive = false
-                salarySavePending = false
-                saveFiltersAutomatically()
-            }
-        }
-    }
-
-    private fun setupSalaryEditorDoneAction(
-        editText: TextInputEditText,
-        layout: TextInputLayout
-    ) {
-        editText.setOnEditorActionListener { v, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                binding.clearIcon.visibility = View.GONE
-                closeKeyboard(editText)
-
-                editText.clearFocus()
-                layout.clearFocus()
-
-                binding.root.isFocusable = true
-                binding.root.isFocusableInTouchMode = true
-                binding.root.requestFocus()
-
-                // Сохраняем при завершении ввода зарплаты
-                isSalaryInputActive = false
-                salarySavePending = false
-                saveFiltersAutomatically()
-
-                true
-            } else {
-                false
-            }
-        }
-    }
-
-    private fun setupSalaryClearIcon(editText: TextInputEditText) {
-        binding.clearIcon.setOnClickListener {
-            editText.text?.clear()
-            isSalaryInputActive = false
-            salarySavePending = false
-            saveFiltersAutomatically()
         }
     }
 
