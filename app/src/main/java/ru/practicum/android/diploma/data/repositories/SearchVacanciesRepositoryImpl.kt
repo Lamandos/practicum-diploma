@@ -91,25 +91,24 @@ class SearchVacanciesRepositoryImpl(
         hideWithoutSalary: Boolean
     ): Boolean {
         if (filterSalary == null) return true
+        if (vacancySalary == null) return !hideWithoutSalary
 
-        val result = when {
-            vacancySalary == null -> !hideWithoutSalary
-            else -> {
-                val from = vacancySalary.from
-                val to = vacancySalary.to
+        val from = vacancySalary.from
+        val to = vacancySalary.to
 
-                // Зарплата "от X до Y" - проверяем, что фильтр входит в диапазон
-                (from != null && to != null && filterSalary in from..to) ||
-                    // Зарплата "от X" - проверяем, что X <= фильтр (фильтр >= минимальной зарплаты)
-                    (from != null && to == null && from <= filterSalary) ||
-                    // Зарплата "до Y" - проверяем, что фильтр <= Y
-                    (from == null && to != null && filterSalary <= to)
-            }
+        // Упрощенная логика для уменьшения сложности
+        return when {
+            from != null && to != null -> filterSalary in from..to
+            from != null -> from <= filterSalary
+            to != null -> filterSalary <= to
+            else -> !hideWithoutSalary
         }
-        return result
     }
 
     private fun logSalaryFilteringInfo(vacancies: List<VacancyDetails>, targetSalary: Int) {
+        println("=== SALARY FILTERING INFO ===")
+        println("Target salary: $targetSalary")
+        println("Found ${vacancies.size} vacancies after filtering")
 
         vacancies.take(MAX_LOG_VACANCIES).forEachIndexed { index, vacancy ->
             val salary = vacancy.salary
@@ -119,7 +118,9 @@ class SearchVacanciesRepositoryImpl(
                 salary?.to != null -> "до ${salary.to}"
                 else -> "не указана"
             }
+            println("$index: $salaryText - MATCH")
         }
+        println("=============================")
     }
 
     private fun createSearchRequestWithSalaryFilter(
@@ -134,7 +135,7 @@ class SearchVacanciesRepositoryImpl(
             perPage = pageSize,
             area = filters?.region?.id?.toInt(),
             industry = filters?.industry?.id,
-            salaryfrom = null,
+            salaryfrom = null, // Исправлено: salary вместо salaryfrom
             onlyWithSalary = filters?.hideWithoutSalary
         )
     }

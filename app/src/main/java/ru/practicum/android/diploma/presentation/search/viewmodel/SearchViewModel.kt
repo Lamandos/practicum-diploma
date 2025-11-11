@@ -197,7 +197,7 @@ class SearchViewModel(
         println("Target salary: $targetSalary")
         println("Found ${vacancies.size} vacancies after filtering")
 
-        vacancies.take(5).forEachIndexed { index, vacancy ->
+        vacancies.take(MAX_LOG_VACANCIES).forEachIndexed { index, vacancy ->
             val salary = vacancy.salary
             val salaryText = when {
                 salary?.from != null && salary.to != null -> "${salary.from}-${salary.to}"
@@ -234,5 +234,6 @@ class SearchViewModel(
 
     companion object {
         private const val PAGE_SIZE = 20
+        private const val MAX_LOG_VACANCIES = 5
     }
 }
