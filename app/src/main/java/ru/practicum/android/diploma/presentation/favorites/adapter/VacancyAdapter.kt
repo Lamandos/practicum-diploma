@@ -1,6 +1,7 @@
 package ru.practicum.android.diploma.presentation.favorites.adapter
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,8 +43,6 @@ class VacancyAdapter(
             salary.text = formatSalaryForDetails(vacancy.salary)
 
             val logoUrl = vacancy.employer?.logo
-
-            // Проверяем наличие интернета и логотипа
             val shouldLoadLogo = !logoUrl.isNullOrBlank() && NetworkUtils.isInternetAvailable(context)
 
             if (shouldLoadLogo) {
@@ -53,9 +52,9 @@ class VacancyAdapter(
                     .error(R.drawable.placeholder)
                     .into(logoImageView)
             } else {
-                // Если нет интернета или логотипа - показываем placeholder
                 logoImageView.setImageResource(R.drawable.placeholder)
             }
+
             nameCity.setOnClickListener { onItemClick(vacancy) }
             itemView.setOnClickListener { onItemClick(vacancy) }
         }
@@ -66,13 +65,30 @@ class VacancyAdapter(
             salary ?: return "Зарплата не указана"
             val from = salary.from
             val to = salary.to
-            val currency = salary.currency ?: ""
+            val currency = getCurrencySymbol(salary.currency ?: "")
+            Log.d("VacancyAdapter", "Currency raw: '${salary.currency}' -> symbol: '${getCurrencySymbol(salary.currency)}'")
             return when {
                 from != null && to != null -> "от $from до $to $currency"
                 from != null -> "от $from $currency"
                 to != null -> "до $to $currency"
                 else -> "Зарплата не указана"
             }
+        }
+    }
+
+    private fun getCurrencySymbol(currency: String?): String {
+        return when (currency?.trim()?.uppercase()) {
+            "RUR", "RUB" -> "₽"
+            "BYR", "BYN" -> "Br"
+            "USD" -> "$"
+            "EUR" -> "€"
+            "KZT" -> "₸"
+            "UAH" -> "₴"
+            "AZN" -> "₼"
+            "UZS" -> "so'm"
+            "GEL" -> "₾"
+            "KGS", "KGT" -> "с"
+            else -> currency ?: ""
         }
     }
 

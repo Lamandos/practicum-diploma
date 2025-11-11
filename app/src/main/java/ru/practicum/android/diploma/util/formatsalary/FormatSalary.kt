@@ -18,10 +18,17 @@ private fun formatNumber(number: Int): String {
 }
 
 private fun getCurrencySymbol(currency: String): String {
-    return when (currency) {
+    return when (currency.uppercase()) {
         "RUR", "RUB" -> "₽"
+        "BYR", "BYN" -> "Br"
         "USD" -> "$"
         "EUR" -> "€"
+        "KZT" -> "₸"
+        "UAH" -> "₴"
+        "AZN" -> "₼"
+        "UZS" -> "so'm"
+        "GEL" -> "₾"
+        "KGS", "KGT" -> "с"
         else -> currency
     }
 }

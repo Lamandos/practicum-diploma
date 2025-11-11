@@ -71,13 +71,9 @@ class VacancyBinder {
         if (contacts == null) return null
 
         val lines = mutableListOf<String>()
-
-        // Добавляем email если есть
         contacts.email?.takeIf { it.isNotBlank() }?.let { email ->
             lines.add(email)
         }
-
-        // Добавляем телефоны если есть
         contacts.phones?.forEach { phone ->
             val number = phone.number.orEmpty()
             if (number.isNotBlank()) {

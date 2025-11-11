@@ -94,7 +94,7 @@ class BasicsBinder {
         return salary?.let {
             val from = it.from?.toString().orEmpty()
             val to = it.to?.toString().orEmpty()
-            val currency = it.currency.orEmpty()
+            val currency = getCurrencySymbol(it.currency)
             when {
                 from.isNotEmpty() && to.isNotEmpty() -> "от $from до $to $currency"
                 from.isNotEmpty() -> "от $from $currency"
@@ -102,5 +102,21 @@ class BasicsBinder {
                 else -> context.getString(R.string.salary_not_specified)
             }
         } ?: context.getString(R.string.salary_not_specified)
+    }
+
+    private fun getCurrencySymbol(currency: String?): String {
+        return when (currency?.trim()?.uppercase()) {
+            "RUR", "RUB" -> "₽"
+            "BYR", "BYN" -> "Br"
+            "USD" -> "$"
+            "EUR" -> "€"
+            "KZT" -> "₸"
+            "UAH" -> "₴"
+            "AZN" -> "₼"
+            "UZS" -> "so'm"
+            "GEL" -> "₾"
+            "KGS", "KGT" -> "с"
+            else -> currency ?: ""
+        }
     }
 }
