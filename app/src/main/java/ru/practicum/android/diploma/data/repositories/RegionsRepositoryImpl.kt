@@ -4,32 +4,27 @@ import ru.practicum.android.diploma.data.dto.filterdto.FilterAreaDto
 import ru.practicum.android.diploma.domain.interactors.impl.RegionsRepository
 import ru.practicum.android.diploma.domain.models.filtermodels.Region
 import ru.practicum.android.diploma.domain.models.vacancy.Country
+import java.io.IOException
 
 class RegionsRepositoryImpl(
     private val areasRepository: AreasRepository
 ) : RegionsRepository {
 
-    override suspend fun getRegionsByCountry(countryId: Int): List<Region> {
-        val allAreas = areasRepository.getAllAreas()
-        val regions: List<Region> = if (allAreas != null) {
-            val countryDto = allAreas.firstOrNull { it.id == countryId }
-            if (countryDto != null) {
-                val country = Country(id = countryDto.id, name = countryDto.name)
-                collectRegions(countryDto, country)
-            } else {
-                emptyList()
-            }
-        } else {
-            emptyList()
-        }
-        return regions
-    }
-
     override suspend fun getAllRegions(): List<Region> {
         val allAreas = areasRepository.getAllAreas()
-        return allAreas?.flatMap { area ->
+            ?: throw IOException("Failed to load areas")
+        return allAreas.flatMap { area ->
             collectAreaWithCountry(area)
-        } ?: emptyList()
+        }
+    }
+
+    override suspend fun getRegionsByCountry(countryId: Int): List<Region> {
+        val allAreas = areasRepository.getAllAreas()
+            ?: throw IOException("Failed to load areas")
+        val countryDto = allAreas.firstOrNull { it.id == countryId }
+            ?: return emptyList()
+        val country = Country(id = countryDto.id, name = countryDto.name)
+        return collectRegions(countryDto, country)
     }
 
     private fun collectAreaWithCountry(area: FilterAreaDto): List<Region> {
