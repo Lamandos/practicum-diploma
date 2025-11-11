@@ -13,6 +13,8 @@ import com.bumptech.glide.Glide
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import ru.practicum.android.diploma.util.networkutils.NetworkUtils
+import java.text.NumberFormat
+import java.util.Locale
 
 class VacancyAdapter(
     private val onItemClick: (VacancyDetails) -> Unit,
@@ -37,13 +39,12 @@ class VacancyAdapter(
         private val logoImageView: ImageView = itemView.findViewById(R.id.vacancyPlaceholder)
 
         fun bind(vacancy: VacancyDetails) {
-            nameCity.text = "${vacancy.name}\n${vacancy.area?.name ?: ""}"
+            nameCity.text = "${vacancy.name}, ${vacancy.area?.name ?: ""}"
             workPlace.text = vacancy.employer?.name ?: ""
             salary.text = formatSalaryForDetails(vacancy.salary)
 
             val logoUrl = vacancy.employer?.logo
 
-            // Проверяем наличие интернета и логотипа
             val shouldLoadLogo = !logoUrl.isNullOrBlank() && NetworkUtils.isInternetAvailable(context)
 
             if (shouldLoadLogo) {
@@ -53,7 +54,6 @@ class VacancyAdapter(
                     .error(R.drawable.placeholder)
                     .into(logoImageView)
             } else {
-                // Если нет интернета или логотипа - показываем placeholder
                 logoImageView.setImageResource(R.drawable.placeholder)
             }
             nameCity.setOnClickListener { onItemClick(vacancy) }
@@ -64,14 +64,36 @@ class VacancyAdapter(
             salary: ru.practicum.android.diploma.domain.models.vacancydetails.Salary?
         ): String {
             salary ?: return "Зарплата не указана"
-            val from = salary.from
-            val to = salary.to
-            val currency = salary.currency ?: ""
+
+            val numberFormatter = NumberFormat.getInstance(Locale("ru"))
+
+            val fromFormatted = salary.from?.let { numberFormatter.format(it) }
+            val toFormatted = salary.to?.let { numberFormatter.format(it) }
+            val currencySymbol = getCurrencySymbol(salary.currency)
+
             return when {
-                from != null && to != null -> "от $from до $to $currency"
-                from != null -> "от $from $currency"
-                to != null -> "до $to $currency"
+                !fromFormatted.isNullOrBlank() && !toFormatted.isNullOrBlank() -> "от $fromFormatted до $toFormatted $currencySymbol"
+                !fromFormatted.isNullOrBlank() -> "от $fromFormatted $currencySymbol"
+                !toFormatted.isNullOrBlank() -> "до $toFormatted $currencySymbol"
                 else -> "Зарплата не указана"
+            }
+        }
+
+        private fun getCurrencySymbol(currencyCode: String?): String {
+            if (currencyCode.isNullOrBlank()) return ""
+
+            return when (currencyCode.uppercase()) {
+                "RUB", "RUR" -> "₽"
+                "BYR" -> "Br"
+                "USD" -> "$"
+                "EUR" -> "€"
+                "KZT" -> "₸"
+                "UAH" -> "₴"
+                "AZN" -> "₼"
+                "UZS" -> "so'm"
+                "GEL" -> "₾"
+                "KGT" -> "сом"
+                else -> currencyCode.uppercase()
             }
         }
     }

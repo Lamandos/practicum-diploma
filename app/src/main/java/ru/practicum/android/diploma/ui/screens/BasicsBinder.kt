@@ -9,6 +9,8 @@ import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentVacancyBinding
 import ru.practicum.android.diploma.domain.models.vacancydetails.Salary
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
+import java.text.NumberFormat
+import java.util.Locale
 
 class BasicsBinder {
 
@@ -90,17 +92,38 @@ class BasicsBinder {
         setupTitle(binding.contactsTitle, R.string.contacts)
     }
 
-    private fun formatSalary(salary: Salary?, context: Context): String {
-        return salary?.let {
-            val from = it.from?.toString().orEmpty()
-            val to = it.to?.toString().orEmpty()
-            val currency = it.currency.orEmpty()
-            when {
-                from.isNotEmpty() && to.isNotEmpty() -> "от $from до $to $currency"
-                from.isNotEmpty() -> "от $from $currency"
-                to.isNotEmpty() -> "до $to $currency"
-                else -> context.getString(R.string.salary_not_specified)
-            }
-        } ?: context.getString(R.string.salary_not_specified)
+    private fun getCurrencySymbol(currencyCode: String?): String {
+        if (currencyCode.isNullOrBlank()) return ""
+        return when (currencyCode.uppercase()) {
+            "RUB", "RUR" -> "₽"
+            "BYR" -> "Br"
+            "USD" -> "$"
+            "EUR" -> "€"
+            "KZT" -> "₸"
+            "UAH" -> "₴"
+            "AZN" -> "₼"
+            "UZS" -> "so'm"
+            "GEL" -> "₾"
+            "KGT" -> "сом"
+            else -> currencyCode.uppercase()
+        }
     }
+
+    private fun formatSalary(salary: Salary?, context: Context): String {
+        salary ?: return context.getString(R.string.salary_not_specified)
+
+        val numberFormatter = NumberFormat.getInstance(Locale("ru"))
+
+        val fromFormatted = salary.from?.let { numberFormatter.format(it) }
+        val toFormatted = salary.to?.let { numberFormatter.format(it) }
+        val currencySymbol = getCurrencySymbol(salary.currency)
+
+        return when {
+            !fromFormatted.isNullOrBlank() && !toFormatted.isNullOrBlank() -> "от $fromFormatted до $toFormatted $currencySymbol"
+            !fromFormatted.isNullOrBlank() -> "от $fromFormatted $currencySymbol"
+            !toFormatted.isNullOrBlank() -> "до $toFormatted $currencySymbol"
+            else -> context.getString(R.string.salary_not_specified)
+        }
+    }
+
 }
