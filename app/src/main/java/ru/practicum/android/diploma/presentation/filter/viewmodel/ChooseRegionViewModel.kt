@@ -1,5 +1,7 @@
 package ru.practicum.android.diploma.presentation.filter.viewmodel
 
+import android.content.Context
+import android.net.ConnectivityManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,14 +11,15 @@ import ru.practicum.android.diploma.domain.interactors.impl.RegionsInteractor
 import ru.practicum.android.diploma.domain.models.filtermodels.Region
 import ru.practicum.android.diploma.domain.models.vacancy.Country
 
-enum class RegionError {
-    NO_RESULTS,
-    LOAD_FAILED
-}
-
 class ChooseRegionViewModel(
-    private val regionsInteractor: RegionsInteractor
+    private val regionsInteractor: RegionsInteractor,
+    private val context: Context
 ) : ViewModel() {
+
+    enum class RegionError {
+        NO_RESULTS,
+        LOAD_FAILED
+    }
 
     private val _allRegions = MutableLiveData<List<Region>>(emptyList())
     val allRegions: LiveData<List<Region>> get() = _allRegions
@@ -31,19 +34,23 @@ class ChooseRegionViewModel(
 
     fun loadRegions(country: Country) {
         viewModelScope.launch {
+            if (!isNetworkAvailable()) {
+                _allRegions.value = emptyList()
+                _filteredRegions.value = emptyList()
+                _error.value = RegionError.LOAD_FAILED
+                return@launch
+            }
+
             runCatching {
                 regionsInteractor.getRegions(country)
             }.onSuccess { regions ->
                 fullRegionList = regions
                 _allRegions.value = regions
                 _filteredRegions.value = regions
-                _error.value = if (regions.isEmpty()) {
-                    RegionError.LOAD_FAILED
-                } else {
-                    null
-                }
-            }.onFailure { e ->
-                // Ловим конкретные ошибки, если возможно, иначе можно оставить как LOAD_FAILED
+                _error.value = if (regions.isEmpty()) RegionError.NO_RESULTS else null
+            }.onFailure {
+                _allRegions.value = emptyList()
+                _filteredRegions.value = emptyList()
                 _error.value = RegionError.LOAD_FAILED
             }
         }
@@ -51,18 +58,23 @@ class ChooseRegionViewModel(
 
     fun loadAllRegions() {
         viewModelScope.launch {
+            if (!isNetworkAvailable()) {
+                _allRegions.value = emptyList()
+                _filteredRegions.value = emptyList()
+                _error.value = RegionError.LOAD_FAILED
+                return@launch
+            }
+
             runCatching {
                 regionsInteractor.getAllRegions()
             }.onSuccess { regions ->
                 fullRegionList = regions
                 _allRegions.value = regions
                 _filteredRegions.value = regions
-                _error.value = if (regions.isEmpty()) {
-                    RegionError.LOAD_FAILED
-                } else {
-                    null
-                }
-            }.onFailure { e ->
+                _error.value = if (regions.isEmpty()) RegionError.NO_RESULTS else null
+            }.onFailure {
+                _allRegions.value = emptyList()
+                _filteredRegions.value = emptyList()
                 _error.value = RegionError.LOAD_FAILED
             }
         }
@@ -76,10 +88,11 @@ class ChooseRegionViewModel(
         }
 
         _filteredRegions.value = filtered
-        _error.value = if (filtered.isEmpty()) {
-            RegionError.NO_RESULTS
-        } else {
-            null
-        }
+        _error.value = if (query.isNotBlank() && filtered.isEmpty()) RegionError.NO_RESULTS else null
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return cm.activeNetworkInfo?.isConnectedOrConnecting == true
     }
 }

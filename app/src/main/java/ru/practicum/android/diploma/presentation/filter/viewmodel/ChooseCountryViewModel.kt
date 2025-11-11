@@ -1,5 +1,7 @@
 package ru.practicum.android.diploma.presentation.filter.viewmodel
 
+import android.content.Context
+import android.net.ConnectivityManager
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -9,22 +11,42 @@ import ru.practicum.android.diploma.domain.interactors.impl.CountriesInteractor
 import ru.practicum.android.diploma.domain.models.vacancy.Country
 
 class ChooseCountryViewModel(
-    private val countriesInteractor: CountriesInteractor
+    private val countriesInteractor: CountriesInteractor,    private val context: Context
+
 ) : ViewModel() {
+
+    sealed class Error {
+        object NoNetwork : Error()
+        object Other : Error()
+    }
 
     private val _countries = MutableLiveData<List<Country>>(emptyList())
     val countries: LiveData<List<Country>> get() = _countries
 
-    private val _error = MutableLiveData<Boolean>(false)
-    val error: LiveData<Boolean> get() = _error
+    private val _error = MutableLiveData<Error?>()
+    val error: LiveData<Error?> get() = _error
 
     fun loadCountries() {
         viewModelScope.launch {
-            val result = runCatching { countriesInteractor.getCountries() }
-                .getOrElse { emptyList() }
+            if (!isNetworkAvailable()) {
+                _countries.value = emptyList()
+                _error.value = Error.NoNetwork
+                return@launch
+            }
 
-            _countries.value = result
-            _error.value = result.isEmpty()
+            try {
+                val result = countriesInteractor.getCountries()
+                _countries.value = result
+                _error.value = if (result.isEmpty()) Error.Other else null
+            } catch (e: Exception) {
+                _countries.value = emptyList()
+                _error.value = Error.Other
+            }
         }
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return cm.activeNetworkInfo?.isConnectedOrConnecting == true
     }
 }
