@@ -3,7 +3,6 @@ package ru.practicum.android.diploma.domain.api.usecases
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import ru.practicum.android.diploma.data.storage.FilterPreferences
-import ru.practicum.android.diploma.domain.api.repositories.FilterRepository
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 
 class FilterInteractorImpl(

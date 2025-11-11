@@ -53,6 +53,7 @@ class SearchVacancyAdapter(
             } else {
                 placeholder.setImageResource(R.drawable.placeholder)
             }
+            nameCity.setOnClickListener { onItemClick(vacancy) }
 
             itemView.setOnClickListener { onItemClick(vacancy) }
         }
