@@ -55,6 +55,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         private const val JOB_LOCATION_FIELD = "jobLocation"
         private const val INDUSTRY_FIELD = "industry"
         private const val CURRENCY_RUB = "RUB"
+        private const val FILTER_DRAFT_TAG = "FilterDraft" // Константа для тега логов
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -62,7 +63,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         _binding = FragmentFilterSettingsBinding.bind(view)
         isViewCreated = true
 
-        loadDraftFilters() // Загружаем черновики при создании
+        loadDraftFilters()
         setupFragmentResultListeners()
         setupClickListeners()
         setupTextWatchers()
@@ -184,7 +185,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                 binding.editIndustry.setText(industry.name)
                 updateIconAndState(binding.industry, industry.name)
                 updateButtonsVisibility()
-                saveDraftFilters() // Сохраняем в черновики
+                saveDraftFilters()
             }
         }
 
@@ -202,7 +203,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             binding.editJobLocation.setText(text)
             updateIconAndState(binding.jobLocation, text)
             updateButtonsVisibility()
-            saveDraftFilters() // Сохраняем в черновики
+            saveDraftFilters()
         }
     }
 
@@ -225,7 +226,6 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         }
     }
 
-
     private fun setupTextWatchers() {
         val jobLocationLayout: TextInputLayout = binding.jobLocation
         val jobLocationEditText: TextInputEditText = binding.editJobLocation
@@ -238,13 +238,13 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         jobLocationEditText.addTextChangedListener {
             updateIconAndState(jobLocationLayout, it?.toString().orEmpty())
             updateButtonsVisibility()
-            saveDraftFilters() // ДОБАВЛЯЕМ сохранение черновиков
+            saveDraftFilters()
         }
 
         industryEditText.addTextChangedListener {
             updateIconAndState(industryLayout, it?.toString().orEmpty())
             updateButtonsVisibility()
-            saveDraftFilters() // ДОБАВЛЯЕМ сохранение черновиков
+            saveDraftFilters()
         }
 
         jobLocationLayout.setEndIconOnClickListener {
@@ -257,7 +257,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
         binding.checkbox.setOnCheckedChangeListener { _, isChecked ->
             updateButtonsVisibility()
-            saveDraftFilters() // Сохраняем в черновики
+            saveDraftFilters()
             updateFilterAppliedState()
         }
 
@@ -266,10 +266,12 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
         setupSalaryField(binding.editSalary, binding.salaryField)
     }
+
     private fun updateFilterAppliedState() {
         val hasFilters = hasAnyFilterApplied()
         isFilterApplied = hasFilters
     }
+
     private fun setupSalaryField(editText: TextInputEditText, layout: TextInputLayout) {
         setupSalaryInputFilter(editText)
         setupSalaryTextWatcher(editText)
@@ -309,7 +311,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
                 override fun afterTextChanged(s: Editable?) {
                     updateButtonsVisibility()
-                    saveDraftFilters() // Сохраняем в черновики
+                    saveDraftFilters()
                 }
             }
         )
@@ -317,10 +319,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
     private fun setupSalaryFocusBehavior(editText: TextInputEditText) {
         editText.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus) {
-                if (!editText.text.isNullOrEmpty()) {
-                    binding.clearIcon.visibility = View.VISIBLE
-                }
+            if (hasFocus && !editText.text.isNullOrEmpty()) {
+                binding.clearIcon.visibility = View.VISIBLE
             }
         }
     }
@@ -350,7 +350,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private fun setupSalaryClearIcon(editText: TextInputEditText) {
         binding.clearIcon.setOnClickListener {
             editText.text?.clear()
-            saveDraftFilters() // Сохраняем в черновики
+            saveDraftFilters()
         }
     }
 
@@ -358,7 +358,6 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         val hasFilters = hasAnyFilterApplied()
         binding.btnAccept.visibility = if (hasFilters) View.VISIBLE else View.GONE
         binding.btnDeny.visibility = if (hasFilters) View.VISIBLE else View.GONE
-        // ОБНОВЛЯЕМ состояние фильтра
         updateFilterAppliedState()
     }
 
@@ -370,10 +369,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     }
 
     private fun applyFiltersAndReturn() {
-        // Применяем черновики в основные фильтры
         filterPreferences.applyDraftFilters()
-
-        // УСТАНАВЛИВАЕМ состояние примененных фильтров
         isFilterApplied = true
 
         setFragmentResult(
@@ -415,16 +411,16 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             currency = CURRENCY_RUB
         )
     }
+
     private fun saveDraftFilters() {
         if (!isViewCreated) return
 
         hasUnsavedChanges = true
         val draftFilters = createFiltersFromUI()
 
-        // Для отладки
-        android.util.Log.d("FilterDraft", "Saving draft filters: $draftFilters")
-        android.util.Log.d("FilterDraft", "Selected country: $selectedCountry")
-        android.util.Log.d("FilterDraft", "Selected region: $selectedRegion")
+        android.util.Log.d(FILTER_DRAFT_TAG, "Saving draft filters: $draftFilters")
+        android.util.Log.d(FILTER_DRAFT_TAG, "Selected country: $selectedCountry")
+        android.util.Log.d(FILTER_DRAFT_TAG, "Selected region: $selectedRegion")
 
         filterPreferences.saveDraftFilters(draftFilters)
     }
@@ -432,16 +428,13 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private fun loadDraftFilters() {
         val draftFilters = filterPreferences.getDraftFilters()
 
-        // Для отладки
-        android.util.Log.d("FilterDraft", "Loading draft filters: $draftFilters")
-        android.util.Log.d("FilterDraft", "Checkbox state in draft: ${draftFilters.hideWithoutSalary}")
+        android.util.Log.d(FILTER_DRAFT_TAG, "Loading draft filters: $draftFilters")
+        android.util.Log.d(FILTER_DRAFT_TAG, "Checkbox state in draft: ${draftFilters.hideWithoutSalary}")
 
         if (draftFilters.isAnyFilterApplied()) {
-            // Если есть черновики, используем их для отображения
             updateUIWithDraftFilters(draftFilters)
-            hasUnsavedChanges = true // ДОБАВЛЯЕМ эту строку
+            hasUnsavedChanges = true
         } else {
-            // Если черновиков нет, загружаем обычные фильтры
             loadSavedFilters()
         }
     }
@@ -463,7 +456,6 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
         updateButtonsVisibility()
 
-        // Очищаем и черновики и основные фильтры
         filterPreferences.clearDraftFilters()
         viewModel.clearFilters()
 
@@ -517,13 +509,12 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             when (field) {
                 INDUSTRY_FIELD -> {
                     selectedIndustry = null
-                    saveDraftFilters() // Сохраняем в черновики
+                    saveDraftFilters()
                 }
                 JOB_LOCATION_FIELD -> {
-                    // Полностью очищаем данные о месте работы
                     selectedCountry = null
                     selectedRegion = null
-                    saveDraftFilters() // Сохраняем в черновики
+                    saveDraftFilters()
                 }
             }
             updateButtonsVisibility()
