@@ -69,7 +69,6 @@ class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {
         }
     }
 
-
     private fun setupClickListeners() {
         binding.backBtn.setOnClickListener { findNavController().popBackStack() }
     }

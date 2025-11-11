@@ -3,6 +3,7 @@ package ru.practicum.android.diploma.presentation.filter.viewmodel
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -33,31 +34,36 @@ class ChooseCountryViewModel(
     fun loadCountries() {
         viewModelScope.launch {
             if (!isNetworkAvailable()) {
-                _countries.value = emptyList()
-                _error.value = Error.NoNetwork
+                handleError(Error.NoNetwork)
             } else {
-                try {
-                    val result = countriesInteractor.getCountries()
-                    _countries.value = result
-                    _error.value = if (result.isEmpty()) Error.Other else null
-                } catch (e: IOException) {
-                    _countries.value = emptyList()
-                    _error.value = Error.NoNetwork
-                } catch (e: HttpException) {
-                    _countries.value = emptyList()
-                    _error.value = Error.ServerError
-                } catch (e: Exception) {
-                    _countries.value = emptyList()
-                    _error.value = Error.Other
-                }
+                runCatching { countriesInteractor.getCountries() }
+                    .onSuccess { result ->
+                        _countries.value = result
+                        _error.value = if (result.isEmpty()) Error.Other else null
+                    }
+                    .onFailure { e ->
+                        when (e) {
+                            is IOException -> handleError(Error.NoNetwork)
+                            is HttpException -> handleError(Error.ServerError)
+                            else -> {
+                                handleError(Error.Other)
+                                Log.e("ChooseCountryViewModel", "Unexpected error", e)
+                            }
+                        }
+                    }
             }
         }
     }
 
+    private fun handleError(errorType: Error) {
+        _countries.value = emptyList()
+        _error.value = errorType
+    }
+
     private fun isNetworkAvailable(): Boolean {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = cm.activeNetwork ?: return false
-        val capabilities = cm.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        val network = cm.activeNetwork
+        val capabilities = network?.let { cm.getNetworkCapabilities(it) }
+        return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
     }
 }
