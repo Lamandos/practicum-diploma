@@ -89,6 +89,16 @@ class SearchViewModel(
             try {
                 // Получаем текущие фильтры
                 val filters = filterInteractor.getFilters()
+
+                // ДЕТАЛЬНОЕ ЛОГИРОВАНИЕ ФИЛЬТРОВ
+                println("=== SEARCH FILTERS DEBUG ===")
+                println("Search query: $query")
+                println("Filters object: $filters")
+                println("Salary from filters: ${filters.salary}")
+                println("Hide without salary: ${filters.hideWithoutSalary}")
+                println("Are filters applied: ${isAnyFilterApplied(filters)}")
+                println("============================")
+
                 val result = interactor.searchVacancies(
                     query = query,
                     page = currentPage + 1,
@@ -98,8 +108,10 @@ class SearchViewModel(
 
                 if (result.isSuccess) {
                     val vacancies = result.getOrThrow()
+                    println("DEBUG: Search successful, found ${vacancies.size} vacancies")
                     handleSuccess(vacancies, append = false)
                 } else {
+                    println("DEBUG: Search failed: ${result.exceptionOrNull()}")
                     _searchState.postValue(SearchState.Error(result.exceptionOrNull()))
                 }
             } finally {
@@ -141,18 +153,96 @@ class SearchViewModel(
     }
 
     private fun handleSuccess(vacancies: List<VacancyDetails>, append: Boolean) {
-        val newItems = vacancies.map { it.toVacancy() }
-        currentPage++
-        if (append) {
-            _isErrorToastShown.value = false
-            val current = (_searchState.value as? SearchState.Success)?.vacancies ?: emptyList()
-            _searchState.postValue(SearchState.Success(current + newItems))
-        } else {
-            _searchState.postValue(
-                if (newItems.isEmpty()) SearchState.Empty else SearchState.Success(newItems)
-            )
+        viewModelScope.launch {
+            val filters = filterInteractor.getFilters()
+            val targetSalary = filters.salary
+
+            val filteredVacancies = if (targetSalary != null) {
+                // ФИЛЬТРАЦИЯ: зарплата ≥ targetSalary ИЛИ targetSalary в диапазоне
+                filterVacanciesBySalary(vacancies, targetSalary)
+            } else {
+                vacancies
+            }
+
+            println("DEBUG: Salary filtering - from ${vacancies.size} to ${filteredVacancies.size} vacancies")
+            logSalaryInfo(filteredVacancies, targetSalary)
+
+            val newItems = filteredVacancies.map { it.toVacancy() }
+            currentPage++
+
+            if (append) {
+                _isErrorToastShown.value = false
+                val current = (_searchState.value as? SearchState.Success)?.vacancies ?: emptyList()
+                _searchState.postValue(SearchState.Success(current + newItems))
+            } else {
+                _searchState.postValue(
+                    if (newItems.isEmpty()) SearchState.Empty else SearchState.Success(newItems)
+                )
+            }
         }
     }
+
+    private fun filterVacanciesBySalary(
+        vacancies: List<VacancyDetails>,
+        targetSalary: Int
+    ): List<VacancyDetails> {
+        return vacancies.filter { vacancy ->
+            val salary = vacancy.salary
+            when {
+                salary == null -> false // Исключаем вакансии без зарплаты
+                // Случай 1: "от X" - зарплата ≥ targetSalary
+                salary.from != null && salary.from >= targetSalary -> true
+                // Случай 2: "до Y" - targetSalary ≤ Y
+                salary.to != null && targetSalary <= salary.to -> true
+                // Случай 3: "от X до Y" - targetSalary в диапазоне X..Y
+                salary.from != null && salary.to != null ->
+                    targetSalary in salary.from..salary.to
+                else -> false
+            }
+        }
+    }
+
+    private fun logSalaryInfo(vacancies: List<VacancyDetails>, targetSalary: Int?) {
+        println("=== SALARY FILTERING INFO ===")
+        println("Target salary: $targetSalary")
+        println("Found ${vacancies.size} vacancies after filtering")
+        vacancies.forEachIndexed { index, vacancy ->
+            val salary = vacancy.salary
+            val matches = when {
+                salary == null -> "NO SALARY"
+                salary.from != null && salary.from >= targetSalary!! -> "MATCH (≥)"
+                salary.to != null && targetSalary!! <= salary.to -> "MATCH (≤)"
+                salary.from != null && salary.to != null && targetSalary!! in salary.from..salary.to -> "MATCH (range)"
+                else -> "NO MATCH"
+            }
+            val salaryText = when {
+                salary?.from != null && salary.to != null -> "${salary.from}-${salary.to}"
+                salary?.from != null -> "от ${salary.from}"
+                salary?.to != null -> "до ${salary.to}"
+                else -> "не указана"
+            }
+            println("$index: $salaryText - $matches")
+        }
+        println("=============================")
+    }
+    // SearchViewModel.kt - добавить метод для дополнительной фильтрации
+    private fun filterVacanciesBySalaryRange(
+        vacancies: List<VacancyDetails>,
+        targetSalary: Int
+    ): List<VacancyDetails> {
+        return vacancies.filter { vacancy ->
+            val salary = vacancy.salary
+            when {
+                salary == null -> false // Исключаем вакансии без зарплаты
+                salary.from != null && salary.to != null ->
+                    targetSalary in salary.from..salary.to
+                salary.from != null -> targetSalary >= salary.from
+                salary.to != null -> targetSalary <= salary.to
+                else -> false
+            }
+        }
+    }
+
 
     // Метод для принудительного обновления поиска с текущими фильтрами
     fun refreshSearchWithCurrentFilters() {

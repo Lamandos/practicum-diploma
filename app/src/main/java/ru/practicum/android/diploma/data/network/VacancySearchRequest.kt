@@ -6,7 +6,7 @@ data class VacancySearchRequest(
     val perPage: Int = 20,
     val area: Int? = null,
     val industry: String? = null,
-    val salary: Int? = null,
+    val salaryfrom: Int? = null,
     val onlyWithSalary: Boolean? = null
 )
 
@@ -19,9 +19,14 @@ fun VacancySearchRequest.toQueryMap(): Map<String, String> {
 
     area?.let { queryMap["area"] = it.toString() }
     industry?.let { queryMap["industry"] = it }
-    salary?.let { queryMap["salary"] = it.toString() }
-    onlyWithSalary?.let { queryMap["only_with_salary"] = it.toString() }
 
-    println("DEBUG: Query map: $queryMap")
+    // ВАЖНО: Не передаем salary в API, так как фильтруем на клиенте
+    // Только включаем only_with_salary если отмечен чекбокс
+    onlyWithSalary?.let {
+        queryMap["only_with_salary"] = it.toString()
+        println("DEBUG: Only with salary filter: $it")
+    }
+
+    println("DEBUG: Query map (client-side salary filtering): $queryMap")
     return queryMap
 }
