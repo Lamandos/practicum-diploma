@@ -25,6 +25,7 @@ class SearchVacanciesRepositoryImpl(
         private const val TAG = "SearchRepository"
         private const val ERROR_INVALID_RESPONSE = "Invalid response data type"
         private const val ERROR_NETWORK = "Network error"
+        private const val MAX_LOG_VACANCIES = 5
     }
 
     override suspend fun searchVacancies(
@@ -75,8 +76,6 @@ class SearchVacanciesRepositoryImpl(
         }
     }
 
-// ДОБАВЬТЕ ЭТИ ФУНКЦИИ В КЛАСС:
-
     private fun filterVacanciesBySalary(
         vacancies: List<VacancyDetails>,
         filters: VacancyFilters
@@ -92,27 +91,27 @@ class SearchVacanciesRepositoryImpl(
         hideWithoutSalary: Boolean
     ): Boolean {
         if (filterSalary == null) return true
-        if (vacancySalary == null) return !hideWithoutSalary
 
-        val from = vacancySalary.from
-        val to = vacancySalary.to
+        val result = when {
+            vacancySalary == null -> !hideWithoutSalary
+            else -> {
+                val from = vacancySalary.from
+                val to = vacancySalary.to
 
-        return when {
-            // Зарплата "от X до Y" - проверяем, что Y >= фильтр (верхняя граница >= фильтра)
-            from != null && to != null -> to >= filterSalary
-            // Зарплата "от X" - проверяем, что X >= фильтр
-            from != null -> from >= filterSalary
-            // Зарплата "до Y" - проверяем, что Y >= фильтр
-            to != null -> to >= filterSalary
-            else -> !hideWithoutSalary
+                // Зарплата "от X до Y" - проверяем, что фильтр входит в диапазон
+                (from != null && to != null && filterSalary in from..to) ||
+                    // Зарплата "от X" - проверяем, что X <= фильтр (фильтр >= минимальной зарплаты)
+                    (from != null && to == null && from <= filterSalary) ||
+                    // Зарплата "до Y" - проверяем, что фильтр <= Y
+                    (from == null && to != null && filterSalary <= to)
+            }
         }
+        return result
     }
-    private fun logSalaryFilteringInfo(vacancies: List<VacancyDetails>, targetSalary: Int) {
-        println("=== SALARY FILTERING INFO ===")
-        println("Target salary: $targetSalary")
-        println("Found ${vacancies.size} vacancies after filtering")
 
-        vacancies.take(5).forEachIndexed { index, vacancy ->
+    private fun logSalaryFilteringInfo(vacancies: List<VacancyDetails>, targetSalary: Int) {
+
+        vacancies.take(MAX_LOG_VACANCIES).forEachIndexed { index, vacancy ->
             val salary = vacancy.salary
             val salaryText = when {
                 salary?.from != null && salary.to != null -> "${salary.from}-${salary.to}"
@@ -120,9 +119,7 @@ class SearchVacanciesRepositoryImpl(
                 salary?.to != null -> "до ${salary.to}"
                 else -> "не указана"
             }
-            println("$index: $salaryText - MATCH")
         }
-        println("=============================")
     }
 
     private fun createSearchRequestWithSalaryFilter(
@@ -141,10 +138,11 @@ class SearchVacanciesRepositoryImpl(
             onlyWithSalary = filters?.hideWithoutSalary
         )
     }
+
     override suspend fun getVacancyDetails(vacancyId: String): Result<VacancyDetails> {
         return networkClient.getVacancyDetails(vacancyId)?.let {
             Result.success(it)
-        } ?: Result.failure(Exception())
+        } ?: Result.failure(Exception("Vacancy details not found"))
     }
 
     override suspend fun getIndustries(): Result<List<VacancyDetails>> =
