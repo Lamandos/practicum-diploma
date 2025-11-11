@@ -4,7 +4,6 @@ import android.text.InputFilter
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.navigation.fragment.findNavController
@@ -90,11 +89,6 @@ class FilterFieldHandler(private val fragment: FilterSettingsFragment) {
 
                     if (s.toString() == "0") {
                         binding.clearIcon.visibility = View.GONE
-                        Toast.makeText(
-                            context,
-                            "Некорректное значение",
-                            Toast.LENGTH_LONG
-                        ).show()
                     }
                 }
 
