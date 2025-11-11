@@ -103,6 +103,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             val locationText = when {
                 region.country != null && region.name.isNotBlank() ->
                     "${region.country.name}, ${region.name}"
+
                 region.country != null -> region.country.name
                 else -> region.name
             }
@@ -130,31 +131,15 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     }
 
     private fun updateUIWithFilters(filters: VacancyFilters) {
-        // Обновляем отрасль
-        filters.industry?.let { industry ->
-            if (binding.editIndustry.text?.toString() != industry.name) {
-                binding.editIndustry.setText(industry.name)
-                selectedIndustry = FilterIndustryUI(
-                    id = industry.id.toIntOrNull() ?: 0,
-                    name = industry.name
-                )
-                updateIconAndState(binding.industry, industry.name)
-            }
-        }
-
+        updateIndustryUI(filters.industry)
+        // Обновляем чекбокс "Только с зарплатой"
+        updateCheckboxUI(filters.hideWithoutSalary)
         // Обновляем зарплату
         filters.salary?.let { salary ->
             val currentSalary = binding.editSalary.text?.toString()?.toIntOrNull()
             if (currentSalary != salary) {
                 binding.editSalary.setText(salary.toString())
             }
-        }
-
-        // Обновляем чекбокс "Только с зарплатой"
-        val currentCheckboxState = binding.checkbox.isChecked
-        val newCheckboxState = filters.hideWithoutSalary ?: false
-        if (currentCheckboxState != newCheckboxState) {
-            binding.checkbox.isChecked = newCheckboxState
         }
 
         // Обновляем регион
@@ -165,6 +150,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             val locationText = when {
                 region.country != null && region.name.isNotBlank() ->
                     "${region.country.name}, ${region.name}"
+
                 region.country != null -> region.country.name
                 else -> region.name
             }
@@ -176,6 +162,25 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         }
 
         updateButtonsVisibility()
+    }
+
+    private fun updateIndustryUI(industry: Industry?) {
+        industry ?: return
+        if (binding.editIndustry.text?.toString() != industry.name) {
+            binding.editIndustry.setText(industry.name)
+            selectedIndustry = FilterIndustryUI(
+                id = industry.id.toIntOrNull() ?: 0,
+                name = industry.name
+            )
+            updateIconAndState(binding.industry, industry.name)
+        }
+    }
+
+    private fun updateCheckboxUI(hideWithoutSalary: Boolean?) {
+        val newState = hideWithoutSalary ?: false
+        if (binding.checkbox.isChecked != newState) {
+            binding.checkbox.isChecked = newState
+        }
     }
 
     private fun setupFragmentResultListeners() {
@@ -196,6 +201,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             val text = when {
                 selectedRegion != null && selectedCountry != null ->
                     "${selectedCountry!!.name}, ${selectedRegion!!.name}"
+
                 selectedCountry != null -> selectedCountry!!.name
                 else -> ""
             }
@@ -293,7 +299,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                     s: CharSequence?,
                     start: Int,
                     count: Int,
-                    after: Int
+                    after: Int,
                 ) = Unit
 
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
@@ -327,7 +333,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
     private fun setupSalaryEditorDoneAction(
         editText: TextInputEditText,
-        layout: TextInputLayout
+        layout: TextInputLayout,
     ) {
         editText.setOnEditorActionListener { v, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
@@ -400,6 +406,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                 name = "",
                 country = selectedCountry
             )
+
             else -> null
         }
 
@@ -490,7 +497,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     private fun navigateOrClear(
         editText: TextInputEditText,
         layout: TextInputLayout,
-        field: String
+        field: String,
     ) {
         if (editText.text.isNullOrEmpty()) {
             when (field) {
@@ -499,6 +506,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                         R.id.action_filterSettingsFragment_to_chooseWorkPlaceFragment
                     )
                 }
+
                 INDUSTRY_FIELD -> findNavController().navigate(
                     R.id.action_filterSettingsFragment_to_chooseIndustryFragment
                 )
@@ -511,6 +519,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
                     selectedIndustry = null
                     saveDraftFilters()
                 }
+
                 JOB_LOCATION_FIELD -> {
                     selectedCountry = null
                     selectedRegion = null

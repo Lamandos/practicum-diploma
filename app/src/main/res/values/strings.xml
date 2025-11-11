@@ -53,6 +53,8 @@
     <string name="no_region_error">Такого региона нет</string>
     <string name="no_region_list">Не удалось получить\nсписок</string>
     <string name="Choose">Выбрать</string>
+    <string name="country">country</string>
+    <string name="region">region</string>
 
 
     <plurals name="found_vac_msg">
