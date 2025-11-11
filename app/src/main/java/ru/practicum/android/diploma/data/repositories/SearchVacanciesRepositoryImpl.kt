@@ -1,7 +1,6 @@
 package ru.practicum.android.diploma.data.repositories
 
 import android.graphics.Region
-import android.util.Log
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
 import ru.practicum.android.diploma.data.mappers.VacancyMapper
 import ru.practicum.android.diploma.data.network.NetworkClient
@@ -11,7 +10,6 @@ import ru.practicum.android.diploma.domain.api.repositories.VacanciesRepository
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import java.io.IOException
-import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 
 class SearchVacanciesRepositoryImpl(
@@ -34,11 +32,9 @@ class SearchVacanciesRepositoryImpl(
         query: String,
         page: Int,
         pageSize: Int,
-        filters: VacancyFilters?
+        filters: VacancyFilters?,
     ): Result<List<VacancyDetails>> {
         return try {
-            Log.d(TAG, "Search started: query='$query', page=$page, filters=$filters")
-
             val searchRequest = VacancySearchRequest(
                 text = query,
                 page = page,
@@ -48,44 +44,27 @@ class SearchVacanciesRepositoryImpl(
                 salary = filters?.salary,
                 onlyWithSalary = filters?.hideWithoutSalary
             )
-
             val response = networkClient.doRequest(searchRequest)
-
             when (response) {
                 is ResponseSuccess<*> -> {
                     val data = response.data as? VacancySearchResponse
                     if (data != null) {
                         totalFound = data.found
-
-                        Log.d(
-                            TAG,
-                            "Search successful: found=${data.found}, pages=${data.pages}, " +
-                                "currentPage=${data.page}, items=${data.items.size}"
-                        )
-
                         val vacancies = VacancyMapper.mapToVacancyDetails(data.items)
                         Result.success(vacancies)
                     } else {
-                        Log.e(TAG, ERROR_INVALID_RESPONSE)
                         Result.failure(Exception(ERROR_INVALID_RESPONSE))
                     }
                 }
                 else -> {
-                    Log.e(TAG, "$ERROR_NETWORK: $response")
                     Result.failure(Exception("$ERROR_NETWORK: $response"))
                 }
             }
-        } catch (e: SocketTimeoutException) {
-            Log.e(TAG, "Search timeout error: ${e.message}", e)
-            Result.failure(e)
         } catch (e: UnknownHostException) {
-            Log.e(TAG, "Search network error: ${e.message}", e)
             Result.failure(e)
         } catch (e: IOException) {
-            Log.e(TAG, "Search IO error: ${e.message}", e)
             Result.failure(e)
         } catch (e: IllegalStateException) {
-            Log.e(TAG, "Search state error: ${e.message}", e)
             Result.failure(e)
         }
     }

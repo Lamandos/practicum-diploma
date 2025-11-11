@@ -59,7 +59,7 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
             if (selected == null) {
                 val country = viewModel.selectedCountry.value
                 val bundle = Bundle().apply {
-                    country?.let { putParcelable("country", it) }
+                    country?.let { putParcelable(getString(R.string.country), it) }
                 }
                 findNavController().navigate(R.id.action_chooseWorkPlaceFragment_to_chooseRegionFragment, bundle)
             } else {
@@ -70,8 +70,8 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
         }
         binding.btnAccept.setOnClickListener {
             val result = Bundle().apply {
-                viewModel.selectedCountry.value?.let { putParcelable("country", it) }
-                viewModel.selectedRegion.value?.let { putParcelable("region", it) }
+                viewModel.selectedCountry.value?.let { putParcelable(getString(R.string.country), it) }
+                viewModel.selectedRegion.value?.let { putParcelable(getString(R.string.region), it) }
             }
 
             parentFragmentManager.setFragmentResult("workplace_result", result)
@@ -100,7 +100,7 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
 
     private fun observeViewModel() {
         parentFragmentManager.setFragmentResultListener("country_request", viewLifecycleOwner) { _, bundle ->
-            bundle.getParcelable<Country>("country")?.let { country ->
+            bundle.getParcelable<Country>(getString(R.string.country))?.let { country ->
                 viewModel.selectCountry(country)
                 binding.editCountry.setText(country.name)
                 binding.editCountry.tag = country
@@ -112,7 +112,7 @@ class ChooseWorkPlaceFragment : Fragment(R.layout.fragment_chooseworkplace) {
         }
 
         parentFragmentManager.setFragmentResultListener("region_request", viewLifecycleOwner) { _, bundle ->
-            bundle.getParcelable<Region>("region")?.let { region ->
+            bundle.getParcelable<Region>(getString(R.string.region))?.let { region ->
                 if (viewModel.selectedCountry.value == null && region.country != null) {
                     viewModel.selectCountry(region.country)
                     binding.editCountry.setText(region.country.name)
