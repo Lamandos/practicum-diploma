@@ -3,17 +3,169 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    >
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/chooseIndustryTV"
+    <LinearLayout
+        android:id="@+id/industry_header"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/header"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/back_btn"
+            style="@style/vac_btns"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/pad_4"
+            android:src="@drawable/back_icon" />
+
+        <TextView
+            style="@style/HeaderStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/pad_4"
+            android:gravity="center"
+            android:text="@string/choose_industry" />
+
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/search_field"
+        style="@style/search_bar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@drawable/search_field_corners"
+        android:hint="@string/enter_industry"
+        android:imeOptions="actionDone"
+        android:inputType="text"
+        android:layout_marginTop="@dimen/margin_half_8"
+        android:layout_marginEnd="@dimen/margin_def_16"
+        android:layout_marginStart="@dimen/margin_def_16"
+        android:maxLength="255"
+        android:paddingStart="@dimen/margin_def_16"
+        android:paddingEnd="56dp"
+        android:singleLine="true"
+        app:layout_constraintTop_toBottomOf="@+id/industry_header" />
+
+    <ImageView
+        android:id="@+id/clear_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/choose_industry"
+        android:src="@drawable/clear_icon"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/search_field"
+        app:layout_constraintEnd_toEndOf="@+id/search_field"
+        app:layout_constraintTop_toTopOf="@+id/search_field" />
+
+    <ImageView
+        android:id="@+id/search_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/leading_icon"
+        app:layout_constraintBottom_toBottomOf="@+id/search_field"
+        app:layout_constraintEnd_toEndOf="@+id/search_field"
+        app:layout_constraintTop_toTopOf="@+id/search_field" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:layout_marginTop="@dimen/margin_def_16"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_space"
+        app:layout_constraintTop_toBottomOf="@+id/search_field"
+        tools:listitem="@layout/fragment_industry_for_rv" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btn_accept"
+        style="@style/filter_btns_accept_deny"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:layout_marginStart="@dimen/button_marg"
+        android:layout_marginEnd="@dimen/button_marg"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="@string/Choose"
+        android:textColor="@color/white"
+        android:layout_marginBottom="@dimen/margin_24"
+        app:cornerRadius="12dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_space"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/no_net_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_space"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/search_field"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/no_net_img" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/No_internet"
+            style="@style/error_text"
+            android:layout_marginTop="@dimen/margin_def_16"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/server_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_space"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/search_field">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/server_error" />
+
+        <TextView
+            style="@style/error_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_def_16"
+            android:gravity="center_horizontal"
+            android:text="@string/Server_error" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/bottom_space"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_weight="1"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

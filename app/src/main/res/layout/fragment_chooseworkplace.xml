@@ -3,44 +3,115 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-   >
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/chooseWorkplaceTV"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/choose_workplace"
+    <LinearLayout
+        android:id="@+id/workplace_header"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/header"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/back_btn"
+            style="@style/vac_btns"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/pad_4"
+            android:src="@drawable/back_icon" />
+
+        <TextView
+            style="@style/HeaderStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/pad_4"
+            android:gravity="center"
+            android:text="@string/choose_workplace" />
+
+    </LinearLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/country"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/container_60"
+        android:layout_marginTop="@dimen/margin_24"
+        android:hint="@string/Country"
+        app:boxStrokeWidth="0dp"
+        app:boxStrokeWidthFocused="0dp"
+        app:hintTextAppearance="@style/SmallHint"
+        android:paddingEnd="@dimen/pad_4"
+        app:endIconTint="@color/filter_sel_color"
+        android:textColorHint="@color/selector_hint_color"
+        app:layout_constraintTop_toBottomOf="@+id/workplace_header">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_country"
+            style="@style/filter_fields"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:gravity="center_vertical"
+            android:maxLines="1"
+            android:paddingStart="@dimen/margin_def_16"
+            android:singleLine="true"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/region"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:hint="@string/Region"
+        android:paddingEnd="@dimen/pad_4"
+        android:textColorHint="@color/selector_hint_color"
+        app:boxStrokeWidth="0dp"
+        app:boxStrokeWidthFocused="0dp"
+        app:endIconTint="@color/filter_sel_color"
+        app:hintTextAppearance="@style/SmallHint"
+        app:layout_constraintTop_toBottomOf="@+id/country">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_region"
+            style="@style/filter_fields"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:gravity="center_vertical"
+            android:maxLines="1"
+            android:paddingStart="@dimen/margin_def_16"
+            android:singleLine="true" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <Button
+        android:id="@+id/btn_accept"
+        style="@style/filter_btns_accept_deny"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:layout_marginStart="@dimen/button_marg"
+        android:layout_marginEnd="@dimen/button_marg"
+        android:layout_marginBottom="@dimen/margin_24"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="@string/Choose"
+        android:textColor="@color/white"
+        android:visibility="gone"
+        app:cornerRadius="12dp"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_space"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/bottom_space"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/size_48dp"
+        android:layout_weight="1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/buttonToFilterSettings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Go to Filter Settings"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonToChooseCountry" />
-
-    <Button
-        android:id="@+id/buttonToChooseCountry"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Go to Choose Country"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonToChooseRegion" />
-
-    <Button
-        android:id="@+id/buttonToChooseRegion"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Go to Choose Region"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/chooseWorkplaceTV" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

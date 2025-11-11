@@ -1,17 +1,14 @@
 package ru.practicum.android.diploma.domain.interactors.impl
 
-import android.util.Log
 import kotlinx.coroutines.flow.Flow
+import ru.practicum.android.diploma.data.db.Mappers
 import ru.practicum.android.diploma.domain.api.repositories.FavoritesRepository
 import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
-import java.io.IOException
-import java.sql.SQLException
-
-private const val TAG = "FavoritesInteractor"
 
 class FavoritesInteractorImpl(
-    private val favoritesRepository: FavoritesRepository
+    private val favoritesRepository: FavoritesRepository,
+    private val mappers: Mappers
 ) : FavoritesInteractor {
 
     override fun getAllFavorites(): Flow<List<VacancyDetails>> {
@@ -19,7 +16,8 @@ class FavoritesInteractorImpl(
     }
 
     override suspend fun getVacancyById(vacancyId: String): VacancyDetails? {
-        return favoritesRepository.getVacancyById(vacancyId)
+        val entity = favoritesRepository.getById(vacancyId)
+        return entity?.let { mappers.toVacancyDetails(it) }
     }
 
     override suspend fun addToFavorites(vacancy: VacancyDetails) {
@@ -31,20 +29,19 @@ class FavoritesInteractorImpl(
     }
 
     override suspend fun isFavorite(vacancyId: String): Boolean {
-        return try {
-            favoritesRepository.isFavorite(vacancyId)
-        } catch (e: IOException) {
-            Log.e(TAG, "I/O error checking favorite status for vacancy: $vacancyId", e)
-            false
-        } catch (e: SQLException) {
-            Log.e(TAG, "Database error checking favorite status for vacancy: $vacancyId", e)
-            false
-        } catch (e: IllegalStateException) {
-            Log.e(TAG, "Illegal state checking favorite status for vacancy: $vacancyId", e)
-            false
-        } catch (e: SecurityException) {
-            Log.e(TAG, "Security error checking favorite status for vacancy: $vacancyId", e)
-            false
+        return favoritesRepository.isFavorite(vacancyId)
+    }
+
+    override suspend fun updateFavorite(vacancy: VacancyDetails) {
+        favoritesRepository.addToFavorites(vacancy)
+    }
+
+    override suspend fun toggleFavorite(vacancy: VacancyDetails) {
+        val existing = favoritesRepository.getById(vacancy.id)
+        if (existing == null) {
+            favoritesRepository.addToFavorites(vacancy)
+        } else {
+            favoritesRepository.removeFromFavorites(vacancy.id)
         }
     }
 }

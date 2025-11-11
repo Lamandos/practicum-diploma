@@ -1,5 +1,6 @@
 package ru.practicum.android.diploma.data.mappers
 
+import android.util.Log
 import ru.practicum.android.diploma.data.dto.filterdto.FilterAreaDto
 import ru.practicum.android.diploma.data.dto.filterdto.FilterIndustryDto
 import ru.practicum.android.diploma.data.dto.vacancydetailsdto.EmployerDto
@@ -96,6 +97,8 @@ object VacancyMapper {
     }
 
     fun mapToDomain(dto: VacancyDetailsDto): VacancyDetails {
+        Log.d("VacancyContacts", "Raw contacts DTO: ${dto.contacts}")
+
         return VacancyDetails(
             id = dto.id,
             name = dto.name,
