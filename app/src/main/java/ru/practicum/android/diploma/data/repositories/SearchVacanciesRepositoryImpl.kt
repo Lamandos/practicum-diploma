@@ -90,20 +90,23 @@ class SearchVacanciesRepositoryImpl(
         filterSalary: Int?,
         hideWithoutSalary: Boolean
     ): Boolean {
-        if (filterSalary == null) return true
-        if (vacancySalary == null) return !hideWithoutSalary
-
-        val from = vacancySalary.from
-        val to = vacancySalary.to
-
-        // Упрощенная логика для уменьшения сложности
         return when {
-            from != null && to != null -> filterSalary in from..to
-            from != null -> from <= filterSalary
-            to != null -> filterSalary <= to
-            else -> !hideWithoutSalary
+            filterSalary == null -> true
+            vacancySalary == null -> !hideWithoutSalary
+            else -> {
+                val from = vacancySalary.from
+                val to = vacancySalary.to
+
+                when {
+                    from != null && to != null -> filterSalary in from..to
+                    from != null -> from <= filterSalary
+                    to != null -> filterSalary <= to
+                    else -> !hideWithoutSalary
+                }
+            }
         }
     }
+
 
     private fun logSalaryFilteringInfo(vacancies: List<VacancyDetails>, targetSalary: Int) {
         println("=== SALARY FILTERING INFO ===")
