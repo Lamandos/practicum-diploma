@@ -2,6 +2,11 @@ package ru.practicum.android.diploma.ui.screens
 
 import android.os.Bundle
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
+import androidx.core.content.ContextCompat
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.setFragmentResult
 import androidx.fragment.app.setFragmentResultListener
@@ -17,6 +22,7 @@ import ru.practicum.android.diploma.databinding.FragmentFilterSettingsBinding
 import ru.practicum.android.diploma.domain.models.filtermodels.Industry
 import ru.practicum.android.diploma.domain.models.filtermodels.Region
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
+import ru.practicum.android.diploma.domain.models.filtermodels.isAnyFilterApplied
 import ru.practicum.android.diploma.domain.models.vacancy.Country
 import ru.practicum.android.diploma.presentation.filter.viewmodel.FilterViewModel
 import ru.practicum.android.diploma.ui.model.FilterIndustryUI
@@ -113,6 +119,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             uiManager?.updateButtonsVisibility()
             saveDraftFilters()
         }
+
+        updateButtonsVisibility()
     }
 
     private fun observeViewModel() {

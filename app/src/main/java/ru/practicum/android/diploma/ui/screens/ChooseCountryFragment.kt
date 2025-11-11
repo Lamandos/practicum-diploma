@@ -43,9 +43,29 @@ class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {
             adapter.updateData(countries)
         }
 
-        viewModel.error.observe(viewLifecycleOwner) { showError ->
-            binding.loadErrorLayout.visibility = if (showError) View.VISIBLE else View.GONE
-            binding.recyclerView.visibility = if (showError) View.GONE else View.VISIBLE
+        viewModel.error.observe(viewLifecycleOwner) { error ->
+            when (error) {
+                ChooseCountryViewModel.Error.NoNetwork -> {
+                    binding.noNetError.visibility = View.VISIBLE
+                    binding.loadErrorLayout.visibility = View.GONE
+                    binding.recyclerView.visibility = View.GONE
+                }
+                ChooseCountryViewModel.Error.ServerError -> {
+                    binding.noNetError.visibility = View.GONE
+                    binding.loadErrorLayout.visibility = View.VISIBLE
+                    binding.recyclerView.visibility = View.GONE
+                }
+                ChooseCountryViewModel.Error.Other -> {
+                    binding.noNetError.visibility = View.GONE
+                    binding.loadErrorLayout.visibility = View.VISIBLE
+                    binding.recyclerView.visibility = View.GONE
+                }
+                null -> {
+                    binding.noNetError.visibility = View.GONE
+                    binding.loadErrorLayout.visibility = View.GONE
+                    binding.recyclerView.visibility = View.VISIBLE
+                }
+            }
         }
     }
 

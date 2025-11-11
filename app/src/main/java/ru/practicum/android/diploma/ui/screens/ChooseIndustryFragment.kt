@@ -46,17 +46,13 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
     }
 
     private fun setupClickListeners() {
-        binding.backBtn.setOnClickListener {
-            findNavController().popBackStack()
-        }
+        binding.backBtn.setOnClickListener { findNavController().popBackStack() }
 
         binding.clearIcon.setOnClickListener {
             binding.searchField.text?.clear()
         }
 
-        binding.btnAccept.setOnClickListener {
-            saveSelectedIndustryAndReturn()
-        }
+        binding.btnAccept.setOnClickListener { saveSelectedIndustryAndReturn() }
     }
 
     private fun setupSearchField() {
@@ -67,8 +63,8 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
                 binding.clearIcon.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
                 binding.searchIcon.visibility = if (query.isNotEmpty()) View.GONE else View.VISIBLE
             }
-            override fun beforeTextChanged(charSequence: CharSequence?, start: Int, count: Int, after: Int) = Unit
-            override fun afterTextChanged(editable: android.text.Editable?) = Unit
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun afterTextChanged(s: android.text.Editable?) = Unit
         })
     }
 
@@ -81,15 +77,25 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
 
-        viewModel.isError.observe(viewLifecycleOwner) { isError ->
-            if (isError) {
-                showError(viewModel.errorMessage.value ?: "Произошла ошибка")
+        viewModel.error.observe(viewLifecycleOwner) { error ->
+            when (error) {
+                ChooseIndustryViewModel.IndustryError.NoNetwork -> {
+                    binding.noNetError.visibility = View.VISIBLE
+                    binding.serverError.visibility = View.GONE
+                    binding.recyclerView.visibility = View.GONE
+                }
+                ChooseIndustryViewModel.IndustryError.ServerError -> {
+                    binding.serverError.visibility = View.VISIBLE
+                    binding.noNetError.visibility = View.GONE
+                    binding.recyclerView.visibility = View.GONE
+                }
+                null -> {
+                    binding.recyclerView.visibility = View.VISIBLE
+                    binding.noNetError.visibility = View.GONE
+                    binding.serverError.visibility = View.GONE
+                }
             }
         }
-    }
-
-    private fun showError(message: String) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     private fun onIndustrySelected(industry: FilterIndustryUI) {
@@ -105,9 +111,7 @@ class ChooseIndustryFragment : Fragment(R.layout.fragment_chooseindustry) {
         selectedIndustry?.let { industry ->
             setFragmentResult(
                 "industry_result",
-                Bundle().apply {
-                    putParcelable("selected_industry", industry)
-                }
+                Bundle().apply { putParcelable("selected_industry", industry) }
             )
         }
         findNavController().popBackStack()

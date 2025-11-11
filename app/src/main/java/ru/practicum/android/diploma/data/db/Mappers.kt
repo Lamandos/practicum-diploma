@@ -14,6 +14,7 @@ import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 
 class Mappers(private val gson: Gson = Gson()) {
 
+    @Suppress("ComplexMethod")
     fun toVacancyDetails(entity: FavoritesEntity): VacancyDetails = VacancyDetails(
         id = entity.id,
         name = entity.name,

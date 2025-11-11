@@ -13,7 +13,6 @@ import ru.practicum.android.diploma.domain.models.filtermodels.Region
 import ru.practicum.android.diploma.domain.models.vacancy.Country
 import ru.practicum.android.diploma.presentation.filter.adapter.RegionAdapter
 import ru.practicum.android.diploma.presentation.filter.viewmodel.ChooseRegionViewModel
-import ru.practicum.android.diploma.presentation.filter.viewmodel.RegionError
 
 class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
 
@@ -53,18 +52,25 @@ class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
     private fun observeViewModel() {
         viewModel.filteredRegions.observe(viewLifecycleOwner) { regions ->
             adapter.updateData(regions)
-            binding.noRegionError.visibility = View.GONE
-            binding.noRegionListError.visibility = View.GONE
         }
 
         viewModel.error.observe(viewLifecycleOwner) { error ->
-            binding.noRegionError.visibility = View.GONE
-            binding.noRegionListError.visibility = View.GONE
-
             when (error) {
-                RegionError.NO_RESULTS -> binding.noRegionError.visibility = View.VISIBLE
-                RegionError.LOAD_FAILED -> binding.noRegionListError.visibility = View.VISIBLE
-                null -> {}
+                ChooseRegionViewModel.RegionError.LOAD_FAILED -> {
+                    binding.noRegionListError.visibility = View.VISIBLE
+                    binding.noRegionError.visibility = View.GONE
+                    binding.recyclerView.visibility = View.GONE
+                }
+                ChooseRegionViewModel.RegionError.NO_RESULTS -> {
+                    binding.noRegionError.visibility = View.VISIBLE
+                    binding.noRegionListError.visibility = View.GONE
+                    binding.recyclerView.visibility = View.GONE
+                }
+                null -> {
+                    binding.recyclerView.visibility = View.VISIBLE
+                    binding.noRegionError.visibility = View.GONE
+                    binding.noRegionListError.visibility = View.GONE
+                }
             }
         }
     }
@@ -74,13 +80,8 @@ class ChooseRegionFragment : Fragment(R.layout.fragment_chooseregion) {
             val query = text?.toString().orEmpty()
             viewModel.filterRegions(query)
 
-            if (query.isNotEmpty()) {
-                binding.clearIcon.visibility = View.VISIBLE
-                binding.searchIcon.visibility = View.GONE
-            } else {
-                binding.clearIcon.visibility = View.GONE
-                binding.searchIcon.visibility = View.VISIBLE
-            }
+            binding.clearIcon.visibility = if (query.isNotEmpty()) View.VISIBLE else View.GONE
+            binding.searchIcon.visibility = if (query.isEmpty()) View.VISIBLE else View.GONE
         }
 
         binding.clearIcon.setOnClickListener {
