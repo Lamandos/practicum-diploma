@@ -71,13 +71,24 @@ class ChooseRegionViewModel(
     }
 
     fun filterRegions(query: String) {
-        val filtered = if (query.isBlank()) fullRegionList else fullRegionList.filter { it.name.contains(query, ignoreCase = true) }
+        val filtered = if (query.isBlank()) {
+            fullRegionList
+        } else {
+            fullRegionList.filter {
+                it.name.contains(query, ignoreCase = true)
+            }
+        }
         _filteredRegions.value = filtered
+
         if (_error.value != RegionError.LOAD_FAILED) {
-            _error.value = if (query.isNotBlank() && filtered.isEmpty()) RegionError.NO_RESULTS else null
+            _error.value = if (query.isNotBlank() && filtered.isEmpty()) {
+                RegionError.NO_RESULTS
+            } else {
+                null
+            }
         }
     }
-    
+
     private fun isNetworkAvailable(): Boolean {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val network = cm.activeNetwork
