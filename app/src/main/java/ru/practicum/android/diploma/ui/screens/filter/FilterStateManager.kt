@@ -6,7 +6,6 @@ import ru.practicum.android.diploma.domain.models.filtermodels.Industry
 import ru.practicum.android.diploma.domain.models.filtermodels.Region
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 import ru.practicum.android.diploma.domain.models.filtermodels.isAnyFilterApplied
-import ru.practicum.android.diploma.domain.models.vacancy.Country
 import ru.practicum.android.diploma.presentation.filter.viewmodel.FilterViewModel
 import ru.practicum.android.diploma.ui.model.FilterIndustryUI
 import ru.practicum.android.diploma.ui.screens.FilterSettingsFragment

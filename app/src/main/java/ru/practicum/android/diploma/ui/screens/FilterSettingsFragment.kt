@@ -37,9 +37,9 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
     var selectedRegion: Region? = null
 
     var isViewCreated = false
-    private lateinit var stateManager: FilterStateManager
-    private lateinit var uiManager: FilterUIManager
-    private lateinit var fieldHandler: FilterFieldHandler
+    private var stateManager: FilterStateManager? = null
+    private var uiManager: FilterUIManager? = null
+    private var fieldHandler: FilterFieldHandler? = null
 
     companion object {
         private const val FILTER_RESULT_KEY = "filter_result"
@@ -57,16 +57,19 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         initManagers()
         setupFragmentResultListeners()
         setupClickListeners()
-        fieldHandler.setupTextWatchers()
+        fieldHandler?.setupTextWatchers()
         observeViewModel()
 
-        stateManager.loadDraftFilters()
+        stateManager?.loadDraftFilters()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         isViewCreated = false
         _binding = null
+        stateManager = null
+        uiManager = null
+        fieldHandler = null
     }
 
     private fun initManagers() {
@@ -94,8 +97,8 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             bundle.getParcelable<FilterIndustryUI>(SELECTED_INDUSTRY_KEY)?.let { industry ->
                 selectedIndustry = industry
                 binding.editIndustry.setText(industry.name)
-                uiManager.updateIconAndState(binding.industry, industry.name)
-                uiManager.updateButtonsVisibility()
+                uiManager?.updateIconAndState(binding.industry, industry.name)
+                uiManager?.updateButtonsVisibility()
                 saveDraftFilters()
             }
         }
@@ -106,43 +109,50 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
 
             val text = buildLocationText(selectedCountry, selectedRegion)
             binding.editJobLocation.setText(text)
-            uiManager.updateIconAndState(binding.jobLocation, text)
-            uiManager.updateButtonsVisibility()
+            uiManager?.updateIconAndState(binding.jobLocation, text)
+            uiManager?.updateButtonsVisibility()
             saveDraftFilters()
         }
     }
 
     private fun observeViewModel() {
         viewModel.filtersState.observe(viewLifecycleOwner) { filters ->
-            if (!stateManager.hasUnsavedChanges) {
+            if (stateManager?.hasUnsavedChanges != true) {
                 updateUIWithFilters(filters)
             }
         }
     }
 
     // Public methods for delegates
-    fun updateButtonsVisibility() = uiManager.updateButtonsVisibility()
-    fun updateIconAndState(layout: TextInputLayout, text: String) = uiManager.updateIconAndState(layout, text)
+    fun updateButtonsVisibility() = uiManager?.updateButtonsVisibility()
+
+    fun updateIconAndState(layout: TextInputLayout, text: String) =
+        uiManager?.updateIconAndState(layout, text)
+
     fun updateFilterAppliedState() {
         val hasFilters = hasAnyFilterApplied()
-        stateManager.isFilterApplied = hasFilters
+        stateManager?.isFilterApplied = hasFilters
     }
-    fun saveDraftFilters() = stateManager.saveDraftFilters()
-    fun hasAnyFilterApplied(): Boolean = stateManager.hasAnyFilterApplied()
+
+    fun saveDraftFilters() = stateManager?.saveDraftFilters()
+
+    fun hasAnyFilterApplied(): Boolean = stateManager?.hasAnyFilterApplied() ?: false
+
     fun loadSavedFilters() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.loadCurrentFilters()
         }
     }
+
     fun clearAllFields() {
-        uiManager.clearAllFields()
-        stateManager.clearAllFilters()
+        uiManager?.clearAllFields()
+        stateManager?.clearAllFilters()
         setFragmentResult(FILTER_RESULT_KEY, Bundle().apply { putBoolean(FILTERS_APPLIED_KEY, true) })
         android.widget.Toast.makeText(requireContext(), "Фильтры сброшены", android.widget.Toast.LENGTH_SHORT).show()
     }
 
     private fun applyFiltersAndReturn() {
-        stateManager.applyFiltersAndReturn()
+        stateManager?.applyFiltersAndReturn()
         setFragmentResult(FILTER_RESULT_KEY, Bundle().apply { putBoolean(FILTERS_APPLIED_KEY, true) })
         findNavController().navigateUp()
     }
@@ -165,11 +175,11 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
             val locationText = buildLocationText(selectedCountry, selectedRegion)
             if (binding.editJobLocation.text?.toString() != locationText) {
                 binding.editJobLocation.setText(locationText)
-                uiManager.updateIconAndState(binding.jobLocation, locationText)
+                uiManager?.updateIconAndState(binding.jobLocation, locationText)
             }
         }
 
-        uiManager.updateButtonsVisibility()
+        uiManager?.updateButtonsVisibility()
     }
 
     private fun updateIndustryUI(industry: Industry?) {
@@ -177,7 +187,7 @@ class FilterSettingsFragment : Fragment(R.layout.fragment_filter_settings) {
         if (binding.editIndustry.text?.toString() != industry.name) {
             binding.editIndustry.setText(industry.name)
             selectedIndustry = FilterIndustryUI(id = industry.id.toIntOrNull() ?: 0, name = industry.name)
-            uiManager.updateIconAndState(binding.industry, industry.name)
+            uiManager?.updateIconAndState(binding.industry, industry.name)
         }
     }
 
