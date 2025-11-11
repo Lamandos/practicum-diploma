@@ -47,6 +47,13 @@ class SearchViewModel(
     private var maxPages = Int.MAX_VALUE
     private var lastQuery: String = ""
 
+    fun checkFiltersApplied() {
+        viewModelScope.launch {
+            val filters = filterInteractor.getFilters()
+            _isFilterApplied.value = isAnyFilterApplied(filters)
+        }
+    }
+
     val totalFoundCount: Int
         get() = interactor.totalFoundCount
 
@@ -154,19 +161,11 @@ class SearchViewModel(
         }
     }
 
-    // Метод для проверки применения фильтров
-    fun checkFiltersApplied() {
-        viewModelScope.launch {
-            val filters = filterInteractor.getFilters()
-            _isFilterApplied.value = isAnyFilterApplied(filters)
-        }
-    }
-
     private fun isAnyFilterApplied(filters: VacancyFilters): Boolean {
         return filters.region != null ||
             filters.industry != null ||
             filters.salary != null ||
-            filters.hideWithoutSalary
+            filters.hideWithoutSalary == true
     }
 
     fun resetSearch() {

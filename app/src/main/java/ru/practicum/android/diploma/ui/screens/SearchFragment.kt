@@ -58,6 +58,11 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         setupClearIcon()
     }
 
+    override fun onResume() {
+        super.onResume()
+        updateFilterButtonState()
+    }
+
     private fun setupFilterButton() {
         parentFragmentManager.setFragmentResultListener("filter_result", viewLifecycleOwner) { requestKey, bundle ->
             if (requestKey == "filter_result") {
@@ -72,6 +77,12 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
                     Toast.makeText(requireContext(), "Фильтры применены", Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+    }
+
+    private fun updateFilterButtonState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.checkFiltersApplied()
         }
     }
 
@@ -111,6 +122,10 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
         viewModel.showLoadingState.observe(viewLifecycleOwner) { showLoading ->
             adapter.showLoading(showLoading)
+        }
+        // ДОБАВЛЯЕМ наблюдение за состоянием фильтров
+        viewModel.isFilterApplied.observe(viewLifecycleOwner) { isApplied ->
+            updateFilterButtonAppearance(isApplied)
         }
     }
 

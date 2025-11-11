@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import ru.practicum.android.diploma.domain.api.usecases.FilterInteractor
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
+import ru.practicum.android.diploma.domain.models.filtermodels.isAnyFilterApplied
 
 class FilterViewModel(
     private val filterInteractor: FilterInteractor
@@ -24,9 +25,9 @@ class FilterViewModel(
 
     fun loadCurrentFilters() {
         viewModelScope.launch {
-            val currentFilters = filterInteractor.getFilters()
-            _filtersState.value = currentFilters
-            _isFilterApplied.value = isAnyFilterApplied(currentFilters)
+            val filters = filterInteractor.getFilters()
+            _filtersState.value = filters
+            _isFilterApplied.value = filters.isAnyFilterApplied()
         }
     }
 
@@ -34,7 +35,7 @@ class FilterViewModel(
         viewModelScope.launch {
             filterInteractor.saveFilters(newFilters)
             _filtersState.value = newFilters
-            _isFilterApplied.value = isAnyFilterApplied(newFilters)
+            _isFilterApplied.value = newFilters.isAnyFilterApplied()
         }
     }
 
@@ -47,10 +48,36 @@ class FilterViewModel(
         }
     }
 
-    private fun isAnyFilterApplied(filters: VacancyFilters): Boolean {
-        return filters.region != null ||
-            filters.industry != null ||
-            filters.salary != null ||
-            filters.hideWithoutSalary
+    // Методы для обновления отдельных полей
+    fun updateRegion(region: ru.practicum.android.diploma.domain.models.filtermodels.Region?) {
+        viewModelScope.launch {
+            val currentFilters = filterInteractor.getFilters()
+            val updatedFilters = currentFilters.copy(region = region)
+            updateFilters(updatedFilters)
+        }
+    }
+
+    fun updateIndustry(industry: ru.practicum.android.diploma.domain.models.filtermodels.Industry?) {
+        viewModelScope.launch {
+            val currentFilters = filterInteractor.getFilters()
+            val updatedFilters = currentFilters.copy(industry = industry)
+            updateFilters(updatedFilters)
+        }
+    }
+
+    fun updateSalary(salary: Int?) {
+        viewModelScope.launch {
+            val currentFilters = filterInteractor.getFilters()
+            val updatedFilters = currentFilters.copy(salary = salary)
+            updateFilters(updatedFilters)
+        }
+    }
+
+    fun updateHideWithoutSalary(hide: Boolean?) {
+        viewModelScope.launch {
+            val currentFilters = filterInteractor.getFilters()
+            val updatedFilters = currentFilters.copy(hideWithoutSalary = hide)
+            updateFilters(updatedFilters)
+        }
     }
 }

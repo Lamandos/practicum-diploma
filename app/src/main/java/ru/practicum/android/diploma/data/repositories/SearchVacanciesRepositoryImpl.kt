@@ -1,8 +1,7 @@
 package ru.practicum.android.diploma.data.repositories
 
 import android.graphics.Region
-import kotlinx.serialization.SerializationException
-import retrofit2.HttpException
+import android.util.Log
 import ru.practicum.android.diploma.data.dto.ResponseSuccess
 import ru.practicum.android.diploma.data.mappers.VacancyMapper
 import ru.practicum.android.diploma.data.network.NetworkClient
@@ -12,6 +11,8 @@ import ru.practicum.android.diploma.domain.api.repositories.VacanciesRepository
 import ru.practicum.android.diploma.domain.models.filtermodels.VacancyFilters
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import java.io.IOException
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 class SearchVacanciesRepositoryImpl(
     private val networkClient: NetworkClient,
@@ -22,70 +23,78 @@ class SearchVacanciesRepositoryImpl(
     override val totalFoundCount: Int
         get() = totalFound
 
+    companion object {
+        private const val TAG = "SearchRepository"
+        private const val ERROR_INVALID_RESPONSE = "Invalid response data type"
+        private const val ERROR_NETWORK = "Network error"
+        private const val ERROR_VACANCY_DETAILS = "Не удалось получить данные вакансии"
+    }
+
     override suspend fun searchVacancies(
         query: String,
         page: Int,
         pageSize: Int,
-        filters: VacancyFilters? // Меняем на VacancyFilters?
+        filters: VacancyFilters?
     ): Result<List<VacancyDetails>> {
         return try {
-            // Пока не используем фильтры в запросе, но сохраняем для будущего использования
-            val searchQuery = buildSearchQuery(query, filters)
+            Log.d(TAG, "Search started: query='$query', page=$page, filters=$filters")
 
-            val response = networkClient.doRequest(
-                VacancySearchRequest(
-                    text = searchQuery,
-                    page = page,
-                    perPage = pageSize
-                )
+            val searchRequest = VacancySearchRequest(
+                text = query,
+                page = page,
+                perPage = pageSize,
+                area = filters?.region?.id,
+                industry = filters?.industry?.id,
+                salary = filters?.salary,
+                onlyWithSalary = filters?.hideWithoutSalary
             )
 
-            if (response is ResponseSuccess<*>) {
-                val data = response.data as VacancySearchResponse
-                totalFound = data.found
-                val vacancies = VacancyMapper.mapToVacancyDetails(data.items)
-                Result.success(vacancies)
-            } else {
-                Result.failure(Exception("Network error"))
+            val response = networkClient.doRequest(searchRequest)
+
+            when (response) {
+                is ResponseSuccess<*> -> {
+                    val data = response.data as? VacancySearchResponse
+                    if (data != null) {
+                        totalFound = data.found
+
+                        Log.d(
+                            TAG,
+                            "Search successful: found=${data.found}, pages=${data.pages}, " +
+                                "currentPage=${data.page}, items=${data.items.size}"
+                        )
+
+                        val vacancies = VacancyMapper.mapToVacancyDetails(data.items)
+                        Result.success(vacancies)
+                    } else {
+                        Log.e(TAG, ERROR_INVALID_RESPONSE)
+                        Result.failure(Exception(ERROR_INVALID_RESPONSE))
+                    }
+                }
+                else -> {
+                    Log.e(TAG, "$ERROR_NETWORK: $response")
+                    Result.failure(Exception("$ERROR_NETWORK: $response"))
+                }
             }
+        } catch (e: SocketTimeoutException) {
+            Log.e(TAG, "Search timeout error: ${e.message}", e)
+            Result.failure(e)
+        } catch (e: UnknownHostException) {
+            Log.e(TAG, "Search network error: ${e.message}", e)
+            Result.failure(e)
         } catch (e: IOException) {
+            Log.e(TAG, "Search IO error: ${e.message}", e)
             Result.failure(e)
-        } catch (e: HttpException) {
-            Result.failure(e)
-        } catch (e: SerializationException) {
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "Search state error: ${e.message}", e)
             Result.failure(e)
         }
     }
 
-    // Вспомогательный метод для построения поискового запроса с фильтрами
-    private fun buildSearchQuery(baseQuery: String, filters: VacancyFilters?): String {
-        var query = baseQuery
-
-        filters?.let {
-            // Добавляем регион/страну
-            if (it.region != null) {
-                query += " ${it.region}"
-            }
-
-            // Добавляем отрасль
-            if (it.industry != null) {
-                query += " ${it.industry.name}"
-            }
-
-            // Добавляем зарплату (если нужно)
-            if (it.salary != null) {
-                query += " зарплата ${it.salary} ${it.currency}"
-            }
-
-            // hideWithoutSalary пока не используем, так как это требует поддержки на сервере
-        }
-
-        return query
+    override suspend fun getVacancyDetails(vacancyId: String): Result<VacancyDetails> {
+        return networkClient.getVacancyDetails(vacancyId)?.let {
+            Result.success(it)
+        } ?: Result.failure(Exception(ERROR_VACANCY_DETAILS))
     }
-
-    override suspend fun getVacancyDetails(vacancyId: String): Result<VacancyDetails> =
-        networkClient.getVacancyDetails(vacancyId)?.let { Result.success(it) }
-            ?: Result.failure(Exception("Не удалось получить данные вакансии"))
 
     override suspend fun getIndustries(): Result<List<VacancyDetails>> =
         Result.failure(Exception("Not implemented"))

@@ -12,8 +12,10 @@ import ru.practicum.android.diploma.domain.api.repositories.VacanciesRepository
 import ru.practicum.android.diploma.domain.api.repositories.VacancyRepository
 import ru.practicum.android.diploma.domain.interactors.CountriesRepository
 import ru.practicum.android.diploma.domain.interactors.CountriesRepositoryImpl
+import ru.practicum.android.diploma.domain.interactors.SearchVacanciesInteractor
 import ru.practicum.android.diploma.domain.interactors.impl.RegionsRepository
 import ru.practicum.android.diploma.domain.interactors.impl.RegionsRepositoryImpl
+import ru.practicum.android.diploma.domain.interactors.impl.SearchVacanciesInteractorImpl
 
 val repositoryModule: Module = module {
     single<FavoritesRepository> {
@@ -34,4 +36,10 @@ val repositoryModule: Module = module {
     single<RegionsRepository> { RegionsRepositoryImpl(get()) }
     single<CountriesRepository> { CountriesRepositoryImpl(get()) }
     single { IndustryRepositoryImpl(get()) }
+
+    single<SearchVacanciesInteractor> {
+        SearchVacanciesInteractorImpl(
+            repository = get()
+        )
+    }
 }
