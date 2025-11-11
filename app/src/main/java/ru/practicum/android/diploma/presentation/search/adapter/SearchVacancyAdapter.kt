@@ -70,7 +70,10 @@ class SearchVacancyAdapter(
             val currencySymbol = getCurrencySymbol(salary.currency)
 
             return when {
-                !fromFormatted.isNullOrBlank() && !toFormatted.isNullOrBlank() -> "от $fromFormatted до $toFormatted $currencySymbol"
+                !fromFormatted.isNullOrBlank() && !toFormatted.isNullOrBlank() -> {
+                    val range = "от $fromFormatted до $toFormatted"
+                    "$range $currencySymbol"
+                }
                 !fromFormatted.isNullOrBlank() -> "от $fromFormatted $currencySymbol"
                 !toFormatted.isNullOrBlank() -> "до $toFormatted $currencySymbol"
                 else -> "Зарплата не указана"
