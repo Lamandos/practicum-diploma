@@ -50,6 +50,11 @@ class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {
                     binding.loadErrorLayout.visibility = View.GONE
                     binding.recyclerView.visibility = View.GONE
                 }
+                ChooseCountryViewModel.Error.ServerError -> {
+                    binding.noNetError.visibility = View.GONE
+                    binding.loadErrorLayout.visibility = View.VISIBLE
+                    binding.recyclerView.visibility = View.GONE
+                }
                 ChooseCountryViewModel.Error.Other -> {
                     binding.noNetError.visibility = View.GONE
                     binding.loadErrorLayout.visibility = View.VISIBLE
@@ -63,6 +68,7 @@ class ChooseCountryFragment : Fragment(R.layout.fragment_choosecountry) {
             }
         }
     }
+
 
     private fun setupClickListeners() {
         binding.backBtn.setOnClickListener { findNavController().popBackStack() }

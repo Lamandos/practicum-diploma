@@ -2,6 +2,7 @@ package ru.practicum.android.diploma.presentation.filter.viewmodel
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -43,29 +44,26 @@ class ChooseIndustryViewModel(
             _error.value = null
 
             if (!isNetworkAvailable()) {
-                _industriesState.value = emptyList()
-                _error.value = IndustryError.NoNetwork
-                _isLoading.value = false
-                return@launch
+                handleLoadFailure(IndustryError.NoNetwork)
+            } else {
+                runCatching { industryInteractor.getAllIndustries() }
+                    .onSuccess { industries ->
+                        if (industries.isNullOrEmpty()) {
+                            handleLoadFailure(IndustryError.ServerError)
+                        } else {
+                            allIndustriesDomain = industries
+                            _industriesState.value = IndustryUiMapper.mapDomainListToUi(industries)
+                            _error.value = null
+                        }
+                    }
+                    .onFailure { e ->
+                        // Можно логировать ошибку для дебага
+                        e.printStackTrace()
+                        handleLoadFailure(IndustryError.ServerError)
+                    }
             }
 
-            try {
-                val industries = industryInteractor.getAllIndustries()
-                if (industries.isNullOrEmpty()) {
-                    _industriesState.value = emptyList()
-                    _error.value = IndustryError.ServerError
-                } else {
-                    allIndustriesDomain = industries
-                    _industriesState.value = IndustryUiMapper.mapDomainListToUi(industries)
-                    _error.value = null
-                }
-            } catch (e: Exception) {
-                _industriesState.value = emptyList()
-                _error.value = IndustryError.ServerError
-                e.printStackTrace()
-            } finally {
-                _isLoading.value = false
-            }
+            _isLoading.value = false
         }
     }
 
@@ -78,8 +76,15 @@ class ChooseIndustryViewModel(
         _industriesState.value = IndustryUiMapper.mapDomainListToUi(filtered)
     }
 
+    private fun handleLoadFailure(errorType: IndustryError) {
+        _industriesState.value = emptyList()
+        _error.value = errorType
+    }
+
     private fun isNetworkAvailable(): Boolean {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        return cm.activeNetworkInfo?.isConnectedOrConnecting == true
+        val network = cm.activeNetwork ?: return false
+        val capabilities = cm.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 }

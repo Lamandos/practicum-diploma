@@ -22,11 +22,10 @@ class RegionsRepositoryImpl(
         val allAreas = areasRepository.getAllAreas()
             ?: throw IOException("Failed to load areas")
         val countryDto = allAreas.firstOrNull { it.id == countryId }
-            ?: return emptyList() 
+            ?: return emptyList()
         val country = Country(id = countryDto.id, name = countryDto.name)
         return collectRegions(countryDto, country)
     }
-
 
     private fun collectAreaWithCountry(area: FilterAreaDto): List<Region> {
         val country = if (area.parentId == null || area.parentId == 0) {

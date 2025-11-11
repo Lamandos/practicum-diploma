@@ -36,15 +36,15 @@ val viewModelModule: Module = module {
         )
     }
     viewModel {
-        ChooseCountryViewModel(get(),get())
+        ChooseCountryViewModel(get(), get())
     }
     viewModel {
-        ChooseRegionViewModel(get(),get())
+        ChooseRegionViewModel(get(), get())
     }
     viewModel {
         ChooseWorkPlaceViewModel(get(), get())
     }
     viewModel {
-        ChooseIndustryViewModel(industryInteractor = get(),get())
+        ChooseIndustryViewModel(industryInteractor = get(), get())
     }
 }
