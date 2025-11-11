@@ -107,7 +107,6 @@ class SearchVacanciesRepositoryImpl(
         }
     }
 
-
     private fun logSalaryFilteringInfo(vacancies: List<VacancyDetails>, targetSalary: Int) {
         println("=== SALARY FILTERING INFO ===")
         println("Target salary: $targetSalary")
