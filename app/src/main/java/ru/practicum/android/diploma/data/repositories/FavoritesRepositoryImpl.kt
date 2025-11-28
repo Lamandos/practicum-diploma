@@ -4,6 +4,7 @@ import android.util.Log
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import ru.practicum.android.diploma.data.db.AppDataBase
+import ru.practicum.android.diploma.data.db.FavoritesEntity
 import ru.practicum.android.diploma.data.db.Mappers
 import ru.practicum.android.diploma.domain.api.repositories.FavoritesRepository
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
@@ -19,6 +20,17 @@ class FavoritesRepositoryImpl(
     override fun getAllFavorites(): Flow<List<VacancyDetails>> {
         return database.favoritesDao().getAllVacancies().map { entities ->
             entities.map { mappers.toVacancyDetails(it) }
+        }
+    }
+    override suspend fun getById(vacancyId: String): FavoritesEntity? {
+        return try {
+            database.favoritesDao().getVacancyById(vacancyId)
+        } catch (e: SQLException) {
+            Log.e(TAG, "SQL error getting vacancy by id: $vacancyId", e)
+            null
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "Illegal state getting vacancy by id: $vacancyId", e)
+            null
         }
     }
 
@@ -68,6 +80,22 @@ class FavoritesRepositoryImpl(
             throw e
         } catch (e: IllegalStateException) {
             Log.e(TAG, "Illegal state removing vacancy from favorites: $vacancyId", e)
+            throw e
+        }
+    }
+
+    override suspend fun updateVacancy(vacancy: VacancyDetails) {
+        try {
+            val entity = mappers.toFavoritesEntity(vacancy)
+//            database.favoritesDao().deleteVacancyById(vacancy.id)
+//            database.favoritesDao().insertVacancy(entity)
+            database.favoritesDao().insertVacancy(entity)
+
+        } catch (e: SQLException) {
+            Log.e(TAG, "SQL error updating vacancy: ${vacancy.id}", e)
+            throw e
+        } catch (e: IllegalStateException) {
+            Log.e(TAG, "Illegal state updating vacancy: ${vacancy.id}", e)
             throw e
         }
     }

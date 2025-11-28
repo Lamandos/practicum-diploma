@@ -54,4 +54,44 @@
         <item name="android:textColor">@color/yp_black</item>
     </style>
 
+    <style name="filter_empty">
+        <item name="android:textColor">@color/yp_gray</item>
+        <item name="android:fontFamily">@font/ys_display_regular</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="SmallHint" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="no_salary">
+        <item name="android:textColor">@color/yp_black</item>
+        <item name="android:fontFamily">@font/ys_display_regular</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="filter_btns_accept_deny">
+        <item name="android:fontFamily">@font/ys_display_medium</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textAllCaps">false</item>
+    </style>
+
+    <style name="filter_fields">
+        <item name="android:textColor">@color/yp_black</item>
+        <item name="android:fontFamily">@font/ys_display_regular</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="industry_rv">
+        <item name="android:textColor">@color/yp_black</item>
+        <item name="android:fontFamily">@font/ys_display_regular</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
+    <style name="country_list">
+        <item name="android:textColor">@color/yp_black</item>
+        <item name="android:fontFamily">@font/ys_display_regular</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
 </resources>

@@ -1,6 +1,5 @@
 package ru.practicum.android.diploma.presentation.details
 
-import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -10,14 +9,19 @@ import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
 import ru.practicum.android.diploma.domain.interactors.VacancyInteractor
 import ru.practicum.android.diploma.domain.models.vacancydetails.VacancyDetails
 import java.io.IOException
-import java.net.UnknownHostException
-
-private const val TAG = "VacancyViewModel"
 
 class VacancyViewModel(
     private val vacancyInteractor: VacancyInteractor,
     private val favoritesInteractor: FavoritesInteractor
 ) : ViewModel() {
+
+    companion object {
+        const val ERROR_SERVER = "ERROR_SERVER"
+        const val ERROR_VACANCY_NOT_FOUND = "ERROR_VACANCY_NOT_FOUND"
+        const val ERROR_ACCESS = "ERROR_ACCESS"
+        const val ERROR_STATE = "ERROR_STATE"
+        const val ERROR_LOAD_VACANCY = "ERROR_LOAD_VACANCY"
+    }
 
     private val _vacancyDetails = MutableLiveData<VacancyDetails?>()
     val vacancyDetails: LiveData<VacancyDetails?> = _vacancyDetails
@@ -34,142 +38,60 @@ class VacancyViewModel(
     private var currentVacancyId: String? = null
     private var isFromFavorites: Boolean = false
 
-    // Константы для сообщений об ошибках
-    companion object {
-        private const val ERROR_NETWORK = "Ошибка сети"
-        private const val ERROR_NO_INTERNET = "Нет подключения к интернету"
-        private const val ERROR_ACCESS = "Ошибка доступа к данным"
-        private const val ERROR_STATE = "Ошибка состояния приложения"
-        private const val ERROR_FAVORITES_NETWORK = "Ошибка сети при работе с избранным"
-        private const val ERROR_LOAD_VACANCY = "Не удалось загрузить данные вакансии"
-        private const val ERROR_REMOVE_FAVORITE = "Ошибка при удалении из избранного"
-        private const val ERROR_ADD_FAVORITE = "Ошибка при добавлении в избранное"
-    }
-
     fun init(vacancyId: String, fromFavorites: Boolean = false) {
-        this.currentVacancyId = vacancyId
-        this.isFromFavorites = fromFavorites
+        currentVacancyId = vacancyId
+        isFromFavorites = fromFavorites
         loadVacancy()
     }
 
     private fun loadVacancy() {
         val vacancyId = currentVacancyId ?: return
-
         _isLoading.value = true
         _error.value = null
 
         viewModelScope.launch {
             try {
-                if (isFromFavorites) {
-                    val vacancy = favoritesInteractor.getVacancyById(vacancyId)
-                    _vacancyDetails.value = vacancy
-                    _isFavorite.value = vacancy != null
+                val vacancy = if (isFromFavorites) {
+                    favoritesInteractor.getVacancyById(vacancyId)
                 } else {
-                    val vacancy = vacancyInteractor.getVacancyDetails(vacancyId)
+                    vacancyInteractor.getVacancyDetails(vacancyId)
+                }
+
+                if (vacancy != null) {
                     _vacancyDetails.value = vacancy
-                    _isFavorite.value = favoritesInteractor.isFavorite(vacancyId)
+                    _isFavorite.value = favoritesInteractor.isFavorite(vacancy.id)
+                } else {
+                    _error.value = ERROR_VACANCY_NOT_FOUND
                 }
             } catch (e: IOException) {
-                handleErrorWithLog("$ERROR_NETWORK: ${e.message}", "loadVacancy - IOException", e)
-            } catch (e: UnknownHostException) {
-                handleErrorWithLog(ERROR_NO_INTERNET, "loadVacancy - UnknownHostException", e)
+                handleError(e, ERROR_SERVER)
             } catch (e: SecurityException) {
-                handleErrorWithLog(ERROR_ACCESS, "loadVacancy - SecurityException", e)
+                handleError(e, ERROR_ACCESS)
             } catch (e: IllegalStateException) {
-                handleErrorWithLog(ERROR_STATE, "loadVacancy - IllegalStateException", e)
-            } finally {
-                _isLoading.value = false
+                handleError(e, ERROR_STATE)
             }
+            _isLoading.value = false
         }
     }
 
     fun onFavoritesClicked() {
-        val vacancyId = currentVacancyId ?: return
+        val vacancy = _vacancyDetails.value ?: return
 
         viewModelScope.launch {
             try {
-                val isCurrentlyFavorite = _isFavorite.value ?: false
-
-                if (isCurrentlyFavorite) {
-                    removeFromFavorites(vacancyId)
-                } else {
-                    addToFavorites(vacancyId)
-                }
+                favoritesInteractor.toggleFavorite(vacancy)
+                _isFavorite.value = favoritesInteractor.isFavorite(vacancy.id)
             } catch (e: IOException) {
-                handleErrorWithLog(ERROR_FAVORITES_NETWORK, "onFavoritesClicked - IOException", e)
+                handleError(e, ERROR_LOAD_VACANCY)
             } catch (e: SecurityException) {
-                handleErrorWithLog(ERROR_ACCESS, "onFavoritesClicked - SecurityException", e)
+                handleError(e, ERROR_ACCESS)
             } catch (e: IllegalStateException) {
-                handleErrorWithLog(ERROR_STATE, "onFavoritesClicked - IllegalStateException", e)
+                handleError(e, ERROR_STATE)
             }
         }
     }
 
-    private suspend fun removeFromFavorites(vacancyId: String) {
-        val result = runCatching {
-            favoritesInteractor.removeFromFavorites(vacancyId)
-            _isFavorite.value = false
-        }
-
-        result.onFailure { throwable ->
-            when (throwable) {
-                is IOException, is SecurityException, is IllegalStateException -> {
-                    handleErrorWithLog(
-                        message = ERROR_REMOVE_FAVORITE,
-                        operation = "removeFromFavorites - ${throwable::class.simpleName}",
-                        exception = throwable
-                    )
-                }
-            }
-        }
-
-        result.getOrThrow()
-    }
-
-    private suspend fun addToFavorites(vacancyId: String) {
-        val result = runCatching {
-            val currentVacancy = getCurrentVacancy(vacancyId)
-
-            if (currentVacancy != null) {
-                favoritesInteractor.addToFavorites(currentVacancy)
-                _isFavorite.value = true
-                updateVacancyDetailsIfNeeded(currentVacancy)
-            } else {
-                handleError(ERROR_LOAD_VACANCY)
-            }
-        }
-
-        result.onFailure { throwable ->
-            when (throwable) {
-                is IOException, is SecurityException, is IllegalStateException -> {
-                    handleErrorWithLog(
-                        message = ERROR_ADD_FAVORITE,
-                        operation = "addToFavorites - ${throwable::class.simpleName}",
-                        exception = throwable
-                    )
-                }
-            }
-        }
-
-        result.getOrThrow()
-    }
-
-    private suspend fun getCurrentVacancy(vacancyId: String): VacancyDetails? {
-        return _vacancyDetails.value ?: vacancyInteractor.getVacancyDetails(vacancyId)
-    }
-
-    private fun updateVacancyDetailsIfNeeded(vacancy: VacancyDetails) {
-        if (_vacancyDetails.value == null) {
-            _vacancyDetails.value = vacancy
-        }
-    }
-
-    private fun handleError(message: String) {
-        _error.value = message
-    }
-
-    private fun handleErrorWithLog(message: String, operation: String, exception: Throwable) {
-        Log.e(TAG, "Error in $operation: ${exception.message}", exception)
-        handleError(message)
+    private fun handleError(exception: Throwable, defaultError: String) {
+        _error.value = defaultError
     }
 }

@@ -9,21 +9,16 @@ fun ContactsDto.toDomain(id: String): Contacts? {
             id = id,
             name = name,
             email = email,
-            phones = phones?.mapNotNull { phoneDto ->
-                phoneDto.number?.takeIf { it.isNotBlank() }?.let { number ->
-                    Contacts.Phone(
-                        number = number,
-                        comment = phoneDto.comment
-                    )
-                }
-            }?.takeIf { it.isNotEmpty() }
+            phones = phones?.map { it.toDomain() }?.takeIf { it.isNotEmpty() }
         )
     } else {
         null
     }
 }
 
-fun ContactsDto.PhoneDto.toDomain(): Contacts.Phone = Contacts.Phone(
-    number = number ?: "",
-    comment = comment
-)
+fun ContactsDto.PhoneDto.toDomain(): Contacts.Phone {
+    return Contacts.Phone(
+        number = this.formatted,
+        comment = this.comment
+    )
+}

@@ -1,8 +1,5 @@
 package ru.practicum.android.diploma.ui.screens
 
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -19,10 +16,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.viewModel
-import retrofit2.HttpException
 import ru.practicum.android.diploma.R
 import ru.practicum.android.diploma.databinding.FragmentSearchBinding
-import ru.practicum.android.diploma.domain.models.vacancy.Vacancy
 import ru.practicum.android.diploma.presentation.search.adapter.SearchVacancyAdapter
 import ru.practicum.android.diploma.presentation.search.viewmodel.SearchState
 import ru.practicum.android.diploma.presentation.search.viewmodel.SearchViewModel
@@ -42,19 +37,61 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
     }
 
+    private val uiStateManager = SearchUiStateManager()
+
     companion object {
         private const val SEARCH_DEBOUNCE_MS = 2000L
-        private const val SERVER_ERROR_CODE = 500
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentSearchBinding.bind(view)
 
+        binding.filterBtn.setOnClickListener {
+            findNavController().navigate(R.id.action_searchFragment_to_filterSettingsFragment)
+        }
+
+        setupFilterButton()
         setupRecyclerView()
         observeViewModel()
         setupSearchField()
         setupClearIcon()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateFilterButtonState()
+    }
+
+    private fun setupFilterButton() {
+        parentFragmentManager.setFragmentResultListener("filter_result", viewLifecycleOwner) { requestKey, bundle ->
+            if (requestKey == "filter_result") {
+                val filtersApplied = bundle.getBoolean("filters_applied", false)
+                updateFilterButtonAppearance(filtersApplied)
+
+                if (filtersApplied) {
+                    val currentQuery = binding.searchField.text.toString()
+                    if (currentQuery.isNotBlank()) {
+                        viewModel.refreshSearchWithCurrentFilters()
+                    }
+                    Toast.makeText(requireContext(), "Фильтры применены", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun updateFilterButtonState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.checkFiltersApplied()
+        }
+    }
+
+    private fun updateFilterButtonAppearance(isFilterApplied: Boolean) {
+        if (isFilterApplied) {
+            binding.filterBtn.setImageResource(R.drawable.trailing_fill_icon)
+        } else {
+            binding.filterBtn.setImageResource(R.drawable.trailing_icon)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -65,11 +102,9 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-
                 if (dy > 0) {
                     val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
                     val totalItemCount = layoutManager.itemCount
-
                     if (lastVisibleItem >= totalItemCount - 1) {
                         viewModel.loadNextPage()
                     }
@@ -79,115 +114,82 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
     }
 
     private fun observeViewModel() {
-        observeSearchState()
-        observeErrorToast()
-        observeLoadingState()
-    }
-
-    private fun observeSearchState() {
         viewModel.searchState.observe(viewLifecycleOwner) { state ->
-            when (state) {
-                is SearchState.Idle -> handleIdleState()
-                is SearchState.Loading -> handleLoadingState()
-                is SearchState.Success -> handleSuccessState(state.vacancies)
-                is SearchState.Empty -> handleEmptyState()
-                is SearchState.Error -> handleErrorState(state.throwable)
-            }
+            handleSearchState(state)
         }
-    }
-
-    private fun handleIdleState() {
-        updateUI(emptyList(), isSearchActive = false)
-        adapter.showLoading(false)
-    }
-
-    private fun handleLoadingState() {
-        updateUI(emptyList(), isSearchActive = true, isLoading = true)
-        adapter.showLoading(false)
-    }
-
-    private fun handleSuccessState(vacancies: List<Vacancy>) {
-        updateUI(vacancies, isSearchActive = true)
-    }
-
-    private fun handleEmptyState() {
-        updateUI(emptyList(), isSearchActive = true)
-        adapter.showLoading(false)
-    }
-
-    private fun handleErrorState(throwable: Throwable?) {
-        val hasNetwork = isNetworkAvailable(requireContext())
-        val isServerError = (throwable as? HttpException)?.code() == SERVER_ERROR_CODE
-        updateUI(
-            vacancies = emptyList(),
-            isSearchActive = true,
-            isLoading = false,
-            isNetworkAvailable = hasNetwork,
-            isServerError = isServerError
-        )
-        adapter.showLoading(false)
-    }
-
-    private fun observeErrorToast() {
         viewModel.isErrorToastShown.observe(viewLifecycleOwner) { isErrorToastShown ->
-            if (isErrorToastShown) {
-                viewModel.errorMessage.value?.let {
-                    showToast(it)
-                }
-            }
+            handleErrorToast(isErrorToastShown)
         }
-    }
-
-    private fun showToast(message: String) {
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
-    }
-
-    private fun observeLoadingState() {
         viewModel.showLoadingState.observe(viewLifecycleOwner) { showLoading ->
             adapter.showLoading(showLoading)
+        }
+        // ДОБАВЛЯЕМ наблюдение за состоянием фильтров
+        viewModel.isFilterApplied.observe(viewLifecycleOwner) { isApplied ->
+            updateFilterButtonAppearance(isApplied)
+        }
+    }
+
+    private fun handleSearchState(state: SearchState) {
+        uiStateManager.handleSearchState(state, binding, adapter, viewModel, requireContext())
+    }
+
+    private fun handleErrorToast(isErrorToastShown: Boolean) {
+        if (isErrorToastShown) {
+            viewModel.errorMessage.value?.let {
+                Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
     private fun setupSearchField() {
-        binding.searchField.addTextChangedListener(object : TextWatcher {
+        binding.searchField.addTextChangedListener(createTextWatcher())
+        binding.searchField.setOnEditorActionListener { _, actionId, _ ->
+            handleEditorAction(actionId)
+        }
+    }
+
+    private fun createTextWatcher(): TextWatcher {
+        return object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
             override fun afterTextChanged(s: Editable?) {
                 binding.searchField.isCursorVisible = !s.isNullOrEmpty()
             }
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                val searchText = s.toString()
-                binding.clearIcon.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
-                binding.searchIcon.visibility = if (searchText.isEmpty()) View.VISIBLE else View.GONE
-
-                searchJob?.cancel()
-
-                if (searchText.isBlank()) {
-                    viewModel.resetSearch()
-                    return
-                }
-
-                searchJob = viewLifecycleOwner.lifecycleScope.launch {
-                    viewModel.setLoading()
-                    delay(SEARCH_DEBOUNCE_MS)
-                    viewModel.searchVacancies(searchText)
-                }
-            }
-        })
-
-        binding.searchField.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_DONE) {
-                val query = binding.searchField.text.toString()
-                if (query.isNotBlank()) {
-                    viewModel.setLoading()
-                    viewModel.searchVacancies(query)
-                }
-                closeKeyboard(binding.searchField)
-                true
-            } else {
-                false
+                handleTextChanged(s.toString())
             }
         }
+    }
+
+    private fun handleTextChanged(searchText: String) {
+        binding.clearIcon.visibility = if (searchText.isEmpty()) View.GONE else View.VISIBLE
+        binding.searchIcon.visibility = if (searchText.isEmpty()) View.VISIBLE else View.GONE
+
+        searchJob?.cancel()
+
+        if (searchText.isBlank()) {
+            viewModel.resetSearch()
+            return
+        }
+
+        searchJob = viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.setLoading()
+            delay(SEARCH_DEBOUNCE_MS)
+            viewModel.searchVacancies(searchText)
+        }
+    }
+
+    private fun handleEditorAction(actionId: Int): Boolean {
+        if (actionId == EditorInfo.IME_ACTION_DONE) {
+            val query = binding.searchField.text.toString()
+            if (query.isNotBlank()) {
+                viewModel.setLoading()
+                viewModel.searchVacancies(query)
+            }
+            closeKeyboard(binding.searchField)
+            return true
+        }
+        return false
     }
 
     private fun setupClearIcon() {
@@ -200,92 +202,6 @@ class SearchFragment : Fragment(R.layout.fragment_search) {
         }
     }
 
-    private fun updateUI(
-        vacancies: List<Vacancy>,
-        isSearchActive: Boolean,
-        isLoading: Boolean = false,
-        isNetworkAvailable: Boolean = true,
-        isServerError: Boolean = false
-    ) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-
-        when {
-            isLoading -> showLoadingState()
-            !isNetworkAvailable -> showNoNetworkError()
-            isServerError -> showServerError()
-            vacancies.isEmpty() && isSearchActive -> showNoVacanciesError()
-            vacancies.isNotEmpty() -> showVacancies(vacancies)
-            else -> showInitialState()
-        }
-    }
-
-    private fun showLoadingState() {
-        binding.noNetError.visibility = View.GONE
-        binding.serverError.visibility = View.GONE
-        binding.noVacError.visibility = View.GONE
-        binding.searchStartPic.visibility = View.GONE
-        binding.recyclerView.visibility = View.GONE
-        binding.msgText.visibility = View.GONE
-    }
-
-    private fun showNoNetworkError() {
-        binding.noNetError.visibility = View.VISIBLE
-        binding.serverError.visibility = View.GONE
-        binding.noVacError.visibility = View.GONE
-        binding.searchStartPic.visibility = View.GONE
-        binding.recyclerView.visibility = View.GONE
-        binding.msgText.visibility = View.GONE
-    }
-
-    private fun showServerError() {
-        binding.noNetError.visibility = View.GONE
-        binding.serverError.visibility = View.VISIBLE
-        binding.noVacError.visibility = View.GONE
-        binding.searchStartPic.visibility = View.GONE
-        binding.recyclerView.visibility = View.GONE
-        binding.msgText.visibility = View.GONE
-    }
-
-    private fun showNoVacanciesError() {
-        binding.noNetError.visibility = View.GONE
-        binding.serverError.visibility = View.GONE
-        binding.noVacError.visibility = View.VISIBLE
-        binding.searchStartPic.visibility = View.GONE
-        binding.recyclerView.visibility = View.GONE
-        binding.msgText.visibility = View.VISIBLE
-        binding.msgText.text = getString(R.string.no_vac_msg)
-    }
-
-    private fun showVacancies(vacancies: List<Vacancy>) {
-        binding.noNetError.visibility = View.GONE
-        binding.serverError.visibility = View.GONE
-        binding.noVacError.visibility = View.GONE
-        binding.searchStartPic.visibility = View.GONE
-        binding.recyclerView.visibility = View.VISIBLE
-        binding.msgText.visibility = View.VISIBLE
-        binding.msgText.text = resources.getQuantityString(
-            R.plurals.found_vac_msg,
-            viewModel.totalFoundCount,
-            viewModel.totalFoundCount
-        )
-        adapter.setItems(vacancies)
-    }
-
-    private fun showInitialState() {
-        binding.noNetError.visibility = View.GONE
-        binding.serverError.visibility = View.GONE
-        binding.noVacError.visibility = View.GONE
-        binding.searchStartPic.visibility = View.VISIBLE
-        binding.recyclerView.visibility = View.GONE
-        binding.msgText.visibility = View.GONE
-    }
-    fun isNetworkAvailable(context: Context): Boolean {
-        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork
-        val capabilities = connectivityManager.getNetworkCapabilities(network)
-
-        return capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
-    }
     private fun closeKeyboard(view: View) {
         val imm = requireContext().getSystemService(InputMethodManager::class.java)
         imm?.hideSoftInputFromWindow(view.windowToken, 0)

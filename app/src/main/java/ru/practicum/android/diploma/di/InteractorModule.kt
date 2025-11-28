@@ -2,25 +2,37 @@ package ru.practicum.android.diploma.di
 
 import org.koin.core.module.Module
 import org.koin.dsl.module
-import ru.practicum.android.diploma.domain.api.usecases.VacanciesInteractor
-import ru.practicum.android.diploma.domain.impl.usecases.VacanciesInteractorImpl
 import ru.practicum.android.diploma.domain.interactors.FavoritesInteractor
+import ru.practicum.android.diploma.domain.interactors.IndustryInteractor
+import ru.practicum.android.diploma.domain.interactors.SearchVacanciesInteractor
 import ru.practicum.android.diploma.domain.interactors.VacancyInteractor
+import ru.practicum.android.diploma.domain.interactors.impl.CountriesInteractor
+import ru.practicum.android.diploma.domain.interactors.impl.CountriesInteractorImpl
 import ru.practicum.android.diploma.domain.interactors.impl.FavoritesInteractorImpl
+import ru.practicum.android.diploma.domain.interactors.impl.IndustryInteractorImpl
+import ru.practicum.android.diploma.domain.interactors.impl.RegionsInteractor
+import ru.practicum.android.diploma.domain.interactors.impl.RegionsInteractorImpl
+import ru.practicum.android.diploma.domain.interactors.impl.SearchVacanciesInteractorImpl
 import ru.practicum.android.diploma.domain.interactors.impl.VacancyInteractorImpl
 
 val interactorModule: Module = module {
     factory<FavoritesInteractor> {
         FavoritesInteractorImpl(
-            favoritesRepository = get()
+            favoritesRepository = get(),
+            mappers = get()
         )
     }
-    factory<VacanciesInteractor> {
-        VacanciesInteractorImpl(get())
+    factory<SearchVacanciesInteractor> {
+        SearchVacanciesInteractorImpl(get())
     }
+    factory<CountriesInteractor> { CountriesInteractorImpl(get()) }
+    factory<RegionsInteractor> { RegionsInteractorImpl(get()) }
     factory<VacancyInteractor> {
         VacancyInteractorImpl(
             vacancyRepository = get()
         )
+    }
+    factory<IndustryInteractor> {
+        IndustryInteractorImpl(industriesRepository = get())
     }
 }

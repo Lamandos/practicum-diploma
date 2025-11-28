@@ -7,6 +7,8 @@
         <item name="android:navigationBarColor">@color/navbar_background_color</item>
         <item name="colorPrimary">@color/yp_blue</item>
         <item name="colorSecondary">@color/yp_blue</item>
+        <item name="colorFavoriteStroke">@color/fav_color</item>
+
     </style>
 
     <style name="Theme.PracticumAndroidDiploma" parent="Base.Theme.PracticumAndroidDiploma" />

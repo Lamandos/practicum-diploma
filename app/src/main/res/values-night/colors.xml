@@ -7,6 +7,7 @@
     <color name="yp_light_gray">#E6E8EB</color>
     <color name="yp_gray">#AEAFB4</color>
     <color name="yp_blue">#3772E7</color>
+    <color name="yp_red">#F56B6C</color>
     <color name="background_color">#1A1B22</color>
     <color name="namescreen_color">#FDFDFD</color>
     <color name="icon_navbar_color">#FDFDFD</color>
@@ -21,5 +22,8 @@
     <color name="system_bar_icon_color">#1A1B22</color>
     <color name="vacancy_rv_text_color">#FDFDFD</color>
     <color name="border_placeholder_vacancy_color">#E6E8EB</color>
+    <color name="hint_color">#FDFDFD</color>
+    <color name="filter_sel_color">#FDFDFD</color>
+    <color name="fav_color">#FDFDFD</color>
 
 </resources>

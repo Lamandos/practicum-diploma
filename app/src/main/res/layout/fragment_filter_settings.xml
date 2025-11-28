@@ -3,35 +3,207 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-   >
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/filtersSettingsTV"
+    <LinearLayout
+        android:id="@+id/filter_header"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/header"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/back_btn"
+            style="@style/vac_btns"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/pad_4"
+            android:src="@drawable/back_icon" />
+
+        <TextView
+            style="@style/HeaderStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/pad_4"
+            android:gravity="center"
+            android:text="@string/filters_settings" />
+
+    </LinearLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/job_location"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/container_60"
+        android:layout_marginTop="@dimen/margin_24"
+        android:hint="@string/job_loc"
+        app:boxStrokeWidth="0dp"
+        app:boxStrokeWidthFocused="0dp"
+        app:hintTextAppearance="@style/SmallHint"
+        android:paddingEnd="@dimen/pad_4"
+        app:endIconTint="@color/filter_sel_color"
+        android:textColorHint="@color/selector_hint_color"
+        app:layout_constraintTop_toBottomOf="@+id/filter_header">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_job_location"
+            style="@style/filter_fields"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:gravity="center_vertical"
+            android:maxLines="1"
+            android:paddingStart="@dimen/margin_def_16"
+            android:singleLine="true"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/industry"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:hint="@string/industry"
+        android:paddingEnd="@dimen/pad_4"
+        android:textColorHint="@color/selector_hint_color"
+        app:boxStrokeWidth="0dp"
+        app:boxStrokeWidthFocused="0dp"
+        app:endIconTint="@color/filter_sel_color"
+        app:hintTextAppearance="@style/SmallHint"
+        app:layout_constraintTop_toBottomOf="@+id/job_location">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_industry"
+            style="@style/filter_fields"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:clickable="false"
+            android:focusable="false"
+            android:gravity="center_vertical"
+            android:maxLines="1"
+            android:paddingStart="@dimen/margin_def_16"
+            android:singleLine="true" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/salary_field"
+        android:layout_width="match_parent"
+        android:layout_height="51dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="@dimen/margin_def_16"
+        android:layout_marginStart="@dimen/margin_def_16"
+        android:background="@drawable/search_field_corners"
+        android:hint="@string/exp_salary"
+        app:hintTextAppearance="@style/SmallHint"
+        app:boxStrokeWidth="0dp"
+        android:textColorHint="@color/hint_text_color_selector"
+        app:boxStrokeWidthFocused="0dp"
+        app:expandedHintEnabled="false"
+        app:layout_constraintTop_toBottomOf="@+id/industry">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_salary"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:imeOptions="actionDone"
+            android:inputType="number"
+            android:maxLength="255"
+            android:maxLines="1"
+            android:paddingStart="@dimen/margin_def_16"
+            android:paddingEnd="56dp"
+            android:singleLine="true"
+            android:background="@drawable/search_field_corners"
+            android:hint="@string/summary"
+            style="@style/search_bar"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+    <ImageView
+        android:id="@+id/clear_icon"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/filters_settings"
+        android:src="@drawable/clear_icon"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/salary_field"
+        app:layout_constraintEnd_toEndOf="@+id/salary_field"
+        app:layout_constraintTop_toTopOf="@+id/salary_field" />
+
+    <LinearLayout
+        android:id="@+id/no_salary"
+        android:layout_width="match_parent"
+        android:layout_marginTop="@dimen/margin_24"
+        android:layout_height="@dimen/container_60"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@+id/salary_field">
+
+        <TextView
+            style="@style/no_salary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/margin_def_16"
+            android:gravity="center"
+            android:text="@string/no_salary" />
+
+        <FrameLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/checkbox"
+            android:layout_width="@dimen/prog_size"
+            android:layout_height="@dimen/prog_size"
+            android:layout_gravity="center"
+            app:buttonTint="@color/yp_blue"
+            android:layout_marginEnd="@dimen/pad_4" />
+
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btn_accept"
+        style="@style/filter_btns_accept_deny"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:layout_marginStart="@dimen/button_marg"
+        android:layout_marginEnd="@dimen/button_marg"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="@string/accept"
+        android:textColor="@color/white"
+        android:layout_marginBottom="@dimen/margin_half_8"
+        app:cornerRadius="12dp"
+        app:layout_constraintBottom_toTopOf="@+id/btn_deny"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btn_deny"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/button_height"
+        android:text="@string/deny"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:layout_marginBottom="@dimen/margin_half_8"
+        android:background="@android:color/transparent"
+        app:cornerRadius="12dp"
+        android:layout_marginEnd="@dimen/button_marg"
+        android:layout_marginStart="@dimen/button_marg"
+        style="@style/filter_btns_accept_deny"
+        android:textColor="@color/yp_red"
+        app:layout_constraintBottom_toTopOf="@+id/bottom_space"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/bottom_space"
+        android:layout_width="match_parent"
+        android:layout_height="64dp"
+        android:layout_weight="1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/buttonToChooseWorkPlace"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Go to Choose Work Place"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/buttonToChooseIndustry" />
-
-    <Button
-        android:id="@+id/buttonToChooseIndustry"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Go to Choose Industry"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/filtersSettingsTV" />
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

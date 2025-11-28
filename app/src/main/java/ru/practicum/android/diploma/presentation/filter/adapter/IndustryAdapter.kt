@@ -1,0 +1,81 @@
+package ru.practicum.android.diploma.presentation.filter.adapter
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.checkbox.MaterialCheckBox
+import ru.practicum.android.diploma.R
+import ru.practicum.android.diploma.ui.model.FilterIndustryUI
+
+class IndustryAdapter(
+    private var industries: List<FilterIndustryUI>,
+    private val onIndustryClick: (FilterIndustryUI) -> Unit
+) : RecyclerView.Adapter<IndustryAdapter.IndustryViewHolder>() {
+
+    private var selectedIndustry: FilterIndustryUI? = null
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): IndustryViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.fragment_industry_for_rv, parent, false)
+        return IndustryViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: IndustryViewHolder, position: Int) {
+        holder.bind(industries[position])
+    }
+
+    override fun getItemCount(): Int = industries.size
+
+    fun updateData(newIndustries: List<FilterIndustryUI>) {
+        industries = newIndustries
+        notifyDataSetChanged()
+    }
+
+    inner class IndustryViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val industryName: TextView = itemView.findViewById(R.id.industry_name)
+        private val checkBox: MaterialCheckBox = itemView.findViewById(R.id.check_industry)
+
+        fun bind(industry: FilterIndustryUI) {
+            industryName.text = industry.name
+            checkBox.isChecked = selectedIndustry?.id == industry.id
+
+            itemView.setOnClickListener {
+                selectIndustry(industry)
+            }
+
+            checkBox.setOnClickListener {
+                selectIndustry(industry)
+            }
+        }
+
+        private fun selectIndustry(industry: FilterIndustryUI) {
+            val previousSelected = selectedIndustry
+            selectedIndustry = industry
+
+            previousSelected?.let { oldIndustry ->
+                val oldPosition = industries.indexOfFirst { it.id == oldIndustry.id }
+                if (oldPosition != -1) {
+                    notifyItemChanged(oldPosition)
+                }
+            }
+
+            val newPosition = industries.indexOfFirst { it.id == industry.id }
+            if (newPosition != -1) {
+                notifyItemChanged(newPosition)
+            }
+
+            onIndustryClick(industry)
+        }
+    }
+
+    fun clearSelection() {
+        selectedIndustry = null
+        notifyDataSetChanged()
+    }
+
+    fun setSelectedIndustry(industry: FilterIndustryUI?) {
+        selectedIndustry = industry
+        notifyDataSetChanged()
+    }
+}

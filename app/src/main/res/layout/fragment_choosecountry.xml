@@ -3,26 +3,124 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    >
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/chooseCountryTV"
+    <LinearLayout
+        android:id="@+id/country_header"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/header"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/back_btn"
+            style="@style/vac_btns"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/pad_4"
+            android:src="@drawable/back_icon" />
+
+        <TextView
+            style="@style/HeaderStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/pad_4"
+            android:gravity="center"
+            android:text="@string/choose_country" />
+
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/margin_def_16"
+        android:layout_marginBottom="@dimen/size_48dp"
+        android:clipToPadding="false"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/country_header"
+        tools:listitem="@layout/fragment_country_for_rv" />
+
+    <LinearLayout
+        android:id="@+id/loadErrorLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/choose_country"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/country_header"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/no_region_list_error" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/no_region_list"
+            style="@style/error_text"
+            android:layout_marginTop="@dimen/margin_def_16"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/no_net_error"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:layout_marginBottom="@dimen/size_48dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/country_header">
 
-    <Button
-        android:id="@+id/buttonToChooseWorkPlace"
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/no_net_img" />
+
+        <TextView
+            style="@style/error_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_def_16"
+            android:text="@string/No_internet" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/server_error"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Go to Choose Work Place"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:layout_marginBottom="@dimen/size_48dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/chooseCountryTV" />
+        app:layout_constraintTop_toBottomOf="@+id/country_header">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/server_error" />
+
+        <TextView
+            style="@style/error_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_def_16"
+            android:gravity="center_horizontal"
+            android:text="@string/Server_error" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
